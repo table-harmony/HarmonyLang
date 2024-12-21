@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
 func main() {
@@ -13,6 +15,12 @@ func main() {
 	}
 
 	source := string(bytes)
+
+	var tokens = lexer.Tokenize(source)
+
+	for _, token := range tokens {
+		token.Print()
+	}
 
 	fmt.Printf("Code: %s\n", source)
 }

@@ -50,6 +50,8 @@ const (
 	MINUS_MINUS
 	PLUS_EQUALS
 	MINUS_EQUALS
+	STAR_EQUALS
+	SLASH_EQUALS
 	NULLISH_ASSIGNMENT
 
 	//Maths
@@ -66,7 +68,7 @@ const (
 	NEW
 	IMPORT
 	FROM
-	FN
+	FUNCTION
 	IF
 	ELSE
 	FOREACH
@@ -76,6 +78,27 @@ const (
 	TYPEOF
 	IN
 )
+
+var reserved_lu map[string]TokenKind = map[string]TokenKind{
+	"true":     TRUE,
+	"false":    FALSE,
+	"null":     NULL,
+	"let":      LET,
+	"const":    CONST,
+	"class":    CLASS,
+	"new":      NEW,
+	"import":   IMPORT,
+	"from":     FROM,
+	"function": FUNCTION,
+	"if":       IF,
+	"else":     ELSE,
+	"foreach":  FOREACH,
+	"while":    WHILE,
+	"for":      FOR,
+	"export":   EXPORT,
+	"typeof":   TYPEOF,
+	"in":       IN,
+}
 
 type Token struct {
 	Kind  TokenKind
@@ -178,6 +201,10 @@ func (kind TokenKind) ToString() string {
 		return "plus_equals"
 	case MINUS_EQUALS:
 		return "minus_equals"
+	case STAR_EQUALS:
+		return "star_equals"
+	case SLASH_EQUALS:
+		return "slash_equals"
 	case NULLISH_ASSIGNMENT:
 		return "nullish_assignment"
 	case PLUS:
@@ -202,8 +229,8 @@ func (kind TokenKind) ToString() string {
 		return "import"
 	case FROM:
 		return "from"
-	case FN:
-		return "fn"
+	case FUNCTION:
+		return "function"
 	case IF:
 		return "if"
 	case ELSE:
@@ -216,6 +243,8 @@ func (kind TokenKind) ToString() string {
 		return "while"
 	case EXPORT:
 		return "export"
+	case TYPEOF:
+		return "typeof"
 	case IN:
 		return "in"
 	default:
