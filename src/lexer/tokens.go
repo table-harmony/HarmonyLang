@@ -77,9 +77,11 @@ const (
 	EXPORT
 	TYPEOF
 	IN
+	RETURN
 )
 
-var reserved_lu map[string]TokenKind = map[string]TokenKind{
+// Reserved lookups for keywords
+var reservedKeywords map[string]TokenKind = map[string]TokenKind{
 	"true":     TRUE,
 	"false":    FALSE,
 	"null":     NULL,
@@ -98,6 +100,7 @@ var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"export":   EXPORT,
 	"typeof":   TYPEOF,
 	"in":       IN,
+	"return":   RETURN,
 }
 
 type Token struct {
@@ -247,6 +250,8 @@ func (kind TokenKind) ToString() string {
 		return "typeof"
 	case IN:
 		return "in"
+	case RETURN:
+		return "return"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

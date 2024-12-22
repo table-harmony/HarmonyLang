@@ -21,6 +21,7 @@ type lexer struct {
 	pos      int
 }
 
+// Returns a reference to a new lexer
 func createLexer(source string) *lexer {
 	return &lexer{
 		pos:      0,
@@ -30,22 +31,27 @@ func createLexer(source string) *lexer {
 	}
 }
 
-func (lex *lexer) advance(n int) {
-	lex.pos += n
+// Advances the lexer position by n
+func (lexer *lexer) advance(n int) {
+	lexer.pos += n
 }
 
-func (lex *lexer) at() byte {
-	return lex.source[lex.pos]
+// Returns the lexer current value at the source
+func (lexer *lexer) at() byte {
+	return lexer.source[lexer.pos]
 }
 
-func (lex *lexer) remainder() string {
-	return lex.source[lex.pos:]
+// Returns the remainder of the source
+func (lexer *lexer) remainder() string {
+	return lexer.source[lexer.pos:]
 }
 
-func (lex *lexer) push(token Token) {
-	lex.Tokens = append(lex.Tokens, token)
+// Pushes a token onto the lexer
+func (lexer *lexer) push(token Token) {
+	lexer.Tokens = append(lexer.Tokens, token)
 }
 
-func (lex *lexer) at_eof() bool {
-	return lex.pos >= len(lex.source)
+// Returns whether the lexer is at the end of the source
+func (lexer *lexer) at_eof() bool {
+	return lexer.pos >= len(lexer.source)
 }

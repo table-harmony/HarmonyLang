@@ -1,0 +1,3 @@
+function myFunction(): string {
+  return "This is the returned of the first function value"
+}
