@@ -9,24 +9,24 @@ import (
 )
 
 func parse_expression(parser *parser, bp binding_power) ast.Expression {
-	var currentToken = parser.currentToken()
-	nud_handler, exists := nud_lookup[currentToken.Kind]
+	token := parser.currentToken()
+	nud_handler, exists := nud_lookup[token.Kind]
 
 	if !exists {
-		panic(fmt.Sprintf("NUD Handler expected for token %s\n", currentToken.Kind.ToString()))
+		panic(fmt.Sprintf("NUD Handler expected for token %s\n", token.Kind.ToString()))
 	}
 
 	left := nud_handler(parser)
+	token = parser.currentToken()
 
-	for binding_power_lookup[parser.currentToken().Kind] > bp {
-		currentToken = parser.currentToken()
-		led_handler, exists := led_lookup[currentToken.Kind]
-
+	for binding_power_lookup[token.Kind] > bp {
+		led_handler, exists := led_lookup[token.Kind]
 		if !exists {
-			panic(fmt.Sprintf("LED Handler expected for token %s\n", currentToken.Kind.ToString()))
+			panic(fmt.Sprintf("LED Handler expected for token %s\n", token.Kind.ToString()))
 		}
 
-		left = led_handler(parser, left, bp)
+		left = led_handler(parser, left, binding_power_lookup[token.Kind])
+		token = parser.currentToken()
 	}
 
 	return left
@@ -36,7 +36,7 @@ func parse_binary_expression(parser *parser, left ast.Expression, bp binding_pow
 	operatorToken := parser.currentToken()
 	parser.advance(1)
 
-	right := parse_expression(parser, defalt_bp)
+	right := parse_expression(parser, bp)
 
 	return ast.BinaryExpression{
 		Left:     left,
@@ -46,15 +46,15 @@ func parse_binary_expression(parser *parser, left ast.Expression, bp binding_pow
 }
 
 func parse_primary_expression(parser *parser) ast.Expression {
-	currentToken := parser.currentToken()
+	token := parser.currentToken()
 	parser.advance(1)
 
-	switch currentToken.Kind {
+	switch token.Kind {
 	case lexer.NUMBER:
-		number, err := strconv.ParseFloat(currentToken.Value, 64)
+		number, err := strconv.ParseFloat(token.Value, 64)
 
 		if err != nil {
-			panic(fmt.Sprintf("Cannot parse token '%s' to float", currentToken.ToString()))
+			panic(fmt.Sprintf("Cannot parse token '%s' to float", token.ToString()))
 		}
 
 		return ast.NumberExpression{
@@ -62,13 +62,13 @@ func parse_primary_expression(parser *parser) ast.Expression {
 		}
 	case lexer.STRING:
 		return ast.StringExpression{
-			Value: currentToken.Value,
+			Value: token.Value,
 		}
 	case lexer.IDENTIFIER:
 		return ast.SymbolExpression{
-			Value: currentToken.Value,
+			Value: token.Value,
 		}
 	default:
-		panic(fmt.Sprintf("Cannot create primary_expression from %s\n", currentToken.Kind.ToString()))
+		panic(fmt.Sprintf("Cannot create primary_expression from %s\n", token.Kind.ToString()))
 	}
 }

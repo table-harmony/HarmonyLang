@@ -27,7 +27,7 @@ func Parse(tokens []lexer.Token) ast.BlockStatement {
 }
 
 func createParser(tokens []lexer.Token) *parser {
-	createTokenLookups()
+	create_token_lookups()
 
 	return &parser{
 		tokens: tokens,

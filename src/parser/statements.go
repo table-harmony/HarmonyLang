@@ -17,8 +17,10 @@ func parse_statement(parser *parser) ast.Statement {
 }
 
 func parse_expression_statement(parser *parser) ast.ExpressionStatement {
-	expression := parse_expression(parser, defalt_bp)
+	expression := parse_expression(parser, default_bp)
+
 	parser.expect(lexer.SEMI_COLON)
+	parser.advance(1)
 
 	return ast.ExpressionStatement{
 		Expression: expression,
