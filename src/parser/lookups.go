@@ -47,7 +47,12 @@ func add_statement(kind lexer.TokenKind, handler statement_handler) {
 
 func create_token_lookups() {
 	// Assignment
-
+	//	add_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
+	//	add_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
+	//	add_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
+	//	add_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
+	//	add_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
+	//
 	// Logical
 	add_led(lexer.AND, logical, parse_binary_expression)
 	add_led(lexer.OR, logical, parse_binary_expression)
@@ -77,4 +82,8 @@ func create_token_lookups() {
 	// Member / Computed // Call
 
 	// Grouping Expression
+
+	// Statements
+	add_statement(lexer.LET, parse_variable_declaration_statement)
+	add_statement(lexer.CONST, parse_variable_declaration_statement)
 }

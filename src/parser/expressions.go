@@ -72,3 +72,30 @@ func parse_primary_expression(parser *parser) ast.Expression {
 		panic(fmt.Sprintf("Cannot create primary_expression from %s\n", token.Kind.ToString()))
 	}
 }
+
+//func parse_assignment_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+//	identifierToken := parser.currentToken()
+//	parser.advance(1)
+//
+//	operatorToken := parser.currentToken()
+//	parser.advance(1)
+//
+//	switch (operatorToken.Kind) {
+//	case lexer.ASSIGNMENT:
+//
+//	}
+//
+//	return ast.AssignmentExpression{
+//
+//	}
+//}
+
+func parse_assignment_expr(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	parser.advance(1)
+	rhs := parse_expression(parser, bp)
+
+	return ast.AssignmentExpression{
+		Assigne:       left,
+		AssignedValue: rhs,
+	}
+}

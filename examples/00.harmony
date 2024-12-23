@@ -1,1 +1,8 @@
-45.2 + 3 / 10;
+const x = "liron kaner";
+let y = foo > 1;
+
+//y = "s"
+//y = foo > 1
+
+//TODO: create a method for parse assigment statement
+//TODO: add_statement for let, cosnt tokens
