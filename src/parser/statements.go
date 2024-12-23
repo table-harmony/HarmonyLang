@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"fmt"
-
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -31,32 +29,24 @@ func parse_expression_statement(parser *parser) ast.ExpressionStatement {
 
 func parse_variable_declaration_statement(parser *parser) ast.Statement {
 	token := parser.currentToken()
-
-	var explicitType ast.Type = nil
-
 	isConstant := token.Kind == lexer.CONST
 	parser.advance(1)
-	token = parser.currentToken()
 
-	parser.expectError(lexer.IDENTIFIER,
-		fmt.Sprintf("Following %s expected variable name however instead recieved %s instead\n",
-			token.Kind.ToString(), token.Kind.ToString()))
-
-	identifier := parser.currentToken().Value
+	identifier := parser.expect(lexer.IDENTIFIER).Value
 	parser.advance(1)
-	token = parser.currentToken()
 
-	if token.Kind == lexer.COLON {
-		parser.expect(lexer.COLON)
-		explicitType = nil //TODO: parse type
+	var explicitType ast.Type
+	if parser.currentToken().Kind == lexer.COLON {
+		parser.advance(1)
+		explicitType = parse_type(parser)
 	}
 
 	var value ast.Expression
-	if token.Kind != lexer.SEMI_COLON {
-		parser.expect(lexer.ASSIGNMENT)
+	if parser.currentToken().Kind == lexer.ASSIGNMENT {
 		parser.advance(1)
-
 		value = parse_expression(parser, assignment)
+	} else if explicitType == nil {
+		panic("Cannot define a variable without an explicit type or default value.")
 	}
 
 	parser.expect(lexer.SEMI_COLON)

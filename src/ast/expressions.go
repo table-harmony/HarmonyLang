@@ -33,8 +33,16 @@ type BinaryExpression struct {
 func (node BinaryExpression) expression() {}
 
 type AssignmentExpression struct {
-	Assigne       Expression
-	AssignedValue Expression
+	Assigne  Expression
+	Value    Expression
+	Operator lexer.Token
 }
 
 func (node AssignmentExpression) expression() {}
+
+type PrefixExpression struct {
+	Operator lexer.Token
+	Right    Expression
+}
+
+func (node PrefixExpression) expression() {}

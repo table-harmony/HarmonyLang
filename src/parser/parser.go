@@ -28,6 +28,7 @@ func Parse(tokens []lexer.Token) ast.BlockStatement {
 
 func createParser(tokens []lexer.Token) *parser {
 	create_token_lookups()
+	create_type_lookups()
 
 	return &parser{
 		tokens: tokens,
@@ -37,6 +38,10 @@ func createParser(tokens []lexer.Token) *parser {
 
 func (parser *parser) currentToken() lexer.Token {
 	return parser.tokens[parser.pos]
+}
+
+func (parser *parser) previousToken() lexer.Token {
+	return parser.tokens[parser.pos-1]
 }
 
 func (parser *parser) advance(n int) {

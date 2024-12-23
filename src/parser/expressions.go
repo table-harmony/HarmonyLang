@@ -36,7 +36,7 @@ func parse_binary_expression(parser *parser, left ast.Expression, bp binding_pow
 	operatorToken := parser.currentToken()
 	parser.advance(1)
 
-	right := parse_expression(parser, bp)
+	right := parse_expression(parser, bp+1)
 
 	return ast.BinaryExpression{
 		Left:     left,
@@ -73,29 +73,39 @@ func parse_primary_expression(parser *parser) ast.Expression {
 	}
 }
 
-//func parse_assignment_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
-//	identifierToken := parser.currentToken()
-//	parser.advance(1)
-//
-//	operatorToken := parser.currentToken()
-//	parser.advance(1)
-//
-//	switch (operatorToken.Kind) {
-//	case lexer.ASSIGNMENT:
-//
-//	}
-//
-//	return ast.AssignmentExpression{
-//
-//	}
-//}
-
-func parse_assignment_expr(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+func parse_assignment_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
 	parser.advance(1)
-	rhs := parse_expression(parser, bp)
+
+	operator := parser.previousToken()
+	right := parse_expression(parser, bp)
 
 	return ast.AssignmentExpression{
-		Assigne:       left,
-		AssignedValue: rhs,
+		Assigne:  left,
+		Value:    right,
+		Operator: operator,
+	}
+}
+
+func parse_grouping_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
+	expression := parse_expression(parser, default_bp)
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
+
+	return expression
+}
+
+func parse_prefix_expression(parser *parser) ast.Expression {
+	operatorToken := parser.currentToken()
+	parser.advance(1)
+
+	right := parse_expression(parser, unary)
+
+	return ast.PrefixExpression{
+		Operator: operatorToken,
+		Right:    right,
 	}
 }

@@ -47,12 +47,12 @@ func add_statement(kind lexer.TokenKind, handler statement_handler) {
 
 func create_token_lookups() {
 	// Assignment
-	//	add_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
-	//	add_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
-	//	add_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
-	//	add_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
-	//	add_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
-	//
+	add_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
+	add_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
+	add_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
+	add_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
+	add_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
+
 	// Logical
 	add_led(lexer.AND, logical, parse_binary_expression)
 	add_led(lexer.OR, logical, parse_binary_expression)
@@ -65,9 +65,11 @@ func create_token_lookups() {
 	add_led(lexer.EQUALS, relational, parse_binary_expression)
 	add_led(lexer.NOT_EQUALS, relational, parse_binary_expression)
 
-	// Additive & Multiplicitave
+	// Additive
 	add_led(lexer.PLUS, additive, parse_binary_expression)
 	add_led(lexer.DASH, additive, parse_binary_expression)
+
+	// Multiplicative
 	add_led(lexer.SLASH, multiplicative, parse_binary_expression)
 	add_led(lexer.STAR, multiplicative, parse_binary_expression)
 	add_led(lexer.PERCENT, multiplicative, parse_binary_expression)
@@ -77,11 +79,15 @@ func create_token_lookups() {
 	add_nud(lexer.STRING, primary, parse_primary_expression)
 	add_nud(lexer.IDENTIFIER, primary, parse_primary_expression)
 
+	add_nud(lexer.DASH, unary, parse_prefix_expression)
+	add_nud(lexer.NOT, unary, parse_prefix_expression)
+
 	// Unary/Prefix
 
 	// Member / Computed // Call
 
 	// Grouping Expression
+	add_nud(lexer.OPEN_PAREN, primary, parse_grouping_expression)
 
 	// Statements
 	add_statement(lexer.LET, parse_variable_declaration_statement)

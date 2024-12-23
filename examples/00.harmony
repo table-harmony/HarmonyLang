@@ -1,8 +1,10 @@
-const x = "liron kaner";
-let y = foo > 1;
+//let foo = -45.2;
+//let bar = foo * 10 + (45 / 10 - -5);
 
-//y = "s"
-//y = foo > 1
+//foo = foo + 10;
+//bar -= 10;
 
-//TODO: create a method for parse assigment statement
-//TODO: add_statement for let, cosnt tokens
+//const isGreater = foo > bar && !foo || bar;
+
+const foo: number = 34.2;
+let bar: [][]number = 12.12;
