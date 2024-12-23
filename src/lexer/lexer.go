@@ -5,17 +5,17 @@ import (
 )
 
 // A function which handles a given regex and deals with tokenization for the lexer
-type regexHandler func(lex *lexer, regex *regexp.Regexp)
+type regex_handler func(lex *lexer, regex *regexp.Regexp)
 
 // A regex pattern including a pattern and a handler function
-type regexPattern struct {
+type regex_pattern struct {
 	regex   *regexp.Regexp
-	handler regexHandler
+	handler regex_handler
 }
 
 // The lexer
 type lexer struct {
-	patterns []regexPattern
+	patterns []regex_pattern
 	Tokens   []Token
 	source   string
 	pos      int
@@ -27,7 +27,7 @@ func createLexer(source string) *lexer {
 		pos:      0,
 		source:   source,
 		Tokens:   make([]Token, 0),
-		patterns: reservedPatterns,
+		patterns: reserved_patterns,
 	}
 }
 

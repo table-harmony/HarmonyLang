@@ -21,7 +21,7 @@ func (node StringExpression) expression() {
 }
 
 type SymbolExpression struct {
-	Value float64
+	Value string
 }
 
 func (node SymbolExpression) expression() {

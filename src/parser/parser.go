@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -12,12 +14,10 @@ type parser struct {
 
 func Parse(tokens []lexer.Token) ast.BlockStatement {
 	body := make([]ast.Statement, 0)
-
 	parser := createParser(tokens)
 
 	for !parser.isEmpty() {
-		statement := parseStatement(parser)
-
+		statement := parse_statement(parser)
 		body = append(body, statement)
 	}
 
@@ -46,6 +46,25 @@ func (parser *parser) advance(n int) {
 func (parser *parser) isEmpty() bool {
 	currentToken := parser.currentToken()
 
-	return parser.pos > len(parser.tokens) ||
+	return parser.pos >= len(parser.tokens) ||
 		currentToken.Kind == lexer.EOF
+}
+
+func (parser *parser) expectError(expectedKind lexer.TokenKind, err any) lexer.Token {
+	currentToken := parser.currentToken()
+
+	if currentToken.Kind != expectedKind {
+		if err == nil {
+			err = fmt.Sprintf("Expected %s but recieved %s instead\n",
+				expectedKind.ToString(), currentToken.Kind.ToString())
+		}
+
+		panic(err)
+	}
+
+	return currentToken
+}
+
+func (parser *parser) expect(expectedKind lexer.TokenKind) lexer.Token {
+	return parser.expectError(expectedKind, nil)
 }

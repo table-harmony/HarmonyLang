@@ -5,7 +5,7 @@ import (
 )
 
 // The default regexHandler method
-func defaultHandler(kind TokenKind, value string) regexHandler {
+func default_handler(kind TokenKind, value string) regex_handler {
 	return func(lex *lexer, _ *regexp.Regexp) {
 		lex.advance(len(value))
 		lex.push(CreateToken(kind, value))
@@ -22,14 +22,14 @@ func stringHandler(lex *lexer, regex *regexp.Regexp) {
 }
 
 // The number regexHandler method
-func numberHandler(lex *lexer, regex *regexp.Regexp) {
+func number_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 	lex.push(CreateToken(NUMBER, match))
 	lex.advance(len(match))
 }
 
 // The symbol regexHandler method
-func symbolHandler(lex *lexer, regex *regexp.Regexp) {
+func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
 	if kind, found := reservedKeywords[match]; found {
@@ -42,13 +42,13 @@ func symbolHandler(lex *lexer, regex *regexp.Regexp) {
 }
 
 // The skip regexHandler method for blank spaces e.t.c
-func skipHandler(lex *lexer, regex *regexp.Regexp) {
+func skip_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	lex.advance(match[1])
 }
 
 // The commetn regexHandler ignores comments and advances in the lexer
-func commentHandler(lex *lexer, regex *regexp.Regexp) {
+func comment_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 
 	if match != nil {
@@ -57,58 +57,58 @@ func commentHandler(lex *lexer, regex *regexp.Regexp) {
 }
 
 // reserved regex patterns
-var reservedPatterns = []regexPattern{
-	{regexp.MustCompile(`\s+`), skipHandler},
-	{regexp.MustCompile(`\/\/.*`), commentHandler},
+var reserved_patterns = []regex_pattern{
+	{regexp.MustCompile(`\s+`), skip_handler},
+	{regexp.MustCompile(`\/\/.*`), comment_handler},
 	{regexp.MustCompile(`"[^"]*"`), stringHandler},
-	{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), numberHandler},
-	{regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), symbolHandler},
+	{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), number_handler},
+	{regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), symbol_handler},
 
 	// Grouping & Braces
-	{regexp.MustCompile(`\[`), defaultHandler(OPEN_BRACKET, "[")},
-	{regexp.MustCompile(`\]`), defaultHandler(CLOSE_BRACKET, "]")},
-	{regexp.MustCompile(`\{`), defaultHandler(OPEN_CURLY, "{")},
-	{regexp.MustCompile(`\}`), defaultHandler(CLOSE_CURLY, "}")},
-	{regexp.MustCompile(`\(`), defaultHandler(OPEN_PAREN, "(")},
-	{regexp.MustCompile(`\)`), defaultHandler(CLOSE_PAREN, ")")},
+	{regexp.MustCompile(`\[`), default_handler(OPEN_BRACKET, "[")},
+	{regexp.MustCompile(`\]`), default_handler(CLOSE_BRACKET, "]")},
+	{regexp.MustCompile(`\{`), default_handler(OPEN_CURLY, "{")},
+	{regexp.MustCompile(`\}`), default_handler(CLOSE_CURLY, "}")},
+	{regexp.MustCompile(`\(`), default_handler(OPEN_PAREN, "(")},
+	{regexp.MustCompile(`\)`), default_handler(CLOSE_PAREN, ")")},
 
 	// Equivalence
-	{regexp.MustCompile(`==`), defaultHandler(EQUALS, "==")},
-	{regexp.MustCompile(`!=`), defaultHandler(NOT_EQUALS, "!=")},
-	{regexp.MustCompile(`=`), defaultHandler(ASSIGNMENT, "=")},
-	{regexp.MustCompile(`!`), defaultHandler(NOT, "!")},
+	{regexp.MustCompile(`==`), default_handler(EQUALS, "==")},
+	{regexp.MustCompile(`!=`), default_handler(NOT_EQUALS, "!=")},
+	{regexp.MustCompile(`=`), default_handler(ASSIGNMENT, "=")},
+	{regexp.MustCompile(`!`), default_handler(NOT, "!")},
 
 	// Conditional
-	{regexp.MustCompile(`<=`), defaultHandler(LESS_EQUALS, "<=")},
-	{regexp.MustCompile(`<`), defaultHandler(LESS, "<")},
-	{regexp.MustCompile(`>=`), defaultHandler(GREATER_EQUALS, ">=")},
-	{regexp.MustCompile(`>`), defaultHandler(GREATER, ">")},
+	{regexp.MustCompile(`<=`), default_handler(LESS_EQUALS, "<=")},
+	{regexp.MustCompile(`<`), default_handler(LESS, "<")},
+	{regexp.MustCompile(`>=`), default_handler(GREATER_EQUALS, ">=")},
+	{regexp.MustCompile(`>`), default_handler(GREATER, ">")},
 
 	// Logical
-	{regexp.MustCompile(`\|\|`), defaultHandler(OR, "||")},
-	{regexp.MustCompile(`&&`), defaultHandler(AND, "&&")},
+	{regexp.MustCompile(`\|\|`), default_handler(OR, "||")},
+	{regexp.MustCompile(`&&`), default_handler(AND, "&&")},
 
 	// Symbols
-	{regexp.MustCompile(`\.\.`), defaultHandler(DOT_DOT, "..")},
-	{regexp.MustCompile(`\.`), defaultHandler(DOT, ".")},
-	{regexp.MustCompile(`;`), defaultHandler(SEMI_COLON, ";")},
-	{regexp.MustCompile(`:`), defaultHandler(COLON, ":")},
-	{regexp.MustCompile(`\?\?=`), defaultHandler(NULLISH_ASSIGNMENT, "??=")},
-	{regexp.MustCompile(`\?`), defaultHandler(QUESTION, "?")},
-	{regexp.MustCompile(`,`), defaultHandler(COMMA, ",")},
+	{regexp.MustCompile(`\.\.`), default_handler(DOT_DOT, "..")},
+	{regexp.MustCompile(`\.`), default_handler(DOT, ".")},
+	{regexp.MustCompile(`;`), default_handler(SEMI_COLON, ";")},
+	{regexp.MustCompile(`:`), default_handler(COLON, ":")},
+	{regexp.MustCompile(`\?\?=`), default_handler(NULLISH_ASSIGNMENT, "??=")},
+	{regexp.MustCompile(`\?`), default_handler(QUESTION, "?")},
+	{regexp.MustCompile(`,`), default_handler(COMMA, ",")},
 
 	// Shorthand
-	{regexp.MustCompile(`\+\+`), defaultHandler(PLUS_PLUS, "++")},
-	{regexp.MustCompile(`--`), defaultHandler(MINUS_MINUS, "--")},
-	{regexp.MustCompile(`\+=`), defaultHandler(PLUS_EQUALS, "+=")},
-	{regexp.MustCompile(`-=`), defaultHandler(MINUS_EQUALS, "-=")},
-	{regexp.MustCompile(`\*=`), defaultHandler(STAR_EQUALS, "*=")},
-	{regexp.MustCompile(`/=`), defaultHandler(SLASH_EQUALS, "/=")},
+	{regexp.MustCompile(`\+\+`), default_handler(PLUS_PLUS, "++")},
+	{regexp.MustCompile(`--`), default_handler(MINUS_MINUS, "--")},
+	{regexp.MustCompile(`\+=`), default_handler(PLUS_EQUALS, "+=")},
+	{regexp.MustCompile(`-=`), default_handler(MINUS_EQUALS, "-=")},
+	{regexp.MustCompile(`\*=`), default_handler(STAR_EQUALS, "*=")},
+	{regexp.MustCompile(`/=`), default_handler(SLASH_EQUALS, "/=")},
 
 	// Math Operators
-	{regexp.MustCompile(`\+`), defaultHandler(PLUS, "+")},
-	{regexp.MustCompile(`-`), defaultHandler(DASH, "-")},
-	{regexp.MustCompile(`/`), defaultHandler(SLASH, "/")},
-	{regexp.MustCompile(`\*`), defaultHandler(STAR, "*")},
-	{regexp.MustCompile(`%`), defaultHandler(PERCENT, "%")},
+	{regexp.MustCompile(`\+`), default_handler(PLUS, "+")},
+	{regexp.MustCompile(`-`), default_handler(DASH, "-")},
+	{regexp.MustCompile(`/`), default_handler(SLASH, "/")},
+	{regexp.MustCompile(`\*`), default_handler(STAR, "*")},
+	{regexp.MustCompile(`%`), default_handler(PERCENT, "%")},
 }

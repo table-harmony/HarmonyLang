@@ -3,11 +3,14 @@ package main
 import (
 	"os"
 
+	"github.com/sanity-io/litter"
+
 	"github.com/table-harmony/HarmonyLang/src/lexer"
+	"github.com/table-harmony/HarmonyLang/src/parser"
 )
 
 func main() {
-	bytes, err := os.ReadFile("examples/01.harmony")
+	bytes, err := os.ReadFile("examples/00.harmony")
 
 	if err != nil {
 		panic(err)
@@ -15,9 +18,8 @@ func main() {
 
 	source := string(bytes)
 
-	var tokens = lexer.Tokenize(source)
+	tokens := lexer.Tokenize(source)
+	ast := parser.Parse(tokens)
 
-	for _, token := range tokens {
-		token.Print()
-	}
+	litter.Dump(ast)
 }

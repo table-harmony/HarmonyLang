@@ -3,26 +3,26 @@ package lexer
 import "fmt"
 
 func Tokenize(source string) []Token {
-	lex := createLexer(source)
+	lexer := createLexer(source)
 
-	for !lex.at_eof() {
+	for !lexer.at_eof() {
 		matched := false
 
-		for _, pattern := range lex.patterns {
-			location := pattern.regex.FindStringIndex(lex.remainder())
+		for _, pattern := range lexer.patterns {
+			location := pattern.regex.FindStringIndex(lexer.remainder())
 
 			if location != nil && location[0] == 0 {
-				pattern.handler(lex, pattern.regex)
+				pattern.handler(lexer, pattern.regex)
 				matched = true
 				break
 			}
 		}
 
 		if !matched {
-			panic(fmt.Sprintf("lexer error: unrecognized token near '%v'", lex.remainder()))
+			panic(fmt.Sprintf("lexer error: unrecognized token near '%v'", lexer.remainder()))
 		}
 	}
 
-	lex.push(CreateToken(EOF, "EOF"))
-	return lex.Tokens
+	lexer.push(CreateToken(EOF, "EOF"))
+	return lexer.Tokens
 }

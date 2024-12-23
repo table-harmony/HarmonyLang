@@ -116,12 +116,12 @@ func CreateToken(kind TokenKind, value string) Token {
 }
 
 // Prints the token's data
-func (token Token) Print() {
+func (token Token) ToString() string {
 	if token.isOfKind(IDENTIFIER, NUMBER, STRING) {
-		fmt.Printf("%s (%s)\n", token.Kind.ToString(), token.Value)
-	} else {
-		fmt.Printf("%s\n", token.Kind.ToString())
+		return fmt.Sprintf("{ Kind: %s, Value: %s }", token.Kind.ToString(), token.Value)
 	}
+
+	return fmt.Sprintf("{ Kind: %s }", token.Kind.ToString())
 }
 
 // Returns whether a token is of the kinds in the collection
