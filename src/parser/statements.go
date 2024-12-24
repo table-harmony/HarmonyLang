@@ -38,7 +38,7 @@ func parse_variable_declaration_statement(parser *parser) ast.Statement {
 	var explicitType ast.Type
 	if parser.currentToken().Kind == lexer.COLON {
 		parser.advance(1)
-		explicitType = parse_type(parser)
+		explicitType = parse_type(parser, default_bp)
 	}
 
 	var value ast.Expression

@@ -1,10 +1,10 @@
 package ast
 
-type PrimitiveType struct {
-	Name string
+type SymbolType struct {
+	Value string
 }
 
-func (t PrimitiveType) _type() {}
+func (t SymbolType) _type() {}
 
 type ArrayType struct {
 	Underlying Type
