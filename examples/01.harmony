@@ -1,0 +1,18 @@
+//static func foo(x: string) -> number {
+//  return bar;
+//}
+
+//struct Shape {
+//  static bar: number;
+//  x: string;
+//
+//  static func foo() {
+//    return bar
+//  }
+//};
+
+
+
+//TODO: statements (FOR, FOREACH, WHILE)
+//TODO: array instansation && .. operator
+//TODO: structures && methods

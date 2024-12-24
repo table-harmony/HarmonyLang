@@ -1,10 +1,41 @@
-//let foo = -45.2;
-//let bar = foo * 10 + (45 / 10 - -5);
+import foo from "bar";
 
-//foo = foo + 10;
-//bar -= 10;
+let foo = -45.2;
+let bar = foo * 10 + (45 / 10 - -5);
 
-//const isGreater = foo > bar && !foo || bar;
+foo = foo + 10;
+bar -= 10;
+
+const isGreater = foo > bar && !foo || bar;
 
 const foo: number = 34.2;
 let bar: [][]number = 12.12;
+
+const foo = "liron1";
+const bar = switch foo {
+  "liron1" -> "1",
+  "liron2" -> "2",
+  _ -> "3"
+};
+
+const x = "";
+
+switch foo + 1 {
+  case "liron1" * 2: {
+    x = "1";
+  }
+  case "liron2": {
+    x = "2";
+  }
+  default: {
+    x = "3";
+  }
+}
+
+if foo == bar {
+  x = 1;
+} else if foo == 1 {
+  y = 2;
+} else {
+  bar = 3;
+}

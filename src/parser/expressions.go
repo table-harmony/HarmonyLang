@@ -109,3 +109,41 @@ func parse_prefix_expression(parser *parser) ast.Expression {
 		Right:    right,
 	}
 }
+
+func parse_switch_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.SWITCH)
+	parser.advance(1)
+
+	value := parse_expression(parser, assignment)
+
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	cases := make([]ast.SwitchCase, 0)
+	for !parser.isEmpty() && parser.currentToken().Kind != lexer.CLOSE_CURLY {
+		pattern := parse_expression(parser, assignment)
+
+		parser.expect(lexer.ARROW)
+		parser.advance(1)
+
+		value := parse_expression(parser, assignment)
+
+		if parser.currentToken().Kind != lexer.CLOSE_CURLY {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+
+		cases = append(cases, ast.SwitchCase{
+			Pattern: pattern,
+			Value:   value,
+		})
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.SwitchExpression{
+		Value: value,
+		Cases: cases,
+	}
+}

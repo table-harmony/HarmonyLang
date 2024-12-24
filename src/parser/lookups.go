@@ -30,66 +30,77 @@ var nud_lookup = map[lexer.TokenKind]nud_handler{}
 var led_lookup = map[lexer.TokenKind]led_handler{}
 var statement_lookup = map[lexer.TokenKind]statement_handler{}
 
-func add_led(kind lexer.TokenKind, bp binding_power, handler led_handler) {
+func led(kind lexer.TokenKind, bp binding_power, handler led_handler) {
 	binding_power_lookup[kind] = bp
 	led_lookup[kind] = handler
 }
 
-func add_nud(kind lexer.TokenKind, bp binding_power, handler nud_handler) {
+func nud(kind lexer.TokenKind, bp binding_power, handler nud_handler) {
 	binding_power_lookup[kind] = bp
 	nud_lookup[kind] = handler
 }
 
-func add_statement(kind lexer.TokenKind, handler statement_handler) {
+func statement(kind lexer.TokenKind, handler statement_handler) {
 	binding_power_lookup[kind] = default_bp
 	statement_lookup[kind] = handler
 }
 
 func create_token_lookups() {
 	// Assignment
-	add_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
-	add_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
-	add_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
-	add_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
-	add_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
+	led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
+	led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
+	led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
+	led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
+	led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
 
 	// Logical
-	add_led(lexer.AND, logical, parse_binary_expression)
-	add_led(lexer.OR, logical, parse_binary_expression)
+	led(lexer.AND, logical, parse_binary_expression)
+	led(lexer.OR, logical, parse_binary_expression)
 
 	// Relational
-	add_led(lexer.LESS, relational, parse_binary_expression)
-	add_led(lexer.LESS_EQUALS, relational, parse_binary_expression)
-	add_led(lexer.GREATER, relational, parse_binary_expression)
-	add_led(lexer.GREATER_EQUALS, relational, parse_binary_expression)
-	add_led(lexer.EQUALS, relational, parse_binary_expression)
-	add_led(lexer.NOT_EQUALS, relational, parse_binary_expression)
+	led(lexer.LESS, relational, parse_binary_expression)
+	led(lexer.LESS_EQUALS, relational, parse_binary_expression)
+	led(lexer.GREATER, relational, parse_binary_expression)
+	led(lexer.GREATER_EQUALS, relational, parse_binary_expression)
+	led(lexer.EQUALS, relational, parse_binary_expression)
+	led(lexer.NOT_EQUALS, relational, parse_binary_expression)
 
 	// Additive
-	add_led(lexer.PLUS, additive, parse_binary_expression)
-	add_led(lexer.DASH, additive, parse_binary_expression)
+	led(lexer.PLUS, additive, parse_binary_expression)
+	led(lexer.DASH, additive, parse_binary_expression)
 
 	// Multiplicative
-	add_led(lexer.SLASH, multiplicative, parse_binary_expression)
-	add_led(lexer.STAR, multiplicative, parse_binary_expression)
-	add_led(lexer.PERCENT, multiplicative, parse_binary_expression)
+	led(lexer.SLASH, multiplicative, parse_binary_expression)
+	led(lexer.STAR, multiplicative, parse_binary_expression)
+	led(lexer.PERCENT, multiplicative, parse_binary_expression)
 
 	// Literals & Symbols
-	add_nud(lexer.NUMBER, primary, parse_primary_expression)
-	add_nud(lexer.STRING, primary, parse_primary_expression)
-	add_nud(lexer.IDENTIFIER, primary, parse_primary_expression)
-
-	add_nud(lexer.DASH, unary, parse_prefix_expression)
-	add_nud(lexer.NOT, unary, parse_prefix_expression)
+	nud(lexer.NUMBER, primary, parse_primary_expression)
+	nud(lexer.STRING, primary, parse_primary_expression)
+	nud(lexer.IDENTIFIER, primary, parse_primary_expression)
 
 	// Unary/Prefix
+	nud(lexer.DASH, unary, parse_prefix_expression)
+	nud(lexer.NOT, unary, parse_prefix_expression)
+	nud(lexer.TYPEOF, unary, parse_prefix_expression)
 
 	// Member / Computed // Call
 
 	// Grouping Expression
-	add_nud(lexer.OPEN_PAREN, primary, parse_grouping_expression)
+	nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)
+	nud(lexer.SWITCH, default_bp, parse_switch_expression)
+
+	// Modifiers
+	//statement(lexer.STATIC, parse_modifier_statement)
 
 	// Statements
-	add_statement(lexer.LET, parse_variable_declaration_statement)
-	add_statement(lexer.CONST, parse_variable_declaration_statement)
+	statement(lexer.LET, parse_variable_declaration_statement)
+	statement(lexer.CONST, parse_variable_declaration_statement)
+	statement(lexer.INTERFACE, parse_interface_declaration_statement)
+	statement(lexer.STRUCT, parse_struct_declaration_statement)
+	statement(lexer.FUNC, parse_func_declaration_statement)
+	statement(lexer.IMPORT, parse_import_statement)
+	statement(lexer.IF, parse_if_statement)
+	statement(lexer.OPEN_CURLY, parse_block_statement)
+	statement(lexer.SWITCH, parse_switch_statement)
 }

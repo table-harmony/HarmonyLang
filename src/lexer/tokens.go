@@ -44,6 +44,7 @@ const (
 	COLON
 	QUESTION
 	COMMA
+	ARROW
 
 	// Shorthand
 	PLUS_PLUS
@@ -64,11 +65,11 @@ const (
 	// Reserved Keywords
 	LET
 	CONST
-	CLASS
-	NEW
 	IMPORT
 	FROM
-	FUNCTION
+	FUNC
+	STRUCT
+	INTERFACE
 	IF
 	ELSE
 	FOREACH
@@ -78,29 +79,37 @@ const (
 	TYPEOF
 	IN
 	RETURN
+	STATIC
+	SWITCH
+	CASE
+	DEFAULT
 )
 
 // Reserved lookups for keywords
 var reservedKeywords map[string]TokenKind = map[string]TokenKind{
-	"true":     TRUE,
-	"false":    FALSE,
-	"null":     NULL,
-	"let":      LET,
-	"const":    CONST,
-	"class":    CLASS,
-	"new":      NEW,
-	"import":   IMPORT,
-	"from":     FROM,
-	"function": FUNCTION,
-	"if":       IF,
-	"else":     ELSE,
-	"foreach":  FOREACH,
-	"while":    WHILE,
-	"for":      FOR,
-	"export":   EXPORT,
-	"typeof":   TYPEOF,
-	"in":       IN,
-	"return":   RETURN,
+	"true":      TRUE,
+	"false":     FALSE,
+	"null":      NULL,
+	"let":       LET,
+	"const":     CONST,
+	"import":    IMPORT,
+	"from":      FROM,
+	"func":      FUNC,
+	"if":        IF,
+	"else":      ELSE,
+	"foreach":   FOREACH,
+	"while":     WHILE,
+	"for":       FOR,
+	"export":    EXPORT,
+	"typeof":    TYPEOF,
+	"in":        IN,
+	"return":    RETURN,
+	"struct":    STRUCT,
+	"interface": INTERFACE,
+	"static":    STATIC,
+	"switch":    SWITCH,
+	"case":      CASE,
+	"default":   DEFAULT,
 }
 
 type Token struct {
@@ -224,15 +233,11 @@ func (kind TokenKind) ToString() string {
 		return "let"
 	case CONST:
 		return "const"
-	case CLASS:
-		return "class"
-	case NEW:
-		return "new"
 	case IMPORT:
 		return "import"
 	case FROM:
 		return "from"
-	case FUNCTION:
+	case FUNC:
 		return "function"
 	case IF:
 		return "if"
@@ -252,6 +257,20 @@ func (kind TokenKind) ToString() string {
 		return "in"
 	case RETURN:
 		return "return"
+	case STRUCT:
+		return "struct"
+	case INTERFACE:
+		return "interface"
+	case STATIC:
+		return "static"
+	case SWITCH:
+		return "switch"
+	case CASE:
+		return "case"
+	case DEFAULT:
+		return "default"
+	case ARROW:
+		return "arrow"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

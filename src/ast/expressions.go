@@ -46,3 +46,15 @@ type PrefixExpression struct {
 }
 
 func (node PrefixExpression) expression() {}
+
+type SwitchExpression struct {
+	Value Expression
+	Cases []SwitchCase
+}
+
+func (node SwitchExpression) expression() {}
+
+type SwitchCase struct {
+	Pattern Expression
+	Value   Expression
+}

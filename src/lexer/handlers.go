@@ -96,6 +96,7 @@ var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`\?\?=`), default_handler(NULLISH_ASSIGNMENT, "??=")},
 	{regexp.MustCompile(`\?`), default_handler(QUESTION, "?")},
 	{regexp.MustCompile(`,`), default_handler(COMMA, ",")},
+	{regexp.MustCompile(`->`), default_handler(ARROW, "->")},
 
 	// Shorthand
 	{regexp.MustCompile(`\+\+`), default_handler(PLUS_PLUS, "++")},

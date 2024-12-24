@@ -11,13 +11,13 @@ type type_handler func(parser *parser) ast.Type
 
 var type_lookup = map[lexer.TokenKind]type_handler{}
 
-func add_type(kind lexer.TokenKind, handler type_handler) {
+func create_type(kind lexer.TokenKind, handler type_handler) {
 	type_lookup[kind] = handler
 }
 
 func create_type_lookups() {
-	add_type(lexer.IDENTIFIER, parse_primitive_type)
-	add_type(lexer.OPEN_BRACKET, parse_array_type)
+	create_type(lexer.IDENTIFIER, parse_primitive_type)
+	create_type(lexer.OPEN_BRACKET, parse_array_type)
 }
 
 func parse_type(parser *parser) ast.Type {
