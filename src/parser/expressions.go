@@ -36,7 +36,7 @@ func parse_binary_expression(parser *parser, left ast.Expression, bp binding_pow
 	operatorToken := parser.currentToken()
 	parser.advance(1)
 
-	right := parse_expression(parser, bp+1)
+	right := parse_expression(parser, bp)
 
 	return ast.BinaryExpression{
 		Left:     left,

@@ -8,25 +8,25 @@ type NumberExpression struct {
 	Value float64
 }
 
-func (node NumberExpression) expression() {}
+func (NumberExpression) expression() {}
 
 type StringExpression struct {
 	Value string
 }
 
-func (node StringExpression) expression() {}
+func (StringExpression) expression() {}
 
 type SymbolExpression struct {
 	Value string
 }
 
-func (node SymbolExpression) expression() {}
+func (SymbolExpression) expression() {}
 
 type BooleanExpression struct {
 	Value bool
 }
 
-func (node BooleanExpression) expression() {}
+func (BooleanExpression) expression() {}
 
 // Complex Expressions
 
@@ -36,7 +36,7 @@ type BinaryExpression struct {
 	Operator lexer.Token
 }
 
-func (node BinaryExpression) expression() {}
+func (BinaryExpression) expression() {}
 
 type AssignmentExpression struct {
 	Assigne  Expression
@@ -44,21 +44,21 @@ type AssignmentExpression struct {
 	Operator lexer.Token
 }
 
-func (node AssignmentExpression) expression() {}
+func (AssignmentExpression) expression() {}
 
 type PrefixExpression struct {
 	Operator lexer.Token
 	Right    Expression
 }
 
-func (node PrefixExpression) expression() {}
+func (PrefixExpression) expression() {}
 
 type SwitchExpression struct {
 	Value Expression
 	Cases []SwitchCase
 }
 
-func (node SwitchExpression) expression() {}
+func (SwitchExpression) expression() {}
 
 type SwitchCase struct {
 	Pattern Expression

@@ -30,80 +30,81 @@ var nud_lookup = map[lexer.TokenKind]nud_handler{}
 var led_lookup = map[lexer.TokenKind]led_handler{}
 var statement_lookup = map[lexer.TokenKind]statement_handler{}
 
-func led(kind lexer.TokenKind, bp binding_power, handler led_handler) {
+func register_led(kind lexer.TokenKind, bp binding_power, handler led_handler) {
 	binding_power_lookup[kind] = bp
 	led_lookup[kind] = handler
 }
 
-func nud(kind lexer.TokenKind, bp binding_power, handler nud_handler) {
+func register_nud(kind lexer.TokenKind, bp binding_power, handler nud_handler) {
 	binding_power_lookup[kind] = bp
 	nud_lookup[kind] = handler
 }
 
-func statement(kind lexer.TokenKind, handler statement_handler) {
+func register_statement(kind lexer.TokenKind, handler statement_handler) {
 	binding_power_lookup[kind] = default_bp
 	statement_lookup[kind] = handler
 }
 
 func create_token_lookups() {
 	// Assignment
-	led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
-	led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
-	led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
-	led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
-	led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
-	led(lexer.PLUS_PLUS, assignment, parse_assignment_expression)
-	led(lexer.MINUS_MINUS, assignment, parse_assignment_expression)
+	register_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
+	register_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.PLUS_PLUS, assignment, parse_assignment_expression)
+	register_led(lexer.MINUS_MINUS, assignment, parse_assignment_expression)
 
 	// Logical
-	led(lexer.AND, logical, parse_binary_expression)
-	led(lexer.OR, logical, parse_binary_expression)
+	register_led(lexer.AND, logical, parse_binary_expression)
+	register_led(lexer.OR, logical, parse_binary_expression)
 
 	// Relational
-	led(lexer.LESS, relational, parse_binary_expression)
-	led(lexer.LESS_EQUALS, relational, parse_binary_expression)
-	led(lexer.GREATER, relational, parse_binary_expression)
-	led(lexer.GREATER_EQUALS, relational, parse_binary_expression)
-	led(lexer.EQUALS, relational, parse_binary_expression)
-	led(lexer.NOT_EQUALS, relational, parse_binary_expression)
-	led(lexer.IN, relational, parse_binary_expression)
+	register_led(lexer.LESS, relational, parse_binary_expression)
+	register_led(lexer.LESS_EQUALS, relational, parse_binary_expression)
+	register_led(lexer.GREATER, relational, parse_binary_expression)
+	register_led(lexer.GREATER_EQUALS, relational, parse_binary_expression)
+	register_led(lexer.EQUALS, relational, parse_binary_expression)
+	register_led(lexer.NOT_EQUALS, relational, parse_binary_expression)
+	register_led(lexer.IN, relational, parse_binary_expression)
 
 	// Additive
-	led(lexer.PLUS, additive, parse_binary_expression)
-	led(lexer.DASH, additive, parse_binary_expression)
+	register_led(lexer.PLUS, additive, parse_binary_expression)
+	register_led(lexer.DASH, additive, parse_binary_expression)
 
 	// Multiplicative
-	led(lexer.SLASH, multiplicative, parse_binary_expression)
-	led(lexer.STAR, multiplicative, parse_binary_expression)
-	led(lexer.PERCENT, multiplicative, parse_binary_expression)
+	register_led(lexer.SLASH, multiplicative, parse_binary_expression)
+	register_led(lexer.STAR, multiplicative, parse_binary_expression)
+	register_led(lexer.PERCENT, multiplicative, parse_binary_expression)
 
 	// Literals & Symbols
-	nud(lexer.NUMBER, primary, parse_primary_expression)
-	nud(lexer.STRING, primary, parse_primary_expression)
-	nud(lexer.IDENTIFIER, primary, parse_primary_expression)
-	nud(lexer.TRUE, primary, parse_primary_expression)
-	nud(lexer.FALSE, primary, parse_primary_expression)
+	register_nud(lexer.NUMBER, primary, parse_primary_expression)
+	register_nud(lexer.STRING, primary, parse_primary_expression)
+	register_nud(lexer.IDENTIFIER, primary, parse_primary_expression)
+	register_nud(lexer.TRUE, primary, parse_primary_expression)
+	register_nud(lexer.FALSE, primary, parse_primary_expression)
 
 	// Unary/Prefix
-	nud(lexer.DASH, unary, parse_prefix_expression)
-	nud(lexer.NOT, unary, parse_prefix_expression)
-	nud(lexer.TYPEOF, unary, parse_prefix_expression)
+	register_nud(lexer.DASH, unary, parse_prefix_expression)
+	register_nud(lexer.NOT, unary, parse_prefix_expression)
+	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
+	register_nud(lexer.PLUS, unary, parse_prefix_expression)
 
 	// Member / Computed // Call
 
 	// Grouping Expression
-	nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)
-	nud(lexer.SWITCH, default_bp, parse_switch_expression)
+	register_nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)
+	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
 
 	// Statements
-	statement(lexer.LET, parse_variable_declaration_statement)
-	statement(lexer.CONST, parse_variable_declaration_statement)
-	statement(lexer.INTERFACE, parse_interface_declaration_statement)
-	statement(lexer.STRUCT, parse_struct_declaration_statement)
-	statement(lexer.FUNC, parse_func_declaration_statement)
-	statement(lexer.IMPORT, parse_import_statement)
-	statement(lexer.IF, parse_if_statement)
-	statement(lexer.OPEN_CURLY, parse_block_statement)
-	statement(lexer.SWITCH, parse_switch_statement)
-	statement(lexer.FOR, parse_for_statement)
+	register_statement(lexer.LET, parse_variable_declaration_statement)
+	register_statement(lexer.CONST, parse_variable_declaration_statement)
+	register_statement(lexer.INTERFACE, parse_interface_declaration_statement)
+	register_statement(lexer.STRUCT, parse_struct_declaration_statement)
+	register_statement(lexer.FUNC, parse_func_declaration_statement)
+	register_statement(lexer.IMPORT, parse_import_statement)
+	register_statement(lexer.IF, parse_if_statement)
+	register_statement(lexer.OPEN_CURLY, parse_block_statement)
+	register_statement(lexer.SWITCH, parse_switch_statement)
+	register_statement(lexer.FOR, parse_for_statement)
 }

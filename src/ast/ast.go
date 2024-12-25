@@ -14,10 +14,10 @@ type Type interface {
 	_type()
 }
 
-func ExpectExpression[T Expression](exprssion Expression) T {
+func ExpectExpression[T Expression](exprssion Expression) (T, error) {
 	return helpers.ExpectType[T](exprssion)
 }
 
-func ExpectStatement[T Statement](statement Statement) T {
+func ExpectStatement[T Statement](statement Statement) (T, error) {
 	return helpers.ExpectType[T](statement)
 }

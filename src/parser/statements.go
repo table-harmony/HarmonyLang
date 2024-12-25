@@ -167,7 +167,11 @@ func parse_switch_statement(parser *parser) ast.Statement {
 		parser.advance(1)
 
 		body_statement := parse_block_statement(parser)
-		block_statement := ast.ExpectStatement[ast.BlockStatement](body_statement)
+		block_statement, err := ast.ExpectStatement[ast.BlockStatement](body_statement)
+
+		if err != nil {
+			panic("Switch case body must be a block statement.")
+		}
 
 		cases = append(cases, ast.SwitchCaseStatement{
 			Pattern: pattern,
@@ -211,7 +215,11 @@ func parse_for_statement(parser *parser) ast.Statement {
 	parser.advance(1)
 
 	body_statement := parse_block_statement(parser)
-	block_statement := ast.ExpectStatement[ast.BlockStatement](body_statement)
+	block_statement, err := ast.ExpectStatement[ast.BlockStatement](body_statement)
+
+	if err != nil {
+		panic("For statement body must be a block statement.")
+	}
 
 	return ast.ForStatement{
 		Initializer: initializer,

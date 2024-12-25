@@ -4,13 +4,13 @@ type BlockStatement struct {
 	Body []Statement
 }
 
-func (node BlockStatement) statement() {}
+func (BlockStatement) statement() {}
 
 type ExpressionStatement struct {
 	Expression Expression
 }
 
-func (node ExpressionStatement) statement() {}
+func (ExpressionStatement) statement() {}
 
 type VariableDeclarationStatement struct {
 	Identifier   string
@@ -19,7 +19,7 @@ type VariableDeclarationStatement struct {
 	ExplicitType Type
 }
 
-func (node VariableDeclarationStatement) statement() {}
+func (VariableDeclarationStatement) statement() {}
 
 type Parameter struct {
 	Name string
@@ -34,7 +34,7 @@ type FunctionDeclarationStatment struct {
 	ReturnType Type
 }
 
-func (node FunctionDeclarationStatment) statement() {}
+func (FunctionDeclarationStatment) statement() {}
 
 type StructProperty struct {
 	IsStatic bool
@@ -51,7 +51,7 @@ type StructDeclarationStatement struct {
 	Methods    map[string]StructMethod
 }
 
-func (node StructDeclarationStatement) statement() {}
+func (StructDeclarationStatement) statement() {}
 
 type ImportStatement struct {
 	Name string
@@ -66,7 +66,7 @@ type IfStatement struct {
 	Alternate  Statement
 }
 
-func (node IfStatement) statement() {}
+func (IfStatement) statement() {}
 
 type SwitchCaseStatement struct {
 	Pattern Expression
@@ -78,7 +78,7 @@ type SwitchStatement struct {
 	Cases []SwitchCaseStatement
 }
 
-func (node SwitchStatement) statement() {}
+func (SwitchStatement) statement() {}
 
 type ForStatement struct {
 	Initializer Statement
@@ -87,4 +87,4 @@ type ForStatement struct {
 	Body        []Statement
 }
 
-func (node ForStatement) statement() {}
+func (ForStatement) statement() {}
