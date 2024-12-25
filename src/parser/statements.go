@@ -109,7 +109,14 @@ func parse_if_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.IF)
 	parser.advance(1)
 
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
 	condition := parse_expression(parser, assignment)
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
+
 	consequent := parse_block_statement(parser)
 
 	var alternate ast.Statement
@@ -146,7 +153,13 @@ func parse_switch_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.SWITCH)
 	parser.advance(1)
 
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
 	value := parse_expression(parser, assignment)
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
 
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)

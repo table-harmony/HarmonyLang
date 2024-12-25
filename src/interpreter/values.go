@@ -64,7 +64,7 @@ func (b BooleanRuntime) AsNumber() (float64, error) {
 	return 0, nil
 }
 func (b BooleanRuntime) AsString() (string, error) {
-	return fmt.Sprintf("%b", b.Value), nil
+	return fmt.Sprintf("%t", b.Value), nil
 }
 func (b BooleanRuntime) AsBoolean() (bool, error) { return b.Value, nil }
 

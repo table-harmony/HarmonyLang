@@ -36,6 +36,9 @@ func parse_binary_expression(parser *parser, left ast.Expression, bp binding_pow
 	operatorToken := parser.currentToken()
 	parser.advance(1)
 
+	//TODO: on 5 / 3 % 2 the module is first because there is priority for right and not left
+	//TODO: FIX
+
 	right := parse_expression(parser, bp)
 
 	return ast.BinaryExpression{
@@ -153,7 +156,13 @@ func parse_switch_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.SWITCH)
 	parser.advance(1)
 
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
 	value := parse_expression(parser, assignment)
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
 
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)

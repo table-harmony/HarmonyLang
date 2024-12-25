@@ -15,12 +15,11 @@ func Interpret(ast []ast.Statement) {
 	global_env := create_enviorment(nil)
 
 	for !interpreter.is_empty() {
-		evalute_statement(interpreter, global_env)
+		evalute_current_statement(interpreter, global_env)
 		interpreter.advance(1)
 	}
 
 	litter.Dump(global_env.variables)
-	litter.Dump(interpreter.ast)
 }
 
 func create_interpreter(ast []ast.Statement) *interpreter {

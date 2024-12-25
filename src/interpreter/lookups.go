@@ -6,7 +6,7 @@ import (
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
-type statement_handler func(statement ast.Statement, env *Environment) RuntimeValue
+type statement_handler func(statement ast.Statement, env *Environment)
 type expression_handler func(expression ast.Expression, env *Environment) RuntimeValue
 
 var statement_lookup = make(map[reflect.Type]statement_handler)
@@ -25,6 +25,9 @@ func register_expression_handler[T ast.Expression](handler expression_handler) {
 func create_lookups() {
 	register_statement_handler[ast.ExpressionStatement](evaluate_expression_statement)
 	register_statement_handler[ast.VariableDeclarationStatement](evaluate_variable_declaration_statement)
+	register_statement_handler[ast.IfStatement](evaluate_if_statement)
+	register_statement_handler[ast.BlockStatement](evaluate_block_statement)
+	register_statement_handler[ast.ForStatement](evaluate_for_statement)
 
 	//
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)
