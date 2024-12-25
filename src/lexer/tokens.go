@@ -84,6 +84,8 @@ const (
 	SWITCH
 	CASE
 	DEFAULT
+	CONTINUE
+	BREAK
 )
 
 // Reserved lookups for keywords
@@ -111,6 +113,8 @@ var reservedKeywords map[string]TokenKind = map[string]TokenKind{
 	"switch":    SWITCH,
 	"case":      CASE,
 	"default":   DEFAULT,
+	"continue":  CONTINUE,
+	"break":     BREAK,
 }
 
 type Token struct {
@@ -270,6 +274,10 @@ func (kind TokenKind) ToString() string {
 		return "default"
 	case ARROW:
 		return "arrow"
+	case CONTINUE:
+		return "continue"
+	case BREAK:
+		return "break"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

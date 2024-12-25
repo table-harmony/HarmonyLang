@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -239,5 +241,19 @@ func parse_for_statement(parser *parser) ast.Statement {
 		Condition:   condition,
 		Post:        post,
 		Body:        block_statement.Body,
+	}
+}
+
+func parse_loop_control_statement(parser *parser) ast.Statement {
+	token := parser.currentToken()
+	parser.advance(2)
+
+	switch token.Kind {
+	case lexer.CONTINUE:
+		return ast.ContinueStatement{}
+	case lexer.BREAK:
+		return ast.BreakStatement{}
+	default:
+		panic(fmt.Sprintf("Cannot parse from token '%s' kind to loop_control_statement", token.ToString()))
 	}
 }

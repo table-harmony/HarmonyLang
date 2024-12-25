@@ -330,12 +330,14 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 	}
 
 	value := evaluate_expression(expected_expression.Value, env)
+	var default_case ast.Expression
 
-	underscore_pattern := ast.SymbolExpression{Value: "_"}
+	underscore_symbol := ast.SymbolExpression{Value: "_"}
 
 	for _, case_statement := range expected_expression.Cases {
-		if case_statement.Pattern == underscore_pattern {
-			return evaluate_expression(case_statement.Value, env)
+		if case_statement.Pattern == underscore_symbol {
+			default_case = case_statement.Value
+			continue
 		}
 
 		case_value := evaluate_expression(case_statement.Pattern, env)
@@ -346,5 +348,9 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 		}
 	}
 
-	return nil
+	if default_case == nil {
+		return nil
+	}
+
+	return evaluate_expression(default_case, env)
 }

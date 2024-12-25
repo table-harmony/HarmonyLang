@@ -88,3 +88,11 @@ type ForStatement struct {
 }
 
 func (ForStatement) statement() {}
+
+type BreakStatement struct{}
+
+func (BreakStatement) statement() {}
+
+type ContinueStatement struct{}
+
+func (ContinueStatement) statement() {}

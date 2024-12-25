@@ -52,7 +52,7 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 	}
 }
 
-// TODO: support BREAK, CONTINUE
+// TODO: fix break to end loop not the block
 func evaluate_block_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.BlockStatement](statement)
 
@@ -62,6 +62,14 @@ func evaluate_block_statement(statement ast.Statement, env *Environment) {
 
 	sub_environment := create_enviorment(env)
 	for _, underlying_statement := range expected_statement.Body {
+		if _, ok := underlying_statement.(ast.BreakStatement); ok {
+			break
+		}
+
+		if _, ok := underlying_statement.(ast.ContinueStatement); ok {
+			break
+		}
+
 		evaluate_statement(underlying_statement, sub_environment)
 	}
 }
@@ -111,12 +119,14 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 
 	for condition_met {
 		evaluate_block_statement(ast.BlockStatement{Body: expected_statement.Body}, sub_environment)
+
 		for _, post := range expected_statement.Post {
 			evaluate_expression(post, sub_environment)
 		}
 
 		condition_value = evaluate_expression(expected_statement.Condition, sub_environment)
 		condition_met, err = condition_value.AsBoolean()
+		litter.Dump(env.variables)
 
 		if err != nil {
 			panic(err)
@@ -133,12 +143,12 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 	}
 
 	value := evaluate_expression(expected_statement.Value, env)
+	var default_case ast.BlockStatement
 
 	for _, case_statement := range expected_statement.Cases {
 		if case_statement.Pattern == nil {
-			sub_environment := create_enviorment(env)
-			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
-			break
+			default_case = ast.BlockStatement{Body: case_statement.Body}
+			continue
 		}
 
 		case_value := evaluate_expression(case_statement.Pattern, env)
@@ -147,7 +157,12 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 		if case_value == value {
 			sub_environment := create_enviorment(env)
 			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
-			break
+			return
 		}
+	}
+
+	if len(default_case.Body) > 0 {
+		sub_environment := create_enviorment(env)
+		evaluate_block_statement(default_case, sub_environment)
 	}
 }

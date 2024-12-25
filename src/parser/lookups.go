@@ -106,4 +106,6 @@ func create_token_lookups() {
 	register_statement(lexer.OPEN_CURLY, parse_block_statement)
 	register_statement(lexer.SWITCH, parse_switch_statement)
 	register_statement(lexer.FOR, parse_for_statement)
+	register_statement(lexer.CONTINUE, parse_loop_control_statement)
+	register_statement(lexer.BREAK, parse_loop_control_statement)
 }

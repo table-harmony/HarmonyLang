@@ -27,10 +27,10 @@ const bar = switch (foo) {
 const x = "";
 
 switch (foo + 1) {
-  case "liron1" * 2: {
+  case 1: {
     x = "1";
   }
-  case "liron2": {
+  case 2: {
     x = "2";
   }
   default: {
