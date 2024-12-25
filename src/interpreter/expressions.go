@@ -135,11 +135,21 @@ func evaluate_prefix_expression(expression ast.Expression, env *Environment) Run
 
 	switch prefix_expression.Operator.Kind {
 	case lexer.NOT:
-		return BooleanRuntime{Value: !right.(BooleanRuntime).Value}
-	case lexer.PLUS:
-		return right
+		right_value, err := right.AsBoolean()
+
+		if err != nil {
+			panic(err)
+		}
+
+		return BooleanRuntime{Value: right_value}
 	case lexer.DASH:
-		return NumberRuntime{Value: -right.(NumberRuntime).Value}
+		right_value, err := right.AsNumber()
+
+		if err != nil {
+			panic(err)
+		}
+
+		return NumberRuntime{Value: right_value}
 	default:
 		panic("Unknown operator")
 	}
@@ -162,5 +172,26 @@ func evaluate_symbol_expression(expression ast.Expression, env *Environment) Run
 }
 
 func evaluate_assignment_expression(expression ast.Expression, env *Environment) RuntimeValue {
-	panic("Not implemented yet")
+	expected_expression, err := ast.ExpectExpression[ast.AssignmentExpression](expression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	//TODO: this is not expected it could be member or call
+	expected_assigne_expression, _ := ast.ExpectExpression[ast.SymbolExpression](expected_expression.Assigne)
+	declared_variable, err := env.get_variable(expected_assigne_expression.Value)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = env.assign_variable(expected_assigne_expression.Value,
+		evaluate_expression(expected_expression.Value, env))
+
+	if err != nil {
+		panic(err)
+	}
+
+	return declared_variable
 }

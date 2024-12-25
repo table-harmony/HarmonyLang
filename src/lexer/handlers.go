@@ -99,6 +99,7 @@ var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`-=`), default_handler(MINUS_EQUALS, "-=")},
 	{regexp.MustCompile(`\*=`), default_handler(STAR_EQUALS, "*=")},
 	{regexp.MustCompile(`/=`), default_handler(SLASH_EQUALS, "/=")},
+	{regexp.MustCompile(`%=`), default_handler(SLASH_EQUALS, "/=")},
 
 	// Math Operators
 	{regexp.MustCompile(`\+`), default_handler(PLUS, "+")},

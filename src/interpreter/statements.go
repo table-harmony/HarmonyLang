@@ -34,7 +34,7 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 	expected_statement, err := ast.ExpectStatement[ast.VariableDeclarationStatement](statement)
 
 	if err != nil {
-		panic(fmt.Sprintf("Expected expression statement, got %v", statement))
+		panic(err)
 	}
 
 	variable := RuntimeVariable{
@@ -43,7 +43,11 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 		Identifier:   expected_statement.Identifier,
 		ExplicitType: expected_statement.ExplicitType,
 	}
-	env.declare_variable(variable)
+	err = env.declare_variable(variable)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return variable
 }

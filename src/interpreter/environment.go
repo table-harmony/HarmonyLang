@@ -43,6 +43,11 @@ func (env *Environment) assign_variable(identifier string, value RuntimeValue) e
 	}
 
 	variable := env.variables[identifier]
+
+	if variable.IsConstant {
+		return errors.New("cannot reassign constant variable")
+	}
+
 	variable.Value = value
 	env.variables[identifier] = variable
 

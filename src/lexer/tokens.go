@@ -53,6 +53,7 @@ const (
 	MINUS_EQUALS
 	STAR_EQUALS
 	SLASH_EQUALS
+	PERCENT_EQUALS
 	NULLISH_ASSIGNMENT
 
 	//Maths
@@ -117,14 +118,12 @@ type Token struct {
 	Value string
 }
 
-// Creates a new token with the kind and values given
 func CreateToken(kind TokenKind, value string) Token {
 	return Token{
 		kind, value,
 	}
 }
 
-// Prints the token's data
 func (token Token) ToString() string {
 	if token.IsOfKind(IDENTIFIER, NUMBER, STRING) {
 		return fmt.Sprintf("{ Kind: %s, Value: %s }", token.Kind.ToString(), token.Value)
@@ -133,7 +132,6 @@ func (token Token) ToString() string {
 	return fmt.Sprintf("{ Kind: %s }", token.Kind.ToString())
 }
 
-// Returns whether a token is of the kinds in the collection
 func (token Token) IsOfKind(expectedTokens ...TokenKind) bool {
 	for _, expected := range expectedTokens {
 		if expected == token.Kind {
@@ -144,7 +142,6 @@ func (token Token) IsOfKind(expectedTokens ...TokenKind) bool {
 	return false
 }
 
-// Returns a string of the token kind
 func (kind TokenKind) ToString() string {
 	switch kind {
 	case EOF:
@@ -219,6 +216,8 @@ func (kind TokenKind) ToString() string {
 		return "slash_equals"
 	case NULLISH_ASSIGNMENT:
 		return "nullish_assignment"
+	case PERCENT_EQUALS:
+		return "percent_equals"
 	case PLUS:
 		return "plus"
 	case DASH:

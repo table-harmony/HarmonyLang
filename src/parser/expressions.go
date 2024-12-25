@@ -83,23 +83,45 @@ func parse_primary_expression(parser *parser) ast.Expression {
 
 func parse_assignment_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
 	parser.advance(1)
-
 	operator := parser.previousToken()
 
-	var right ast.Expression
-	switch operator.Kind {
-	case lexer.PLUS_PLUS:
-		right = ast.NumberExpression{Value: 1}
-	case lexer.MINUS_MINUS:
-		right = ast.NumberExpression{Value: -1}
-	default:
-		right = parse_expression(parser, bp)
+	right := ast.BinaryExpression{
+		Left: left,
 	}
 
+	switch operator.Kind {
+	case lexer.PLUS_PLUS:
+		right.Operator = lexer.CreateToken(lexer.PLUS, "")
+		right.Right = ast.NumberExpression{Value: 1}
+	case lexer.MINUS_MINUS:
+		right.Operator = lexer.CreateToken(lexer.DASH, "")
+		right.Right = ast.NumberExpression{Value: -1}
+	case lexer.PLUS_EQUALS:
+		right.Operator = lexer.CreateToken(lexer.PLUS, "")
+		right.Right = parse_expression(parser, bp)
+	case lexer.MINUS_EQUALS:
+		right.Operator = lexer.CreateToken(lexer.DASH, "")
+		right.Right = parse_expression(parser, bp)
+	case lexer.STAR_EQUALS:
+		right.Operator = lexer.CreateToken(lexer.STAR, "")
+		right.Right = parse_expression(parser, bp)
+	case lexer.SLASH_EQUALS:
+		right.Operator = lexer.CreateToken(lexer.SLASH, "")
+		right.Right = parse_expression(parser, bp)
+	case lexer.PERCENT_EQUALS:
+		right.Operator = lexer.CreateToken(lexer.PERCENT, "")
+		right.Right = parse_expression(parser, bp)
+	case lexer.ASSIGNMENT:
+		return ast.AssignmentExpression{
+			Assigne: left,
+			Value:   parse_expression(parser, bp),
+		}
+	}
+	//TODO: nullish assignment
+
 	return ast.AssignmentExpression{
-		Assigne:  left,
-		Value:    right,
-		Operator: operator,
+		Assigne: left,
+		Value:   right,
 	}
 }
 

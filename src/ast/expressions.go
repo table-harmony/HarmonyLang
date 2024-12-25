@@ -39,9 +39,8 @@ type BinaryExpression struct {
 func (BinaryExpression) expression() {}
 
 type AssignmentExpression struct {
-	Assigne  Expression
-	Value    Expression
-	Operator lexer.Token
+	Assigne Expression
+	Value   Expression
 }
 
 func (AssignmentExpression) expression() {}
