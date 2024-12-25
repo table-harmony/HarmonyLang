@@ -13,7 +13,6 @@ type regex_pattern struct {
 	handler regex_handler
 }
 
-// The lexer
 type lexer struct {
 	patterns []regex_pattern
 	Tokens   []Token
@@ -21,7 +20,6 @@ type lexer struct {
 	pos      int
 }
 
-// Returns a reference to a new lexer
 func createLexer(source string) *lexer {
 	return &lexer{
 		pos:      0,
@@ -31,27 +29,22 @@ func createLexer(source string) *lexer {
 	}
 }
 
-// Advances the lexer position by n
 func (lexer *lexer) advance(n int) {
 	lexer.pos += n
 }
 
-// Returns the lexer current value at the source
 func (lexer *lexer) at() byte {
 	return lexer.source[lexer.pos]
 }
 
-// Returns the remainder of the source
 func (lexer *lexer) remainder() string {
 	return lexer.source[lexer.pos:]
 }
 
-// Pushes a token onto the lexer
 func (lexer *lexer) push(token Token) {
 	lexer.Tokens = append(lexer.Tokens, token)
 }
 
-// Returns whether the lexer is at the end of the source
 func (lexer *lexer) at_eof() bool {
 	return lexer.pos >= len(lexer.source)
 }

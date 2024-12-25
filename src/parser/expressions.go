@@ -50,6 +50,14 @@ func parse_primary_expression(parser *parser) ast.Expression {
 	parser.advance(1)
 
 	switch token.Kind {
+	case lexer.TRUE:
+		return ast.BooleanExpression{
+			Value: true,
+		}
+	case lexer.FALSE:
+		return ast.BooleanExpression{
+			Value: false,
+		}
 	case lexer.NUMBER:
 		number, err := strconv.ParseFloat(token.Value, 64)
 
@@ -77,7 +85,16 @@ func parse_assignment_expression(parser *parser, left ast.Expression, bp binding
 	parser.advance(1)
 
 	operator := parser.previousToken()
-	right := parse_expression(parser, bp)
+
+	var right ast.Expression
+	switch operator.Kind {
+	case lexer.PLUS_PLUS:
+		right = ast.NumberExpression{Value: 1}
+	case lexer.MINUS_MINUS:
+		right = ast.NumberExpression{Value: -1}
+	default:
+		right = parse_expression(parser, bp)
+	}
 
 	return ast.AssignmentExpression{
 		Assigne:  left,

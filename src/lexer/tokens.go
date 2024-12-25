@@ -126,7 +126,7 @@ func CreateToken(kind TokenKind, value string) Token {
 
 // Prints the token's data
 func (token Token) ToString() string {
-	if token.isOfKind(IDENTIFIER, NUMBER, STRING) {
+	if token.IsOfKind(IDENTIFIER, NUMBER, STRING) {
 		return fmt.Sprintf("{ Kind: %s, Value: %s }", token.Kind.ToString(), token.Value)
 	}
 
@@ -134,7 +134,7 @@ func (token Token) ToString() string {
 }
 
 // Returns whether a token is of the kinds in the collection
-func (token Token) isOfKind(expectedTokens ...TokenKind) bool {
+func (token Token) IsOfKind(expectedTokens ...TokenKind) bool {
 	for _, expected := range expectedTokens {
 		if expected == token.Kind {
 			return true

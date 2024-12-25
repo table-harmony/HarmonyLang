@@ -79,3 +79,12 @@ type SwitchStatement struct {
 }
 
 func (node SwitchStatement) statement() {}
+
+type ForStatement struct {
+	Initializer Statement
+	Condition   Expression
+	Post        []Expression
+	Body        Statement
+}
+
+func (node ForStatement) statement() {}

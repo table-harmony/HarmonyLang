@@ -4,7 +4,6 @@ import (
 	"regexp"
 )
 
-// The default regexHandler method
 func default_handler(kind TokenKind, value string) regex_handler {
 	return func(lex *lexer, _ *regexp.Regexp) {
 		lex.advance(len(value))
@@ -12,8 +11,7 @@ func default_handler(kind TokenKind, value string) regex_handler {
 	}
 }
 
-// The string regexHandler method
-func stringHandler(lex *lexer, regex *regexp.Regexp) {
+func string_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	stringLiteral := lex.remainder()[match[0]+1 : match[1]-1]
 
@@ -21,14 +19,12 @@ func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	lex.advance(len(stringLiteral) + 2)
 }
 
-// The number regexHandler method
 func number_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 	lex.push(CreateToken(NUMBER, match))
 	lex.advance(len(match))
 }
 
-// The symbol regexHandler method
 func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
@@ -41,13 +37,11 @@ func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 	lex.advance(len(match))
 }
 
-// The skip regexHandler method for blank spaces e.t.c
 func skip_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	lex.advance(match[1])
 }
 
-// The commetn regexHandler ignores comments and advances in the lexer
 func comment_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 
@@ -60,7 +54,7 @@ func comment_handler(lex *lexer, regex *regexp.Regexp) {
 var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`\s+`), skip_handler},
 	{regexp.MustCompile(`\/\/.*`), comment_handler},
-	{regexp.MustCompile(`"[^"]*"`), stringHandler},
+	{regexp.MustCompile(`"[^"]*"`), string_handler},
 	{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), number_handler},
 	{regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), symbol_handler},
 

@@ -9,7 +9,7 @@ bar -= 10;
 const isGreater = foo > bar && !foo || bar;
 
 const foo: number = 34.2;
-let bar: [][]number = 12.12;
+let bar: number[][] = 12.12;
 
 const foo = "liron1";
 const bar = switch foo {

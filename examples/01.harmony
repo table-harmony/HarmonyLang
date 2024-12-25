@@ -2,17 +2,22 @@
 //  return bar;
 //}
 
-//struct Shape {
+//struct shape {
 //  static bar: number;
 //  x: string;
 //
 //  static func foo() {
 //    return bar
 //  }
+//  func get_bar() -> bar;
 //};
 
 // Example of a for loop in HarmonyLang
 
 //TODO: statements (FOR, FOREACH)
 //TODO: array instansation && .. operator
-//TODO: structures && methods
+//TODO: structures && functions
+//TODO: refernces && pointers
+
+// array instansation expression
+// number[] { 1, 2, 3 } =  1..3

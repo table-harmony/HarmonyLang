@@ -27,6 +27,7 @@ func parse_expression_statement(parser *parser) ast.Statement {
 	}
 }
 
+// TODO: implement multiple variable declaration (e.g. let a, b int = 1, 2 || let a = 1, b = 2)
 func parse_variable_declaration_statement(parser *parser) ast.Statement {
 	token := parser.currentToken()
 	isConstant := token.Kind == lexer.CONST
@@ -179,5 +180,41 @@ func parse_switch_statement(parser *parser) ast.Statement {
 	return ast.SwitchStatement{
 		Value: value,
 		Cases: cases,
+	}
+}
+
+func parse_for_statement(parser *parser) ast.Statement {
+	parser.expect(lexer.FOR)
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
+	initializer := parse_statement(parser)
+	condition := parse_expression(parser, assignment)
+
+	parser.expect(lexer.SEMI_COLON)
+	parser.advance(1)
+
+	var post []ast.Expression
+	for !parser.isEmpty() && parser.currentToken().Kind != lexer.CLOSE_PAREN {
+		post = append(post, parse_expression(parser, default_bp))
+
+		if parser.currentToken().Kind != lexer.CLOSE_PAREN {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
+
+	body := parse_block_statement(parser)
+
+	return ast.ForStatement{
+		Initializer: initializer,
+		Condition:   condition,
+		Post:        post,
+		Body:        body,
 	}
 }

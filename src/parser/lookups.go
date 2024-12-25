@@ -52,6 +52,8 @@ func create_token_lookups() {
 	led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
 	led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
 	led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
+	led(lexer.PLUS_PLUS, assignment, parse_assignment_expression)
+	led(lexer.MINUS_MINUS, assignment, parse_assignment_expression)
 
 	// Logical
 	led(lexer.AND, logical, parse_binary_expression)
@@ -64,6 +66,7 @@ func create_token_lookups() {
 	led(lexer.GREATER_EQUALS, relational, parse_binary_expression)
 	led(lexer.EQUALS, relational, parse_binary_expression)
 	led(lexer.NOT_EQUALS, relational, parse_binary_expression)
+	led(lexer.IN, relational, parse_binary_expression)
 
 	// Additive
 	led(lexer.PLUS, additive, parse_binary_expression)
@@ -78,6 +81,8 @@ func create_token_lookups() {
 	nud(lexer.NUMBER, primary, parse_primary_expression)
 	nud(lexer.STRING, primary, parse_primary_expression)
 	nud(lexer.IDENTIFIER, primary, parse_primary_expression)
+	nud(lexer.TRUE, primary, parse_primary_expression)
+	nud(lexer.FALSE, primary, parse_primary_expression)
 
 	// Unary/Prefix
 	nud(lexer.DASH, unary, parse_prefix_expression)
@@ -90,9 +95,6 @@ func create_token_lookups() {
 	nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)
 	nud(lexer.SWITCH, default_bp, parse_switch_expression)
 
-	// Modifiers
-	//statement(lexer.STATIC, parse_modifier_statement)
-
 	// Statements
 	statement(lexer.LET, parse_variable_declaration_statement)
 	statement(lexer.CONST, parse_variable_declaration_statement)
@@ -103,4 +105,5 @@ func create_token_lookups() {
 	statement(lexer.IF, parse_if_statement)
 	statement(lexer.OPEN_CURLY, parse_block_statement)
 	statement(lexer.SWITCH, parse_switch_statement)
+	statement(lexer.FOR, parse_for_statement)
 }

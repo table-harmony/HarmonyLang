@@ -22,6 +22,12 @@ type SymbolExpression struct {
 
 func (node SymbolExpression) expression() {}
 
+type BooleanExpression struct {
+	Value bool
+}
+
+func (node BooleanExpression) expression() {}
+
 // Complex Expressions
 
 type BinaryExpression struct {
