@@ -1,10 +1,10 @@
-if (foo == bar) {
-  x = 1;
-} else if (foo == 1) {
-  y = 2;
-} else {
-  bar = 3;
-}
+const foo = 5;
+
+const bar = switch (foo) {
+  1 -> "1",
+  2 + 3 -> "2",
+  _ -> "3"
+};
 
 //static func foo(x: string) -> number {
 //  return bar;

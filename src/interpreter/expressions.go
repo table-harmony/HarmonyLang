@@ -9,6 +9,10 @@ import (
 )
 
 func evaluate_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	if expression == nil {
+		return nil
+	}
+
 	expression_type := reflect.TypeOf(expression)
 
 	if handler, exists := expression_lookup[expression_type]; exists {
@@ -316,4 +320,31 @@ func evaluate_assignment_expression(expression ast.Expression, env *Environment)
 	}
 
 	return declared_variable
+}
+
+func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expected_expression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	value := evaluate_expression(expected_expression.Value, env)
+
+	underscore_pattern := ast.SymbolExpression{Value: "_"}
+
+	for _, case_statement := range expected_expression.Cases {
+		if case_statement.Pattern == underscore_pattern {
+			return evaluate_expression(case_statement.Value, env)
+		}
+
+		case_value := evaluate_expression(case_statement.Pattern, env)
+
+		//TODO: equality needs better support
+		if case_value == value {
+			return evaluate_expression(case_statement.Value, env)
+		}
+	}
+
+	return nil
 }

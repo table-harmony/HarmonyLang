@@ -52,6 +52,7 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 	}
 }
 
+// TODO: support BREAK, CONTINUE
 func evaluate_block_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.BlockStatement](statement)
 
@@ -60,8 +61,8 @@ func evaluate_block_statement(statement ast.Statement, env *Environment) {
 	}
 
 	sub_environment := create_enviorment(env)
-	for _, statement1 := range expected_statement.Body {
-		evaluate_statement(statement1, sub_environment)
+	for _, underlying_statement := range expected_statement.Body {
+		evaluate_statement(underlying_statement, sub_environment)
 	}
 }
 
@@ -92,7 +93,6 @@ func evaluate_if_statement(statement ast.Statement, env *Environment) {
 
 func evaluate_for_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.ForStatement](statement)
-	litter.Dump(expected_statement)
 
 	if err != nil {
 		panic(err)
@@ -125,5 +125,29 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 }
 
 func evaluate_switch_statement(statement ast.Statement, env *Environment) {
-	panic("Not implemented yet")
+	expected_statement, err := ast.ExpectStatement[ast.SwitchStatement](statement)
+
+	litter.Dump(expected_statement)
+	if err != nil {
+		panic(err)
+	}
+
+	value := evaluate_expression(expected_statement.Value, env)
+
+	for _, case_statement := range expected_statement.Cases {
+		if case_statement.Pattern == nil {
+			sub_environment := create_enviorment(env)
+			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
+			break
+		}
+
+		case_value := evaluate_expression(case_statement.Pattern, env)
+
+		//TODO: equality needs better support
+		if case_value == value {
+			sub_environment := create_enviorment(env)
+			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
+			break
+		}
+	}
 }

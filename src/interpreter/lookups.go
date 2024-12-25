@@ -28,12 +28,14 @@ func create_lookups() {
 	register_statement_handler[ast.IfStatement](evaluate_if_statement)
 	register_statement_handler[ast.BlockStatement](evaluate_block_statement)
 	register_statement_handler[ast.ForStatement](evaluate_for_statement)
+	register_statement_handler[ast.SwitchStatement](evaluate_switch_statement)
 
 	//
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)
 	register_expression_handler[ast.BinaryExpression](evalute_binary_expression)
 	register_expression_handler[ast.AssignmentExpression](evaluate_assignment_expression)
 	register_expression_handler[ast.SymbolExpression](evaluate_symbol_expression)
+	register_expression_handler[ast.SwitchExpression](evaluate_switch_expression)
 
 	//
 	register_expression_handler[ast.BooleanExpression](evaluate_primary_statement)
