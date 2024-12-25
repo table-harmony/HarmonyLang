@@ -11,16 +11,19 @@ type interpreter struct {
 }
 
 func Interpret(ast []ast.Statement) {
-	interpreter := createInterpreter(ast)
+	interpreter := create_interpreter(ast)
+	global_env := create_enviorment(nil)
 
-	for !interpreter.isEmpty() {
-		litter.Dump(interpreter.currentStatement())
-		evalute_statement(interpreter)
+	for !interpreter.is_empty() {
+		evalute_statement(interpreter, global_env)
 		interpreter.advance(1)
 	}
+
+	litter.Dump(global_env.variables)
+	litter.Dump(interpreter.ast)
 }
 
-func createInterpreter(ast []ast.Statement) *interpreter {
+func create_interpreter(ast []ast.Statement) *interpreter {
 	create_lookups()
 
 	return &interpreter{
@@ -33,10 +36,10 @@ func (interpreter *interpreter) advance(n int) {
 	interpreter.pos += n
 }
 
-func (interpreter *interpreter) currentStatement() ast.Statement {
+func (interpreter *interpreter) current_statement() ast.Statement {
 	return interpreter.ast[interpreter.pos]
 }
 
-func (interpreter *interpreter) isEmpty() bool {
+func (interpreter *interpreter) is_empty() bool {
 	return interpreter.pos >= len(interpreter.ast)
 }

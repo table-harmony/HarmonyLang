@@ -88,7 +88,6 @@ func create_token_lookups() {
 	register_nud(lexer.DASH, unary, parse_prefix_expression)
 	register_nud(lexer.NOT, unary, parse_prefix_expression)
 	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
-	register_nud(lexer.PLUS, unary, parse_prefix_expression)
 
 	// Member / Computed // Call
 
