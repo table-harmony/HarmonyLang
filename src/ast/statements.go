@@ -70,7 +70,7 @@ func (node IfStatement) statement() {}
 
 type SwitchCaseStatement struct {
 	Pattern Expression
-	Body    Statement
+	Body    []Statement
 }
 
 type SwitchStatement struct {
@@ -84,7 +84,7 @@ type ForStatement struct {
 	Initializer Statement
 	Condition   Expression
 	Post        []Expression
-	Body        Statement
+	Body        []Statement
 }
 
 func (node ForStatement) statement() {}

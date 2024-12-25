@@ -39,3 +39,9 @@ if foo == bar {
 } else {
   bar = 3;
 }
+
+for (let i = 0; i < 10; i++) {
+  if i == 1 {
+    bar = i;
+  }
+}

@@ -166,11 +166,12 @@ func parse_switch_statement(parser *parser) ast.Statement {
 		parser.expect(lexer.COLON)
 		parser.advance(1)
 
-		body := parse_block_statement(parser)
+		body_statement := parse_block_statement(parser)
+		block_statement := ast.ExpectStatement[ast.BlockStatement](body_statement)
 
 		cases = append(cases, ast.SwitchCaseStatement{
 			Pattern: pattern,
-			Body:    body,
+			Body:    block_statement.Body,
 		})
 	}
 
@@ -209,12 +210,13 @@ func parse_for_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.CLOSE_PAREN)
 	parser.advance(1)
 
-	body := parse_block_statement(parser)
+	body_statement := parse_block_statement(parser)
+	block_statement := ast.ExpectStatement[ast.BlockStatement](body_statement)
 
 	return ast.ForStatement{
 		Initializer: initializer,
 		Condition:   condition,
 		Post:        post,
-		Body:        body,
+		Body:        block_statement.Body,
 	}
 }
