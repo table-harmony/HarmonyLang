@@ -298,3 +298,25 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 
 	return evaluate_expression(default_case, env)
 }
+
+func evaluate_ternary_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expected_expression, err := ast.ExpectExpression[ast.TernaryExpression](expression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	condition_expression := evaluate_expression(expected_expression.Condition, env)
+
+	condition_met, err := condition_expression.as_boolean()
+
+	if err != nil {
+		panic(err)
+	}
+
+	if condition_met {
+		return evaluate_expression(expected_expression.Consequent, env)
+	} else {
+		return evaluate_expression(expected_expression.Alternate, env)
+	}
+}

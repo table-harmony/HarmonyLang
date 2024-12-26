@@ -11,6 +11,7 @@ const (
 	default_bp binding_power = iota
 	comma
 	assignment
+	ternary
 	logical
 	relational
 	additive
@@ -89,6 +90,9 @@ func create_token_lookups() {
 	//register_nud(lexer.DASH, unary, parse_prefix_expression)
 	register_nud(lexer.NOT, unary, parse_prefix_expression)
 	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
+
+	// Ternary
+	register_led(lexer.QUESTION, ternary, parse_ternary_expression)
 
 	// Member / Computed // Call
 

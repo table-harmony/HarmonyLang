@@ -41,4 +41,5 @@ func create_lookups() {
 	register_expression_handler[ast.BooleanExpression](evaluate_primary_statement)
 	register_expression_handler[ast.NumberExpression](evaluate_primary_statement)
 	register_expression_handler[ast.StringExpression](evaluate_primary_statement)
+	register_expression_handler[ast.TernaryExpression](evaluate_ternary_expression)
 }

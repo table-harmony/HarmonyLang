@@ -63,3 +63,11 @@ type SwitchCase struct {
 	Pattern Expression
 	Value   Expression
 }
+
+type TernaryExpression struct {
+	Condition  Expression
+	Alternate  Expression
+	Consequent Expression
+}
+
+func (TernaryExpression) expression() {}

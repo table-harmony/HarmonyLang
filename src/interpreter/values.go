@@ -35,7 +35,7 @@ func (n NumberRuntime) as_string() (string, error) {
 	return fmt.Sprintf("%.g", n.Value), nil
 }
 func (n NumberRuntime) as_boolean() (bool, error) {
-	return n.Value != 0, nil
+	return false, type_mismatch_error(n.get_type(), BooleanType)
 }
 
 type StringRuntime struct {
@@ -48,7 +48,7 @@ func (s StringRuntime) as_number() (float64, error) {
 }
 func (s StringRuntime) as_string() (string, error) { return s.Value, nil }
 func (s StringRuntime) as_boolean() (bool, error) {
-	return s.Value != "", nil
+	return false, type_mismatch_error(s.get_type(), BooleanType)
 }
 
 type BooleanRuntime struct {
@@ -57,14 +57,10 @@ type BooleanRuntime struct {
 
 func (b BooleanRuntime) get_type() ValueType { return BooleanType }
 func (b BooleanRuntime) as_number() (float64, error) {
-	if b.Value {
-		return 1, nil
-	}
-
-	return 0, nil
+	return 0, type_mismatch_error(b.get_type(), NumberType)
 }
 func (b BooleanRuntime) as_string() (string, error) {
-	return fmt.Sprintf("%t", b.Value), nil
+	return "", type_mismatch_error(b.get_type(), StringType)
 }
 func (b BooleanRuntime) as_boolean() (bool, error) { return b.Value, nil }
 

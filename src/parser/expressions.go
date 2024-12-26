@@ -195,3 +195,21 @@ func parse_switch_expression(parser *parser) ast.Expression {
 		Cases: cases,
 	}
 }
+
+func parse_ternary_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	parser.expect(lexer.QUESTION)
+	parser.advance(1)
+
+	consequent := parse_expression(parser, bp)
+
+	parser.expect(lexer.COLON)
+	parser.advance(1)
+
+	alternate := parse_expression(parser, bp)
+
+	return ast.TernaryExpression{
+		Condition:  left,
+		Consequent: consequent,
+		Alternate:  alternate,
+	}
+}
