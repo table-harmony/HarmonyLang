@@ -51,7 +51,6 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 	}
 }
 
-// TODO: fix break to end loop not the block
 func evaluate_block_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.BlockStatement](statement)
 
@@ -61,14 +60,6 @@ func evaluate_block_statement(statement ast.Statement, env *Environment) {
 
 	sub_environment := create_enviorment(env)
 	for _, underlying_statement := range expected_statement.Body {
-		if _, ok := underlying_statement.(ast.BreakStatement); ok {
-			break
-		}
-
-		if _, ok := underlying_statement.(ast.ContinueStatement); ok {
-			break
-		}
-
 		evaluate_statement(underlying_statement, sub_environment)
 	}
 }
@@ -98,36 +89,59 @@ func evaluate_if_statement(statement ast.Statement, env *Environment) {
 	}
 }
 
+func evaluate_continue_statement(statement ast.Statement, env *Environment) {
+	panic(ContinueError{})
+}
+
+func evaluate_break_statement(statement ast.Statement, env *Environment) {
+	panic(BreakError{})
+}
+
 func evaluate_for_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.ForStatement](statement)
-
 	if err != nil {
 		panic(err)
 	}
 
-	sub_environment := create_enviorment(env)
+	loop_env := create_enviorment(env)
 
-	evaluate_statement(expected_statement.Initializer, sub_environment)
+	evaluate_statement(expected_statement.Initializer, loop_env)
 
-	condition_value := evaluate_expression(expected_statement.Condition, sub_environment)
-	condition_met, err := condition_value.as_boolean()
-
-	if err != nil {
-		panic(err)
-	}
-
-	for condition_met {
-		evaluate_block_statement(ast.BlockStatement{Body: expected_statement.Body}, sub_environment)
-
-		for _, post := range expected_statement.Post {
-			evaluate_expression(post, sub_environment)
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(BreakError); ok {
+				return
+			}
+			panic(r)
 		}
+	}()
 
-		condition_value = evaluate_expression(expected_statement.Condition, sub_environment)
-		condition_met, err = condition_value.as_boolean()
-
+	for {
+		condition_value := evaluate_expression(expected_statement.Condition, loop_env)
+		condition_met, err := condition_value.as_boolean()
 		if err != nil {
 			panic(err)
+		}
+
+		if !condition_met {
+			break
+		}
+
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					if _, ok := r.(ContinueError); ok {
+						return
+					}
+					panic(r)
+				}
+			}()
+
+			evaluate_block_statement(ast.BlockStatement{Body: expected_statement.Body}, loop_env)
+		}()
+
+		for _, post := range expected_statement.Post {
+			evaluate_expression(post, loop_env)
 		}
 	}
 }

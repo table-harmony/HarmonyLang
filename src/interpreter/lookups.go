@@ -29,6 +29,8 @@ func create_lookups() {
 	register_statement_handler[ast.BlockStatement](evaluate_block_statement)
 	register_statement_handler[ast.ForStatement](evaluate_for_statement)
 	register_statement_handler[ast.SwitchStatement](evaluate_switch_statement)
+	register_statement_handler[ast.ContinueStatement](evaluate_continue_statement)
+	register_statement_handler[ast.BreakStatement](evaluate_break_statement)
 
 	//
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)
