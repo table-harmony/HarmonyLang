@@ -15,7 +15,7 @@ func Interpret(ast []ast.Statement) {
 	global_env := create_enviorment(nil)
 
 	for !interpreter.is_empty() {
-		evalute_current_statement(interpreter, global_env)
+		interpreter.evalute_current_statement(global_env)
 		interpreter.advance(1)
 	}
 

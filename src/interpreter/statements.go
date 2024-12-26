@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
-func evalute_current_statement(interpreter *interpreter, enviorment *Environment) {
+func (interpreter *interpreter) evalute_current_statement(enviorment *Environment) {
 	statement := interpreter.current_statement()
 	evaluate_statement(statement, enviorment)
 }
@@ -82,7 +81,7 @@ func evaluate_if_statement(statement ast.Statement, env *Environment) {
 	}
 
 	condition_value := evaluate_expression(expected_statement.Condition, env)
-	condition_met, err := condition_value.AsBoolean()
+	condition_met, err := condition_value.as_boolean()
 
 	if err != nil {
 		panic(err)
@@ -111,7 +110,7 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 	evaluate_statement(expected_statement.Initializer, sub_environment)
 
 	condition_value := evaluate_expression(expected_statement.Condition, sub_environment)
-	condition_met, err := condition_value.AsBoolean()
+	condition_met, err := condition_value.as_boolean()
 
 	if err != nil {
 		panic(err)
@@ -125,8 +124,7 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 		}
 
 		condition_value = evaluate_expression(expected_statement.Condition, sub_environment)
-		condition_met, err = condition_value.AsBoolean()
-		litter.Dump(env.variables)
+		condition_met, err = condition_value.as_boolean()
 
 		if err != nil {
 			panic(err)
@@ -137,7 +135,6 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.SwitchStatement](statement)
 
-	litter.Dump(expected_statement)
 	if err != nil {
 		panic(err)
 	}
@@ -153,8 +150,7 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 
 		case_value := evaluate_expression(case_statement.Pattern, env)
 
-		//TODO: equality needs better support
-		if case_value == value {
+		if is_equal(case_value, value) {
 			sub_environment := create_enviorment(env)
 			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
 			return

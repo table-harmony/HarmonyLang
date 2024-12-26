@@ -1,7 +1,11 @@
-let i = 0;
-for (i = 1; i < 10; i++) {
-  break;
-  i = 1000;
+let bar: string = "1";
+
+if (bar == "1") {
+  bar = "1";
+}
+
+if (1 == true) {
+  bar = "2";
 }
 
 //static func foo(x: string) -> number {
@@ -19,11 +23,6 @@ for (i = 1; i < 10; i++) {
 //};
 
 // Example of a for loop in HarmonyLang
-
-//TODO: statements (FOR, FOREACH)
-//TODO: array instansation && .. operator
-//TODO: structures && functions
-//TODO: refernces && pointers
 
 // array instansation expression
 // number[] { 1, 2, 3 } =  1..3

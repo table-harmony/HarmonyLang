@@ -49,13 +49,13 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 	left := evaluate_expression(binary_expression.Left, env)
 	right := evaluate_expression(binary_expression.Right, env)
 
-	left_type, right_type := left.Type(), right.Type()
+	left_type, right_type := left.get_type(), right.get_type()
 
 	switch binary_expression.Operator.Kind {
 	case lexer.PLUS:
 		if left_type == StringType || right_type == StringType {
-			left_value, err1 := left.AsString()
-			right_value, err2 := right.AsString()
+			left_value, err1 := left.as_string()
+			right_value, err2 := right.as_string()
 
 			if err1 == nil && err2 == nil {
 				return StringRuntime{Value: left_value + right_value}
@@ -63,8 +63,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 		}
 
 		if left_type == NumberType || right_type == NumberType {
-			left_value, err1 := left.AsNumber()
-			right_value, err2 := right.AsNumber()
+			left_value, err1 := left.as_number()
+			right_value, err2 := right.as_number()
 
 			if err1 == nil && err2 == nil {
 				return NumberRuntime{Value: left_value + right_value}
@@ -73,8 +73,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand + not supported for these types")
 	case lexer.DASH:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return NumberRuntime{Value: left_value - right_value}
@@ -82,8 +82,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand - not supported for these types")
 	case lexer.STAR:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return NumberRuntime{Value: left_value * right_value}
@@ -91,8 +91,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand * not supported for these types")
 	case lexer.SLASH:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return NumberRuntime{Value: left_value / right_value}
@@ -100,8 +100,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand / not supported for these types")
 	case lexer.PERCENT:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return NumberRuntime{Value: float64(int(left_value) % int(right_value))}
@@ -109,8 +109,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand % not supported for these types")
 	case lexer.AND:
-		left_value, err1 := left.AsBoolean()
-		right_value, err2 := right.AsBoolean()
+		left_value, err1 := left.as_boolean()
+		right_value, err2 := right.as_boolean()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_value && right_value}
@@ -118,8 +118,8 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand && not supported for these types")
 	case lexer.OR:
-		left_value, err1 := left.AsBoolean()
-		right_value, err2 := right.AsBoolean()
+		left_value, err1 := left.as_boolean()
+		right_value, err2 := right.as_boolean()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_value || right_value}
@@ -127,73 +127,19 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand || not supported for these types")
 	case lexer.EQUALS:
-		if left_type == StringType || right_type == StringType {
-			left_value, err1 := left.AsString()
-			right_value, err2 := right.AsString()
-
-			if err1 == nil && err2 == nil {
-				return BooleanRuntime{Value: left_value == right_value}
-			}
-		}
-
-		if left_type == NumberType || right_type == NumberType {
-			left_value, err1 := left.AsNumber()
-			right_value, err2 := right.AsNumber()
-
-			if err1 == nil && err2 == nil {
-				return BooleanRuntime{Value: left_value == right_value}
-			}
-		}
-
-		if left_type == BooleanType || right_type == BooleanType {
-			left_value, err1 := left.AsBoolean()
-			right_value, err2 := right.AsBoolean()
-
-			if err1 == nil && err2 == nil {
-				return BooleanRuntime{Value: left_value == right_value}
-			}
-		}
-
-		panic("Operand == not supported for these types")
+		return BooleanRuntime{is_equal(left, right)}
 	case lexer.NOT_EQUALS:
-		if left_type == StringType || right_type == StringType {
-			left_value, err1 := left.AsString()
-			right_value, err2 := right.AsString()
-
-			if err1 == nil && err2 == nil {
-				return BooleanRuntime{Value: left_value != right_value}
-			}
-		}
-
-		if left_type == NumberType || right_type == NumberType {
-			left_value, err1 := left.AsNumber()
-			right_value, err2 := right.AsNumber()
-
-			if err1 == nil && err2 == nil {
-				return BooleanRuntime{Value: left_value != right_value}
-			}
-		}
-
-		if left_type == BooleanType || right_type == BooleanType {
-			left_value, err1 := left.AsBoolean()
-			right_value, err2 := right.AsBoolean()
-
-			if err1 == nil && err2 == nil {
-				return BooleanRuntime{Value: left_value != right_value}
-			}
-		}
-
-		panic("Operand != not supported for these types")
+		return BooleanRuntime{!is_equal(left, right)}
 	case lexer.LESS:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_value < right_value}
 		}
 
-		left_str, err1 := left.AsString()
-		right_str, err2 := right.AsString()
+		left_str, err1 := left.as_string()
+		right_str, err2 := right.as_string()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_str < right_str}
@@ -201,15 +147,15 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand < not supported for these types")
 	case lexer.LESS_EQUALS:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_value <= right_value}
 		}
 
-		left_str, err1 := left.AsString()
-		right_str, err2 := right.AsString()
+		left_str, err1 := left.as_string()
+		right_str, err2 := right.as_string()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_str <= right_str}
@@ -217,15 +163,15 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand <= not supported for these types")
 	case lexer.GREATER:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_value > right_value}
 		}
 
-		left_str, err1 := left.AsString()
-		right_str, err2 := right.AsString()
+		left_str, err1 := left.as_string()
+		right_str, err2 := right.as_string()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_str > right_str}
@@ -233,15 +179,15 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 
 		panic("Operand > not supported for these types")
 	case lexer.GREATER_EQUALS:
-		left_value, err1 := left.AsNumber()
-		right_value, err2 := right.AsNumber()
+		left_value, err1 := left.as_number()
+		right_value, err2 := right.as_number()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_value >= right_value}
 		}
 
-		left_str, err1 := left.AsString()
-		right_str, err2 := right.AsString()
+		left_str, err1 := left.as_string()
+		right_str, err2 := right.as_string()
 
 		if err1 == nil && err2 == nil {
 			return BooleanRuntime{Value: left_str >= right_str}
@@ -251,7 +197,6 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 	default:
 		panic("Unknown operator")
 	}
-	//TODO: relational tokens as well such as LESS, LESS EQUALS e.t.c
 }
 
 func evaluate_prefix_expression(expression ast.Expression, env *Environment) RuntimeValue {
@@ -261,7 +206,7 @@ func evaluate_prefix_expression(expression ast.Expression, env *Environment) Run
 
 	switch prefix_expression.Operator.Kind {
 	case lexer.NOT:
-		right_value, err := right.AsBoolean()
+		right_value, err := right.as_boolean()
 
 		if err != nil {
 			panic(err)
@@ -269,7 +214,7 @@ func evaluate_prefix_expression(expression ast.Expression, env *Environment) Run
 
 		return BooleanRuntime{Value: !right_value}
 	case lexer.DASH:
-		right_value, err := right.AsNumber()
+		right_value, err := right.as_number()
 
 		if err != nil {
 			panic(err)
@@ -342,8 +287,7 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 
 		case_value := evaluate_expression(case_statement.Pattern, env)
 
-		//TODO: equality needs better support
-		if case_value == value {
+		if is_equal(case_value, value) {
 			return evaluate_expression(case_statement.Value, env)
 		}
 	}
