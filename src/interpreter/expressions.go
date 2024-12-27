@@ -239,6 +239,11 @@ func evaluate_assignment_expression(expression ast.Expression, env *Environment)
 		panic(err)
 	}
 
+	if expected_expression.Operator.Kind == lexer.NULLISH_ASSIGNMENT &&
+		declared_variable.getValue().getType() != (RuntimeNull{}).getType() {
+		return declared_variable
+	}
+
 	err = env.assign_variable(expected_assigne_expression.Value,
 		evaluate_expression(expected_expression.Value, env))
 

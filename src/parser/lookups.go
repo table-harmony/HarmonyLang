@@ -55,6 +55,7 @@ func create_token_lookups() {
 	register_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
 	register_led(lexer.PLUS_PLUS, assignment, parse_assignment_expression)
 	register_led(lexer.MINUS_MINUS, assignment, parse_assignment_expression)
+	register_led(lexer.NULLISH_ASSIGNMENT, assignment, parse_assignment_expression)
 
 	// Logical
 	register_led(lexer.AND, logical, parse_binary_expression)
@@ -86,17 +87,16 @@ func create_token_lookups() {
 	register_nud(lexer.FALSE, primary, parse_primary_expression)
 	register_nud(lexer.NULL, primary, parse_primary_expression)
 
-	// Unary/Prefix
-	//TODO: fix this shit -> 10 * 10 - 10 (- has more precidecne because it is unary)
-	//register_nud(lexer.DASH, unary, parse_prefix_expression)
-	//register_nud(lexer.PLUS, unary, parse_prefix_expression)
+	// Unary / Prefix
+	register_nud(lexer.DASH, additive, parse_prefix_expression)
+	register_nud(lexer.PLUS, additive, parse_prefix_expression)
 	register_nud(lexer.NOT, unary, parse_prefix_expression)
 	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
 
 	// Ternary
 	register_led(lexer.QUESTION, ternary, parse_ternary_expression)
 
-	// Member / Computed // Call
+	// Member / Computed / Call
 
 	// Grouping Expression
 	register_nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)

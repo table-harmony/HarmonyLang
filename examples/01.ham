@@ -1,5 +1,5 @@
-let foo: bool = true,
-  bar: string = "123123";
+let foo = true,
+  bar = 1;
 
 //foo = 1;
 
