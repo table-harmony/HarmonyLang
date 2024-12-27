@@ -150,7 +150,7 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 				}
 			}()
 
-			evaluate_block_statement(ast.BlockStatement{Body: expected_statement.Body}, loop_env)
+			evaluate_block_statement(expected_statement, loop_env)
 		}()
 
 		for _, post := range expected_statement.Post {
@@ -171,7 +171,7 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 
 	for _, case_statement := range expected_statement.Cases {
 		if case_statement.Pattern == nil {
-			default_case = ast.BlockStatement{Body: case_statement.Body}
+			default_case = case_statement.Body
 			continue
 		}
 
@@ -179,7 +179,7 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 
 		if isEqual(case_value, value) {
 			sub_environment := create_enviorment(env)
-			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
+			evaluate_block_statement(case_statement.Body, sub_environment)
 			return
 		}
 	}

@@ -36,7 +36,7 @@ type Parameter struct {
 type FunctionDeclarationStatment struct {
 	Identifier string
 	Parameters []Parameter
-	Body       []Statement
+	Body       BlockStatement
 	ReturnType Type
 }
 
@@ -59,7 +59,7 @@ func (IfStatement) statement() {}
 
 type SwitchCaseStatement struct {
 	Pattern Expression
-	Body    []Statement
+	Body    BlockStatement
 }
 
 type SwitchStatement struct {
@@ -73,7 +73,7 @@ type ForStatement struct {
 	Initializer Statement
 	Condition   Expression
 	Post        []Expression
-	Body        []Statement
+	Body        BlockStatement
 }
 
 func (ForStatement) statement() {}

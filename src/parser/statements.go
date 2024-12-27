@@ -187,7 +187,7 @@ func parse_switch_statement(parser *parser) ast.Statement {
 
 		cases = append(cases, ast.SwitchCaseStatement{
 			Pattern: pattern,
-			Body:    block_statement.Body,
+			Body:    block_statement,
 		})
 	}
 
@@ -231,7 +231,7 @@ func parse_for_statement(parser *parser) ast.Statement {
 		Initializer: initializer,
 		Condition:   condition,
 		Post:        post,
-		Body:        block_statement.Body,
+		Body:        block_statement,
 	}
 }
 
@@ -311,7 +311,7 @@ func parse_function_declaration_statement(parser *parser) ast.Statement {
 	return ast.FunctionDeclarationStatment{
 		Identifier: identifier.Value,
 		Parameters: params,
-		Body:       block_statement.Body,
+		Body:       block_statement,
 		ReturnType: return_type,
 	}
 }

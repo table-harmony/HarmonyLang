@@ -153,13 +153,7 @@ func parse_switch_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.SWITCH)
 	parser.advance(1)
 
-	parser.expect(lexer.OPEN_PAREN)
-	parser.advance(1)
-
 	value := parse_expression(parser, assignment)
-
-	parser.expect(lexer.CLOSE_PAREN)
-	parser.advance(1)
 
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
