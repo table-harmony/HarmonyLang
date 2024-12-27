@@ -58,8 +58,17 @@ func parse_symbol_type(parser *parser) ast.Type {
 	token := parser.expect(lexer.IDENTIFIER)
 	parser.advance(1)
 
-	return ast.SymbolType{
-		Value: token.Value,
+	switch token.Value {
+	case "number":
+		return ast.NumberType{}
+	case "bool":
+		return ast.BooleanType{}
+	case "string":
+		return ast.StringType{}
+	default:
+		return ast.SymbolType{
+			Value: token.Value,
+		}
 	}
 }
 

@@ -28,6 +28,11 @@ type BooleanExpression struct {
 
 func (BooleanExpression) expression() {}
 
+type NullExpression struct {
+}
+
+func (NullExpression) expression() {}
+
 // Complex Expressions
 
 type BinaryExpression struct {

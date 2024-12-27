@@ -84,6 +84,7 @@ func create_token_lookups() {
 	register_nud(lexer.IDENTIFIER, primary, parse_primary_expression)
 	register_nud(lexer.TRUE, primary, parse_primary_expression)
 	register_nud(lexer.FALSE, primary, parse_primary_expression)
+	register_nud(lexer.NULL, primary, parse_primary_expression)
 
 	// Unary/Prefix
 	//TODO: fix this shit -> 10 * 10 - 10 (- has more precidecne because it is unary)

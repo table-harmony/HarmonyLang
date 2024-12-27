@@ -69,7 +69,7 @@ func parse_multi_variable_declaration_statement(parser *parser) ast.Statement {
 			ExplicitType: explicitType,
 		})
 
-		if parser.current_token().Kind != lexer.SEMI_COLON {
+		if !parser.is_empty() && parser.current_token().Kind != lexer.SEMI_COLON {
 			parser.expect(lexer.COMMA)
 			parser.advance(1)
 		}
@@ -169,6 +169,10 @@ func parse_switch_statement(parser *parser) ast.Statement {
 		if parser.current_token().Kind == lexer.DEFAULT {
 			parser.advance(1)
 		} else {
+			if parser.current_token().Kind == lexer.SEMI_COLON {
+				parser.advance(1)
+			}
+
 			parser.expect(lexer.CASE)
 			parser.advance(1)
 
@@ -178,16 +182,15 @@ func parse_switch_statement(parser *parser) ast.Statement {
 		parser.expect(lexer.COLON)
 		parser.advance(1)
 
-		body_statement := parse_block_statement(parser)
-		block_statement, err := ast.ExpectStatement[ast.BlockStatement](body_statement)
-
-		if err != nil {
-			panic("Switch case body must be a block statement.")
+		body := make([]ast.Statement, 0)
+		for !parser.is_empty() && !parser.current_token().IsOfKind(lexer.CASE, lexer.DEFAULT, lexer.CLOSE_CURLY) {
+			statement := parse_statement(parser)
+			body = append(body, statement)
 		}
 
 		cases = append(cases, ast.SwitchCaseStatement{
 			Pattern: pattern,
-			Body:    block_statement,
+			Body:    ast.BlockStatement{Body: body},
 		})
 	}
 

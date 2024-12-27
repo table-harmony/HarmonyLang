@@ -50,6 +50,8 @@ func parse_primary_expression(parser *parser) ast.Expression {
 	parser.advance(1)
 
 	switch token.Kind {
+	case lexer.NULL:
+		return ast.NullExpression{}
 	case lexer.TRUE:
 		return ast.BooleanExpression{
 			Value: true,

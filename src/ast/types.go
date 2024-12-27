@@ -4,10 +4,25 @@ type SymbolType struct {
 	Value string
 }
 
-func (t SymbolType) _type() {}
+func (SymbolType) _type() {}
+
+type StringType struct {
+}
+
+func (StringType) _type() {}
+
+type BooleanType struct {
+}
+
+func (BooleanType) _type() {}
+
+type NumberType struct {
+}
+
+func (NumberType) _type() {}
 
 type ArrayType struct {
 	Underlying Type
 }
 
-func (t ArrayType) _type() {}
+func (ArrayType) _type() {}

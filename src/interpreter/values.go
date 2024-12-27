@@ -1,19 +1,45 @@
 package interpreter
 
 import (
-	"github.com/table-harmony/HarmonyLang/src/ast"
+	"fmt"
+
 	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
 type RuntimeValueType int
 
 const (
+	// Literals
 	NumberType RuntimeValueType = iota
 	StringType
 	BooleanType
+	NullType
+
 	VariableType
 	FunctionType
+	AnyType
 )
+
+func (_type RuntimeValueType) ToString() string {
+	switch _type {
+	case NumberType:
+		return "number"
+	case StringType:
+		return "string"
+	case BooleanType:
+		return "bool"
+	case NullType:
+		return "null"
+	case VariableType:
+		return "variable"
+	case FunctionType:
+		return "function"
+	case AnyType:
+		return "any"
+	default:
+		return fmt.Sprintf("unknown(%d)", _type)
+	}
+}
 
 type RuntimeValue interface {
 	getType() RuntimeValueType
@@ -25,12 +51,11 @@ func ExpectRuntimeValue[T RuntimeValue](value RuntimeValue) (T, error) {
 }
 
 func isEqual(variable1 RuntimeValue, variable2 RuntimeValue) bool {
-	if variable1.getType() != variable2.getType() {
+	if variable1.getValue().getType() != variable2.getValue().getType() {
 		return false
 	}
 
-	//TODO: equality incorrect it checks refrences not values
-	return variable1 == variable2
+	return variable1.getValue() == variable2.getValue()
 }
 
 type RuntimeNumber struct {
@@ -54,11 +79,17 @@ type RuntimeBoolean struct {
 func (RuntimeBoolean) getType() RuntimeValueType { return BooleanType }
 func (b RuntimeBoolean) getValue() RuntimeValue  { return b }
 
+type RuntimeNull struct {
+}
+
+func (RuntimeNull) getType() RuntimeValueType { return NullType }
+func (n RuntimeNull) getValue() RuntimeValue  { return n }
+
 type RuntimeVariable struct {
 	Identifier   string
 	IsConstant   bool
 	Value        RuntimeValue
-	ExplicitType ast.Type
+	ExplicitType RuntimeValueType
 }
 
 func (RuntimeVariable) getType() RuntimeValueType { return VariableType }

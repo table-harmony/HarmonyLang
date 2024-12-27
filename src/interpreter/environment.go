@@ -1,6 +1,8 @@
 package interpreter
 
-import "errors"
+import (
+	"fmt"
+)
 
 type Environment struct {
 	parent    *Environment
@@ -18,7 +20,14 @@ func (env *Environment) declare_variable(variable RuntimeVariable) error {
 	_, err := env.resolve(variable.Identifier)
 
 	if err == nil {
-		return errors.New("variable already declared")
+		return fmt.Errorf("variable '%s' already declared", variable.Identifier)
+	}
+
+	if variable.getValue().getType() != variable.ExplicitType && variable.ExplicitType != AnyType {
+		return fmt.Errorf("type mismatch: variable '%s' declared as %v but got %v",
+			variable.Identifier, variable.ExplicitType.ToString(),
+			variable.getValue().getType().ToString(),
+		)
 	}
 
 	env.variables[variable.Identifier] = variable
@@ -45,7 +54,14 @@ func (env *Environment) assign_variable(identifier string, value RuntimeValue) e
 	variable := env.variables[identifier]
 
 	if variable.IsConstant {
-		return errors.New("cannot reassign constant variable")
+		return fmt.Errorf("cannot reassign constant variable '%s'", variable.Identifier)
+	}
+
+	if variable.ExplicitType != value.getValue().getType() && variable.ExplicitType != AnyType {
+		return fmt.Errorf("type mismatch: variable '%s' explicit type %v but assigned a %v",
+			variable.Identifier, variable.ExplicitType.ToString(),
+			value.getValue().getType().ToString(),
+		)
 	}
 
 	variable.Value = value
@@ -60,7 +76,7 @@ func (env *Environment) resolve(identifier string) (*Environment, error) {
 	}
 
 	if env.parent == nil {
-		return nil, errors.New("variable not declared")
+		return nil, fmt.Errorf("variable '%s' not declared", identifier)
 	}
 
 	return env.parent.resolve(identifier)

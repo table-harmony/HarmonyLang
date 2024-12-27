@@ -13,12 +13,12 @@ func (interpreter *interpreter) evalute_current_statement(enviorment *Environmen
 }
 
 func evaluate_statement(statement ast.Statement, enviornment *Environment) {
-	statement_type := reflect.TypeOf(statement)
+	statementType := reflect.TypeOf(statement)
 
-	if handler, exists := statement_lookup[statement_type]; exists {
+	if handler, exists := statement_lookup[statementType]; exists {
 		handler(statement, enviornment)
 	} else {
-		panic(fmt.Sprintf("No handler registered for statement type: %v", statement_type))
+		panic(fmt.Sprintf("No handler registered for statement type: %v", statementType))
 	}
 }
 
@@ -26,24 +26,24 @@ func evaluate_expression_statement(statement ast.Statement, env *Environment) {
 	expression_statement, err := ast.ExpectStatement[ast.ExpressionStatement](statement)
 
 	if err != nil {
-		panic(fmt.Sprintf("Expected expression statement, got %v", statement))
+		panic(fmt.Sprintf("Expected expression statement, got %T", statement))
 	}
 
 	evaluate_expression(expression_statement.Expression, env)
 }
 
 func evaluate_variable_declaration_statement(statement ast.Statement, env *Environment) {
-	expected_statement, err := ast.ExpectStatement[ast.VariableDeclarationStatement](statement)
+	expectedStatement, err := ast.ExpectStatement[ast.VariableDeclarationStatement](statement)
 
 	if err != nil {
 		panic(err)
 	}
 
 	err = env.declare_variable(RuntimeVariable{
-		Value:        evaluate_expression(expected_statement.Value, env),
-		IsConstant:   expected_statement.IsConstant,
-		Identifier:   expected_statement.Identifier,
-		ExplicitType: expected_statement.ExplicitType,
+		Value:        evaluate_expression(expectedStatement.Value, env),
+		IsConstant:   expectedStatement.IsConstant,
+		Identifier:   expectedStatement.Identifier,
+		ExplicitType: evaluate_type(expectedStatement.ExplicitType),
 	})
 
 	if err != nil {
@@ -159,6 +159,7 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 	}
 }
 
+// TODO: duplicate keys
 func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.SwitchStatement](statement)
 
@@ -167,26 +168,26 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 	}
 
 	value := evaluate_expression(expected_statement.Value, env)
-	var default_case ast.BlockStatement
+	var default_case ast.SwitchCaseStatement
 
 	for _, case_statement := range expected_statement.Cases {
 		if case_statement.Pattern == nil {
-			default_case = case_statement.Body
+			default_case = case_statement
 			continue
 		}
 
 		case_value := evaluate_expression(case_statement.Pattern, env)
 
 		if isEqual(case_value, value) {
-			sub_environment := create_enviorment(env)
-			evaluate_block_statement(case_statement.Body, sub_environment)
+			scope := create_enviorment(env)
+			evaluate_block_statement(case_statement.Body, scope)
 			return
 		}
 	}
 
-	if len(default_case.Body) > 0 {
-		sub_environment := create_enviorment(env)
-		evaluate_block_statement(default_case, sub_environment)
+	if len(default_case.Body.Body) > 0 {
+		scope := create_enviorment(env)
+		evaluate_block_statement(default_case.Body, scope)
 	}
 }
 

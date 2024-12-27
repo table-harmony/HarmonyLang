@@ -38,8 +38,10 @@ func evaluate_primary_statement(expression ast.Expression, env *Environment) Run
 		return RuntimeBoolean{
 			Value: expression.(ast.BooleanExpression).Value,
 		}
+	case reflect.TypeOf(ast.NullExpression{}):
+		return RuntimeNull{}
 	default:
-		panic("Unknown statement type")
+		panic(fmt.Sprintf("Unknown statement type %s", expression_type))
 	}
 }
 
@@ -149,7 +151,7 @@ func handle_string_concatenation(left RuntimeValue, right RuntimeValue) RuntimeV
 	case RuntimeBoolean:
 		leftStr = fmt.Sprintf("%t", v.Value)
 	default:
-		panic(fmt.Sprintf("Cannot convert type %v to string", left.getType()))
+		panic(fmt.Sprintf("Cannot convert type '%v' to string", left.getType().ToString()))
 	}
 
 	switch v := right.(type) {
@@ -160,7 +162,7 @@ func handle_string_concatenation(left RuntimeValue, right RuntimeValue) RuntimeV
 	case RuntimeBoolean:
 		rightStr = fmt.Sprintf("%t", v.Value)
 	default:
-		panic(fmt.Sprintf("Cannot convert type %v to string", right.getType()))
+		panic(fmt.Sprintf("Cannot convert type '%v' to string", right.getType().ToString()))
 	}
 
 	return RuntimeString{Value: leftStr + rightStr}
@@ -178,7 +180,7 @@ func evaluate_prefix_expression(expression ast.Expression, env *Environment) Run
 
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
-				lexer.NOT, rightType))
+				lexer.NOT.ToString(), rightType))
 		}
 
 		return RuntimeBoolean{Value: !right.Value}
@@ -187,7 +189,7 @@ func evaluate_prefix_expression(expression ast.Expression, env *Environment) Run
 
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
-				lexer.DASH, rightType))
+				lexer.DASH.ToString(), rightType))
 		}
 
 		return RuntimeNumber{Value: -right.Value}
@@ -196,13 +198,13 @@ func evaluate_prefix_expression(expression ast.Expression, env *Environment) Run
 
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
-				lexer.PLUS, rightType))
+				lexer.PLUS.ToString(), rightType))
 		}
 
 		return RuntimeNumber{Value: right.Value}
 	default:
 		panic(fmt.Sprintf("Invalid operation %v with type %v",
-			prefix_expression.Operator.Kind, rightType))
+			prefix_expression.Operator.Kind.ToString(), rightType.ToString()))
 	}
 }
 
@@ -247,6 +249,7 @@ func evaluate_assignment_expression(expression ast.Expression, env *Environment)
 	return declared_variable
 }
 
+// TODO: duplicate keys
 func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {
 	expected_expression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
 
@@ -295,7 +298,7 @@ func evaluate_ternary_expression(expression ast.Expression, env *Environment) Ru
 
 	if expected_value.Value {
 		return evaluate_expression(expected_expression.Consequent, env)
-	} else {
-		return evaluate_expression(expected_expression.Alternate, env)
 	}
+
+	return evaluate_expression(expected_expression.Alternate, env)
 }

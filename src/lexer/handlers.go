@@ -65,6 +65,10 @@ func newline_handler(lex *lexer, regex *regexp.Regexp) {
 	lex.advance(len(match))
 }
 
+// TODO: semi colon insertion hurts stuff like switch statements either
+// TODO: i need to specify to disregard them on switch statements and more things in the future
+// TODO: or just remove it and think of something else
+
 func needs_semi_colon(token Token) bool {
 	return token.IsOfKind(
 		IDENTIFIER,

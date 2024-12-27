@@ -1,9 +1,7 @@
-let foo = "liron"
-const bar = switch foo + 1 {
-  "liron1" -> "1",
-  "liron2" -> "2",
-  _ -> "3",
-};
+let foo: bool = true,
+  bar: string = "123123";
+
+//foo = 1;
 
 //for (index, value) in range(slice) {
 //} 
