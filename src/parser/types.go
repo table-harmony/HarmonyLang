@@ -31,7 +31,7 @@ func create_type_token_lookups() {
 }
 
 func parse_type(parser *parser, bp binding_power) ast.Type {
-	token := parser.currentToken()
+	token := parser.current_token()
 	nud_handler, exists := type_nud_lookup[token.Kind]
 
 	if !exists {
@@ -40,8 +40,8 @@ func parse_type(parser *parser, bp binding_power) ast.Type {
 
 	left := nud_handler(parser)
 
-	for type_bp_lookup[parser.currentToken().Kind] > bp {
-		token = parser.currentToken()
+	for type_bp_lookup[parser.current_token().Kind] > bp {
+		token = parser.current_token()
 		led_handler, exists := type_led_lookup[token.Kind]
 
 		if !exists {

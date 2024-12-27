@@ -58,9 +58,9 @@ func evaluate_block_statement(statement ast.Statement, env *Environment) {
 		panic(err)
 	}
 
-	sub_environment := create_enviorment(env)
+	scope := create_enviorment(env)
 	for _, underlying_statement := range expected_statement.Body {
-		evaluate_statement(underlying_statement, sub_environment)
+		evaluate_statement(underlying_statement, scope)
 	}
 }
 
@@ -72,13 +72,13 @@ func evaluate_if_statement(statement ast.Statement, env *Environment) {
 	}
 
 	condition_value := evaluate_expression(expected_statement.Condition, env)
-	condition_met, err := condition_value.as_boolean()
+	expected_value, err := ExpectRuntimeValue[RuntimeBoolean](condition_value)
 
 	if err != nil {
 		panic(err)
 	}
 
-	if condition_met {
+	if expected_value.Value {
 		evaluate_block_statement(expected_statement.Consequent, env)
 	} else if expected_statement.Alternate != nil {
 		if alternate_if_statement, ok := expected_statement.Alternate.(ast.IfStatement); ok {
@@ -118,12 +118,13 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 
 	for {
 		condition_value := evaluate_expression(expected_statement.Condition, loop_env)
-		condition_met, err := condition_value.as_boolean()
+		expected_value, err := ExpectRuntimeValue[RuntimeBoolean](condition_value)
+
 		if err != nil {
 			panic(err)
 		}
 
-		if !condition_met {
+		if !expected_value.Value {
 			break
 		}
 
@@ -164,7 +165,7 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 
 		case_value := evaluate_expression(case_statement.Pattern, env)
 
-		if is_equal(case_value, value) {
+		if isEqual(case_value, value) {
 			sub_environment := create_enviorment(env)
 			evaluate_block_statement(ast.BlockStatement{Body: case_statement.Body}, sub_environment)
 			return
@@ -175,4 +176,16 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 		sub_environment := create_enviorment(env)
 		evaluate_block_statement(default_case, sub_environment)
 	}
+}
+
+func evaluate_function_declaration_statement(statement ast.Statement, env *Environment) {
+	panic("Not implemented yet")
+
+	//expected_statement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
+
+	//	if err != nil {
+	//		panic(err)
+	//	}
+
+	//	scope := create_enviorment(env)
 }

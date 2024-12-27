@@ -3,7 +3,7 @@ package lexer
 import "fmt"
 
 func Tokenize(source string) []Token {
-	lexer := createLexer(source)
+	lexer := create_lexer(source)
 
 	for !lexer.at_eof() {
 		matched := false

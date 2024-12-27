@@ -71,3 +71,9 @@ type TernaryExpression struct {
 }
 
 func (TernaryExpression) expression() {}
+
+type FunctionDeclarationExpression struct {
+	Parameters []Parameter
+	Body       []Statement
+	ReturnType Type
+}

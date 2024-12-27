@@ -88,8 +88,7 @@ const (
 	BREAK
 )
 
-// Reserved lookups for keywords
-var reservedKeywords map[string]TokenKind = map[string]TokenKind{
+var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"true":      TRUE,
 	"false":     FALSE,
 	"null":      NULL,
@@ -120,11 +119,13 @@ var reservedKeywords map[string]TokenKind = map[string]TokenKind{
 type Token struct {
 	Kind  TokenKind
 	Value string
+	Line  int
 }
 
 func CreateToken(kind TokenKind, value string) Token {
 	return Token{
-		kind, value,
+		Kind:  kind,
+		Value: value,
 	}
 }
 

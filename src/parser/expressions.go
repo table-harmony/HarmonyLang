@@ -9,7 +9,7 @@ import (
 )
 
 func parse_expression(parser *parser, bp binding_power) ast.Expression {
-	token := parser.currentToken()
+	token := parser.current_token()
 	nud_handler, exists := nud_lookup[token.Kind]
 
 	if !exists {
@@ -17,7 +17,7 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 	}
 
 	left := nud_handler(parser)
-	token = parser.currentToken()
+	token = parser.current_token()
 
 	for binding_power_lookup[token.Kind] > bp {
 		led_handler, exists := led_lookup[token.Kind]
@@ -26,18 +26,15 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 		}
 
 		left = led_handler(parser, left, binding_power_lookup[token.Kind])
-		token = parser.currentToken()
+		token = parser.current_token()
 	}
 
 	return left
 }
 
 func parse_binary_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
-	operatorToken := parser.currentToken()
+	operatorToken := parser.current_token()
 	parser.advance(1)
-
-	//TODO: on 5 / 3 % 2 the module is first because there is priority for right and not left
-	//TODO: FIX
 
 	right := parse_expression(parser, bp)
 
@@ -49,7 +46,7 @@ func parse_binary_expression(parser *parser, left ast.Expression, bp binding_pow
 }
 
 func parse_primary_expression(parser *parser) ast.Expression {
-	token := parser.currentToken()
+	token := parser.current_token()
 	parser.advance(1)
 
 	switch token.Kind {
@@ -86,7 +83,7 @@ func parse_primary_expression(parser *parser) ast.Expression {
 
 func parse_assignment_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
 	parser.advance(1)
-	operator := parser.previousToken()
+	operator := parser.previous_token()
 
 	right := ast.BinaryExpression{
 		Left: left,
@@ -141,7 +138,7 @@ func parse_grouping_expression(parser *parser) ast.Expression {
 }
 
 func parse_prefix_expression(parser *parser) ast.Expression {
-	operatorToken := parser.currentToken()
+	operatorToken := parser.current_token()
 	parser.advance(1)
 
 	right := parse_expression(parser, unary)
@@ -168,7 +165,7 @@ func parse_switch_expression(parser *parser) ast.Expression {
 	parser.advance(1)
 
 	cases := make([]ast.SwitchCase, 0)
-	for !parser.isEmpty() && parser.currentToken().Kind != lexer.CLOSE_CURLY {
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
 		pattern := parse_expression(parser, assignment)
 
 		parser.expect(lexer.ARROW)
@@ -176,7 +173,7 @@ func parse_switch_expression(parser *parser) ast.Expression {
 
 		value := parse_expression(parser, assignment)
 
-		if parser.currentToken().Kind != lexer.CLOSE_CURLY {
+		if parser.current_token().Kind != lexer.CLOSE_CURLY {
 			parser.expect(lexer.COMMA)
 			parser.advance(1)
 		}

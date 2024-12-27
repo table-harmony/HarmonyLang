@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	bytes, err := os.ReadFile("examples/01.ham")
+	bytes, err := os.ReadFile("examples/02.ham")
 
 	if err != nil {
 		panic(err)

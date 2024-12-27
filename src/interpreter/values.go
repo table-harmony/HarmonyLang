@@ -1,68 +1,58 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
-type ValueType int
+type RuntimeValueType int
 
 const (
-	NumberType ValueType = iota
+	NumberType RuntimeValueType = iota
 	StringType
 	BooleanType
+	VariableType
+	FunctionType
 )
 
 type RuntimeValue interface {
-	get_type() ValueType
-	as_number() (float64, error)
-	as_string() (string, error)
-	as_boolean() (bool, error)
+	getType() RuntimeValueType
+	getValue() RuntimeValue
 }
 
-func type_mismatch_error(got, want ValueType) error {
-	return fmt.Errorf("type mismatch: got %v, want %v", got, want)
+func ExpectRuntimeValue[T RuntimeValue](value RuntimeValue) (T, error) {
+	return helpers.ExpectType[T](value)
 }
 
-type NumberRuntime struct {
+func isEqual(variable1 RuntimeValue, variable2 RuntimeValue) bool {
+	if variable1.getType() != variable2.getType() {
+		return false
+	}
+
+	//TODO: equality incorrect it checks refrences not values
+	return variable1 == variable2
+}
+
+type RuntimeNumber struct {
 	Value float64
 }
 
-func (n NumberRuntime) get_type() ValueType         { return NumberType }
-func (n NumberRuntime) as_number() (float64, error) { return n.Value, nil }
-func (n NumberRuntime) as_string() (string, error) {
-	return fmt.Sprintf("%.g", n.Value), nil
-}
-func (n NumberRuntime) as_boolean() (bool, error) {
-	return false, type_mismatch_error(n.get_type(), BooleanType)
-}
+func (RuntimeNumber) getType() RuntimeValueType { return NumberType }
+func (n RuntimeNumber) getValue() RuntimeValue  { return n }
 
-type StringRuntime struct {
+type RuntimeString struct {
 	Value string
 }
 
-func (s StringRuntime) get_type() ValueType { return StringType }
-func (s StringRuntime) as_number() (float64, error) {
-	return 0, type_mismatch_error(s.get_type(), NumberType)
-}
-func (s StringRuntime) as_string() (string, error) { return s.Value, nil }
-func (s StringRuntime) as_boolean() (bool, error) {
-	return false, type_mismatch_error(s.get_type(), BooleanType)
-}
+func (RuntimeString) getType() RuntimeValueType { return StringType }
+func (s RuntimeString) getValue() RuntimeValue  { return s }
 
-type BooleanRuntime struct {
+type RuntimeBoolean struct {
 	Value bool
 }
 
-func (b BooleanRuntime) get_type() ValueType { return BooleanType }
-func (b BooleanRuntime) as_number() (float64, error) {
-	return 0, type_mismatch_error(b.get_type(), NumberType)
-}
-func (b BooleanRuntime) as_string() (string, error) {
-	return "", type_mismatch_error(b.get_type(), StringType)
-}
-func (b BooleanRuntime) as_boolean() (bool, error) { return b.Value, nil }
+func (RuntimeBoolean) getType() RuntimeValueType { return BooleanType }
+func (b RuntimeBoolean) getValue() RuntimeValue  { return b }
 
 type RuntimeVariable struct {
 	Identifier   string
@@ -71,46 +61,5 @@ type RuntimeVariable struct {
 	ExplicitType ast.Type
 }
 
-func (variable RuntimeVariable) get_type() ValueType         { return variable.Value.get_type() }
-func (variable RuntimeVariable) as_number() (float64, error) { return variable.Value.as_number() }
-func (variable RuntimeVariable) as_string() (string, error)  { return variable.Value.as_string() }
-func (variable RuntimeVariable) as_boolean() (bool, error)   { return variable.Value.as_boolean() }
-
-// TODO: decide whether there is equality between other types
-func is_equal(variable1 RuntimeValue, variable2 RuntimeValue) bool {
-	variable1_type, variable2_type := variable1.get_type(), variable2.get_type()
-
-	// Handle string comparison
-	if variable1_type == StringType && variable2_type == StringType {
-		variable1_value, err1 := variable1.as_string()
-		variable2_value, err2 := variable2.as_string()
-
-		if err1 == nil && err2 == nil {
-			return variable1_value == variable2_value
-		}
-	}
-
-	// Handle number comparison
-	if variable1_type == NumberType && variable2_type == NumberType {
-		variable1_value, err1 := variable1.as_number()
-		variable2_value, err2 := variable2.as_number()
-
-		if err1 == nil && err2 == nil {
-			return variable1_value == variable2_value
-		}
-	}
-
-	// Handle boolean comparison
-	if variable1_type == BooleanType && variable2_type == BooleanType {
-		variable1_value, err1 := variable1.as_boolean()
-		variable2_value, err2 := variable2.as_boolean()
-
-		if err1 == nil && err2 == nil {
-			return variable1_value == variable2_value
-		}
-	}
-
-	//TODO: complex variables equality
-
-	return false
-}
+func (RuntimeVariable) getType() RuntimeValueType { return VariableType }
+func (v RuntimeVariable) getValue() RuntimeValue  { return v.Value }

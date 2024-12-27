@@ -105,7 +105,7 @@ func create_token_lookups() {
 	register_statement(lexer.CONST, parse_variable_declaration_statement)
 	register_statement(lexer.INTERFACE, parse_interface_declaration_statement)
 	register_statement(lexer.STRUCT, parse_struct_declaration_statement)
-	register_statement(lexer.FUNC, parse_func_declaration_statement)
+	register_statement(lexer.FUNC, parse_function_declaration_statement)
 	register_statement(lexer.IMPORT, parse_import_statement)
 	register_statement(lexer.IF, parse_if_statement)
 	register_statement(lexer.OPEN_CURLY, parse_block_statement)
@@ -113,4 +113,5 @@ func create_token_lookups() {
 	register_statement(lexer.FOR, parse_for_statement)
 	register_statement(lexer.CONTINUE, parse_loop_control_statement)
 	register_statement(lexer.BREAK, parse_loop_control_statement)
+	register_statement(lexer.RETURN, parse_return_statement)
 }

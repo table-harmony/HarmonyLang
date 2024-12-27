@@ -22,36 +22,19 @@ type VariableDeclarationStatement struct {
 func (VariableDeclarationStatement) statement() {}
 
 type Parameter struct {
-	Name string
-	Type Type
+	Name         string
+	Type         Type
+	DefaultValue Expression
 }
 
 type FunctionDeclarationStatment struct {
-	Modifiers  []Statement
+	Identifier string
 	Parameters []Parameter
-	Name       string
 	Body       []Statement
 	ReturnType Type
 }
 
 func (FunctionDeclarationStatment) statement() {}
-
-type StructProperty struct {
-	IsStatic bool
-	Type     Type
-}
-
-type StructMethod struct {
-	IsStatic bool
-}
-
-type StructDeclarationStatement struct {
-	Identifier string
-	Properties map[string]StructProperty
-	Methods    map[string]StructMethod
-}
-
-func (StructDeclarationStatement) statement() {}
 
 type ImportStatement struct {
 	Name string
@@ -96,3 +79,9 @@ func (BreakStatement) statement() {}
 type ContinueStatement struct{}
 
 func (ContinueStatement) statement() {}
+
+type ReturnStatement struct {
+	Value Expression
+}
+
+func (ReturnStatement) statement() {}

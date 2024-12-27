@@ -28,7 +28,7 @@ func number_handler(lex *lexer, regex *regexp.Regexp) {
 func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
-	if kind, found := reservedKeywords[match]; found {
+	if kind, found := reserved_keywords[match]; found {
 		lex.push(CreateToken(kind, match))
 	} else {
 		lex.push(CreateToken(IDENTIFIER, match))
@@ -38,8 +38,8 @@ func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 }
 
 func skip_handler(lex *lexer, regex *regexp.Regexp) {
-	match := regex.FindStringIndex(lex.remainder())
-	lex.advance(match[1])
+	match := regex.FindString(lex.remainder())
+	lex.advance(len(match))
 }
 
 func comment_handler(lex *lexer, regex *regexp.Regexp) {
@@ -50,8 +50,41 @@ func comment_handler(lex *lexer, regex *regexp.Regexp) {
 	}
 }
 
+func newline_handler(lex *lexer, regex *regexp.Regexp) {
+	match := regex.FindString(lex.remainder())
+
+	if len(lex.Tokens) > 0 {
+		last := lex.Tokens[len(lex.Tokens)-1]
+
+		if needs_semi_colon(last) {
+			lex.push(CreateToken(SEMI_COLON, ";"))
+		}
+	}
+
+	lex.line++
+	lex.advance(len(match))
+}
+
+func needs_semi_colon(token Token) bool {
+	return token.IsOfKind(
+		IDENTIFIER,
+		NUMBER,
+		STRING,
+		BREAK,
+		CONTINUE,
+		RETURN,
+		TRUE,
+		FALSE,
+		NULL,
+		CLOSE_PAREN,
+		CLOSE_BRACKET,
+		CLOSE_CURLY,
+	)
+}
+
 // reserved regex patterns
 var reserved_patterns = []regex_pattern{
+	{regexp.MustCompile(`\r\n|\r|\n`), newline_handler},
 	{regexp.MustCompile(`\s+`), skip_handler},
 	{regexp.MustCompile(`\/\/.*`), comment_handler},
 	{regexp.MustCompile(`"[^"]*"`), string_handler},
@@ -99,7 +132,7 @@ var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`-=`), default_handler(MINUS_EQUALS, "-=")},
 	{regexp.MustCompile(`\*=`), default_handler(STAR_EQUALS, "*=")},
 	{regexp.MustCompile(`/=`), default_handler(SLASH_EQUALS, "/=")},
-	{regexp.MustCompile(`%=`), default_handler(SLASH_EQUALS, "/=")},
+	{regexp.MustCompile(`%=`), default_handler(PERCENT_EQUALS, "%=")},
 
 	// Math Operators
 	{regexp.MustCompile(`\+`), default_handler(PLUS, "+")},

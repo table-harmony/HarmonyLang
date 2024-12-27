@@ -14,9 +14,9 @@ type parser struct {
 
 func Parse(tokens []lexer.Token) ast.BlockStatement {
 	body := make([]ast.Statement, 0)
-	parser := createParser(tokens)
+	parser := create_parser(tokens)
 
-	for !parser.isEmpty() {
+	for !parser.is_empty() {
 		statement := parse_statement(parser)
 		body = append(body, statement)
 	}
@@ -26,7 +26,7 @@ func Parse(tokens []lexer.Token) ast.BlockStatement {
 	}
 }
 
-func createParser(tokens []lexer.Token) *parser {
+func create_parser(tokens []lexer.Token) *parser {
 	create_token_lookups()
 	create_type_token_lookups()
 
@@ -36,11 +36,11 @@ func createParser(tokens []lexer.Token) *parser {
 	}
 }
 
-func (parser *parser) currentToken() lexer.Token {
+func (parser *parser) current_token() lexer.Token {
 	return parser.tokens[parser.pos]
 }
 
-func (parser *parser) previousToken() lexer.Token {
+func (parser *parser) previous_token() lexer.Token {
 	return parser.tokens[parser.pos-1]
 }
 
@@ -48,15 +48,15 @@ func (parser *parser) advance(n int) {
 	parser.pos += n
 }
 
-func (parser *parser) isEmpty() bool {
-	currentToken := parser.currentToken()
+func (parser *parser) is_empty() bool {
+	currentToken := parser.current_token()
 
 	return parser.pos >= len(parser.tokens) ||
 		currentToken.Kind == lexer.EOF
 }
 
-func (parser *parser) expectError(expectedKind lexer.TokenKind, err any) lexer.Token {
-	currentToken := parser.currentToken()
+func (parser *parser) expect_error(expectedKind lexer.TokenKind, err any) lexer.Token {
+	currentToken := parser.current_token()
 
 	if currentToken.Kind != expectedKind {
 		if err == nil {
@@ -70,6 +70,6 @@ func (parser *parser) expectError(expectedKind lexer.TokenKind, err any) lexer.T
 	return currentToken
 }
 
-func (parser *parser) expect(expectedKind lexer.TokenKind) lexer.Token {
-	return parser.expectError(expectedKind, nil)
+func (parser *parser) expect(expected lexer.TokenKind) lexer.Token {
+	return parser.expect_error(expected, nil)
 }
