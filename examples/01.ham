@@ -1,11 +1,10 @@
 cosnt x: number, y: string = 1, "2"
 
 
-
-for boolean {
-
-}
-
-for index, value in enumerate(5..10) {
-  
-}
+//for boolean {
+//
+//}
+//
+//for (index, value) in range(slice) {
+//
+//}

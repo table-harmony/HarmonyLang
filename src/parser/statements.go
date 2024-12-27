@@ -18,7 +18,8 @@ func parse_statement(parser *parser) ast.Statement {
 		ast = parse_expression_statement(parser)
 	}
 
-	if parser.current_token().Kind == lexer.SEMI_COLON {
+	if !parser.is_empty() {
+		parser.expect(lexer.SEMI_COLON)
 		parser.advance(1)
 	}
 
@@ -113,14 +114,7 @@ func parse_if_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.IF)
 	parser.advance(1)
 
-	parser.expect(lexer.OPEN_PAREN)
-	parser.advance(1)
-
 	condition := parse_expression(parser, assignment)
-
-	parser.expect(lexer.CLOSE_PAREN)
-	parser.advance(1)
-
 	consequent := parse_block_statement(parser)
 
 	var alternate ast.Statement
@@ -153,13 +147,7 @@ func parse_switch_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.SWITCH)
 	parser.advance(1)
 
-	parser.expect(lexer.OPEN_PAREN)
-	parser.advance(1)
-
 	value := parse_expression(parser, assignment)
-
-	parser.expect(lexer.CLOSE_PAREN)
-	parser.advance(1)
 
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
@@ -173,6 +161,7 @@ func parse_switch_statement(parser *parser) ast.Statement {
 		} else {
 			parser.expect(lexer.CASE)
 			parser.advance(1)
+
 			pattern = parse_expression(parser, assignment)
 		}
 
@@ -205,9 +194,6 @@ func parse_for_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.FOR)
 	parser.advance(1)
 
-	parser.expect(lexer.OPEN_PAREN)
-	parser.advance(1)
-
 	initializer := parse_statement(parser)
 	condition := parse_expression(parser, assignment)
 
@@ -223,9 +209,6 @@ func parse_for_statement(parser *parser) ast.Statement {
 			parser.advance(1)
 		}
 	}
-
-	parser.expect(lexer.CLOSE_PAREN)
-	parser.advance(1)
 
 	body_statement := parse_block_statement(parser)
 	block_statement, err := ast.ExpectStatement[ast.BlockStatement](body_statement)

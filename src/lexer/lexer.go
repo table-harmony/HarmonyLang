@@ -46,6 +46,14 @@ func (lexer *lexer) push(token Token) {
 	lexer.Tokens = append(lexer.Tokens, token)
 }
 
+func (lexer *lexer) peek() Token {
+	if len(lexer.Tokens) == 0 {
+		panic("Lexer hasn't handled any tokens yet")
+	}
+
+	return lexer.Tokens[len(lexer.Tokens)-1]
+}
+
 func (lexer *lexer) at_eof() bool {
 	return lexer.pos >= len(lexer.source)
 }

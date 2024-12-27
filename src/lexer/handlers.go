@@ -54,7 +54,7 @@ func newline_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
 	if len(lex.Tokens) > 0 {
-		last := lex.Tokens[len(lex.Tokens)-1]
+		last := lex.peek()
 
 		if needs_semi_colon(last) {
 			lex.push(CreateToken(SEMI_COLON, ";"))
@@ -85,7 +85,7 @@ func needs_semi_colon(token Token) bool {
 // reserved regex patterns
 var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`\r\n|\r|\n`), newline_handler},
-	{regexp.MustCompile(`\s+`), skip_handler},
+	{regexp.MustCompile(`[ \t]+`), skip_handler},
 	{regexp.MustCompile(`\/\/.*`), comment_handler},
 	{regexp.MustCompile(`"[^"]*"`), string_handler},
 	{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), number_handler},

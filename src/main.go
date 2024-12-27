@@ -9,10 +9,14 @@ import (
 )
 
 func main() {
-	bytes, err := os.ReadFile("examples/02.ham")
+	bytes, err := os.ReadFile("examples/01.ham")
 
 	if err != nil {
 		panic(err)
+	}
+
+	for i := 0; i < 10; i++ {
+
 	}
 
 	source := string(bytes)
