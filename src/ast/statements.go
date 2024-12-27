@@ -21,6 +21,12 @@ type VariableDeclarationStatement struct {
 
 func (VariableDeclarationStatement) statement() {}
 
+type MultiVariableDeclarationStatement struct {
+	Declarations []VariableDeclarationStatement
+}
+
+func (MultiVariableDeclarationStatement) statement() {}
+
 type Parameter struct {
 	Name         string
 	Type         Type

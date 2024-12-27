@@ -26,6 +26,7 @@ func create_lookups() {
 	// Statements
 	register_statement_handler[ast.ExpressionStatement](evaluate_expression_statement)
 	register_statement_handler[ast.VariableDeclarationStatement](evaluate_variable_declaration_statement)
+	register_statement_handler[ast.MultiVariableDeclarationStatement](evaluate_multi_variable_declaration_statement)
 	register_statement_handler[ast.IfStatement](evaluate_if_statement)
 	register_statement_handler[ast.BlockStatement](evaluate_block_statement)
 	register_statement_handler[ast.ForStatement](evaluate_for_statement)

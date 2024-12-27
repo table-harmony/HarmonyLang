@@ -51,6 +51,18 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 	}
 }
 
+func evaluate_multi_variable_declaration_statement(statement ast.Statement, env *Environment) {
+	expected_statement, err := ast.ExpectStatement[ast.MultiVariableDeclarationStatement](statement)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, declaration := range expected_statement.Declarations {
+		evaluate_variable_declaration_statement(declaration, env)
+	}
+}
+
 func evaluate_block_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.BlockStatement](statement)
 
@@ -180,12 +192,4 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 
 func evaluate_function_declaration_statement(statement ast.Statement, env *Environment) {
 	panic("Not implemented yet")
-
-	//expected_statement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
-
-	//	if err != nil {
-	//		panic(err)
-	//	}
-
-	//	scope := create_enviorment(env)
 }

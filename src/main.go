@@ -15,10 +15,6 @@ func main() {
 		panic(err)
 	}
 
-	for i := 0; i < 10; i++ {
-
-	}
-
 	source := string(bytes)
 
 	tokens := lexer.Tokenize(source)

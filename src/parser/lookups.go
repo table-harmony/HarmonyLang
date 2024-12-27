@@ -101,8 +101,8 @@ func create_token_lookups() {
 	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
 
 	// Statements
-	register_statement(lexer.LET, parse_variable_declaration_statement)
-	register_statement(lexer.CONST, parse_variable_declaration_statement)
+	register_statement(lexer.LET, parse_multi_variable_declaration_statement)
+	register_statement(lexer.CONST, parse_multi_variable_declaration_statement)
 	register_statement(lexer.INTERFACE, parse_interface_declaration_statement)
 	register_statement(lexer.STRUCT, parse_struct_declaration_statement)
 	register_statement(lexer.FUNC, parse_function_declaration_statement)
