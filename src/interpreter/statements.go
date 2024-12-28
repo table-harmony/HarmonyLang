@@ -64,44 +64,6 @@ func evaluate_multi_variable_declaration_statement(statement ast.Statement, env 
 	}
 }
 
-func evaluate_block_statement(statement ast.Statement, env *Environment) {
-	expected_statement, err := ast.ExpectStatement[ast.BlockStatement](statement)
-
-	if err != nil {
-		panic(err)
-	}
-
-	scope := create_enviorment(env)
-	for _, underlying_statement := range expected_statement.Body {
-		evaluate_statement(underlying_statement, scope)
-	}
-}
-
-func evaluate_if_statement(statement ast.Statement, env *Environment) {
-	expected_statement, err := ast.ExpectStatement[ast.IfStatement](statement)
-
-	if err != nil {
-		panic(err)
-	}
-
-	condition_value := evaluate_expression(expected_statement.Condition, env)
-	expected_value, err := ExpectRuntimeValue[RuntimeBoolean](condition_value)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if expected_value.Value {
-		evaluate_block_statement(expected_statement.Consequent, env)
-	} else if expected_statement.Alternate != nil {
-		if alternate_if_statement, ok := expected_statement.Alternate.(ast.IfStatement); ok {
-			evaluate_if_statement(alternate_if_statement, env)
-		} else {
-			evaluate_block_statement(expected_statement.Alternate, env)
-		}
-	}
-}
-
 func evaluate_continue_statement(statement ast.Statement, env *Environment) {
 	panic(ContinueError{})
 }
@@ -154,51 +116,12 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 				}
 			}()
 
-			evaluate_block_statement(expected_statement, loop_env)
+			//evaluate_block_statement(expected_statement, loop_env)
 		}()
 
 		for _, post := range expected_statement.Post {
 			evaluate_expression(post, loop_env)
 		}
-	}
-}
-
-func evaluate_switch_statement(statement ast.Statement, env *Environment) {
-	expectedStatement, err := ast.ExpectStatement[ast.SwitchStatement](statement)
-
-	if err != nil {
-		panic(err)
-	}
-
-	value := evaluate_expression(expectedStatement.Value, env)
-	var defaultCase *ast.SwitchCaseStatement
-
-	for _, caseStatement := range expectedStatement.Cases {
-		if caseStatement.IsDefault {
-			if defaultCase != nil {
-				panic("duplicate default patterns at a switch statement")
-			}
-
-			defaultCase = &caseStatement
-			continue
-		}
-	}
-
-	for _, caseStatement := range expectedStatement.Cases {
-		for _, pattern := range caseStatement.Patterns {
-			case_value := evaluate_expression(pattern, env)
-
-			if isEqual(case_value, value) {
-				scope := create_enviorment(env)
-				evaluate_block_statement(caseStatement.Body, scope)
-				return
-			}
-		}
-	}
-
-	if defaultCase != nil {
-		scope := create_enviorment(env)
-		evaluate_block_statement(defaultCase.Body, scope)
 	}
 }
 
@@ -213,7 +136,7 @@ func evaluate_assignment_statement(statement ast.Statement, env *Environment) {
 		panic(err)
 	}
 
-	//TODO: this is not expected it could be member or call
+	//TODO: this is not expected it could be member or computed member e.t.c
 	assigneExpression, _ := ast.ExpectExpression[ast.SymbolExpression](expectedStatement.Assigne)
 	declaredVariable, err := env.get_variable(assigneExpression.Value)
 

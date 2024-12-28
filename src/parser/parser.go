@@ -12,18 +12,16 @@ type parser struct {
 	pos    int
 }
 
-func Parse(tokens []lexer.Token) ast.BlockStatement {
-	body := make([]ast.Statement, 0)
+func Parse(tokens []lexer.Token) []ast.Statement {
+	statements := make([]ast.Statement, 0)
 	parser := create_parser(tokens)
 
 	for !parser.is_empty() {
 		statement := parse_statement(parser)
-		body = append(body, statement)
+		statements = append(statements, statement)
 	}
 
-	return ast.BlockStatement{
-		Body: body,
-	}
+	return statements
 }
 
 func create_parser(tokens []lexer.Token) *parser {

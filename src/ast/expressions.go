@@ -50,33 +50,6 @@ type PrefixExpression struct {
 
 func (PrefixExpression) expression() {}
 
-type SwitchExpression struct {
-	Value Expression
-	Cases []SwitchCase
-}
-
-func (SwitchExpression) expression() {}
-
-type SwitchCase interface {
-	GetValue() Expression
-	GetPatterns() []Expression
-}
-
-type NormalSwitchCase struct {
-	Patterns []Expression
-	Value    Expression
-}
-
-func (n NormalSwitchCase) GetValue() Expression      { return n.Value }
-func (n NormalSwitchCase) GetPatterns() []Expression { return n.Patterns }
-
-type DefaultSwitchCase struct {
-	Value Expression
-}
-
-func (n DefaultSwitchCase) GetValue() Expression      { return n.Value }
-func (n DefaultSwitchCase) GetPatterns() []Expression { return make([]Expression, 0) }
-
 type TernaryExpression struct {
 	Condition  Expression
 	Alternate  Expression
@@ -85,8 +58,52 @@ type TernaryExpression struct {
 
 func (TernaryExpression) expression() {}
 
-type FunctionDeclarationExpression struct {
-	Parameters []Parameter
-	Body       []Statement
-	ReturnType Type
+type CallExpression struct {
+	Caller Expression
+	Params []Expression
 }
+
+func (CallExpression) expression() {}
+
+type MemberExpression struct {
+	Owner    Expression
+	Property Expression
+}
+
+func (MemberExpression) expression() {}
+
+type ComputedMemberExpression struct {
+	Owner    Expression
+	Property Expression
+}
+
+func (ComputedMemberExpression) expression() {}
+
+type BlockExpression struct {
+	Statements []Statement
+}
+
+func (BlockExpression) expression() {}
+
+type IfExpression struct {
+	Condition  Expression
+	Consequent BlockExpression
+	Alternate  BlockExpression
+}
+
+func (IfExpression) expression() {}
+
+type SwitchExpression struct {
+	Value Expression
+	Cases []SwitchCaseStatement
+}
+
+func (SwitchExpression) expression() {}
+
+type SwitchCaseStatement struct {
+	Patterns  []Expression
+	Body      BlockExpression
+	IsDefault bool
+}
+
+func (SwitchCaseStatement) statement() {}

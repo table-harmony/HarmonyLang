@@ -19,5 +19,5 @@ func main() {
 
 	tokens := lexer.Tokenize(source)
 	ast := parser.Parse(tokens)
-	interpreter.Interpret(ast.Body)
+	interpreter.Interpret(ast)
 }

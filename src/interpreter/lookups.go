@@ -27,10 +27,7 @@ func create_lookups() {
 	register_statement_handler[ast.ExpressionStatement](evaluate_expression_statement)
 	register_statement_handler[ast.VariableDeclarationStatement](evaluate_variable_declaration_statement)
 	register_statement_handler[ast.MultiVariableDeclarationStatement](evaluate_multi_variable_declaration_statement)
-	register_statement_handler[ast.IfStatement](evaluate_if_statement)
-	register_statement_handler[ast.BlockStatement](evaluate_block_statement)
 	register_statement_handler[ast.ForStatement](evaluate_for_statement)
-	register_statement_handler[ast.SwitchStatement](evaluate_switch_statement)
 	register_statement_handler[ast.ContinueStatement](evaluate_continue_statement)
 	register_statement_handler[ast.BreakStatement](evaluate_break_statement)
 	register_statement_handler[ast.ReturnStatement](evaluate_return_statement)
@@ -41,8 +38,12 @@ func create_lookups() {
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)
 	register_expression_handler[ast.BinaryExpression](evalute_binary_expression)
 	register_expression_handler[ast.SymbolExpression](evaluate_symbol_expression)
-	register_expression_handler[ast.SwitchExpression](evaluate_switch_expression)
 	register_expression_handler[ast.TernaryExpression](evaluate_ternary_expression)
+
+	// Block expressions
+	register_expression_handler[ast.BlockExpression](evaluate_block_expression)
+	register_expression_handler[ast.IfExpression](evaluate_if_expression)
+	register_expression_handler[ast.SwitchExpression](evaluate_switch_expression)
 
 	// Primary expressions
 	register_expression_handler[ast.BooleanExpression](evaluate_primary_statement)

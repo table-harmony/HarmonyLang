@@ -26,19 +26,19 @@ const bar = switch foo + 1 {
 
 const x = "";
 
-switch foo + 1 {
-  case 1: {
-    x = "1";
+switch foo {
+  case 1, 2 {
+    1
   }
-  case 2 + 2, 1 + 1:
-    x = "2";
-  default: {
-    x = "3";
+  case 3, 4 {
+    2
   }
-  default: {
-    x = "4";
+  default {
+    3
   }
 }
+
+let x = if true { 5; } else { x; }
 
 if foo == bar {
   x = 1;

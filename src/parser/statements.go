@@ -157,117 +157,12 @@ func parse_import_statement(parser *parser) ast.Statement {
 	}
 }
 
-func parse_block_statement(parser *parser) ast.Statement {
-	parser.expect(lexer.OPEN_CURLY)
-	parser.advance(1)
-
-	body := make([]ast.Statement, 0)
-	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
-		statement := parse_statement(parser)
-		body = append(body, statement)
-	}
-
-	parser.expect(lexer.CLOSE_CURLY)
-	parser.advance(1)
-
-	return ast.BlockStatement{
-		Body: body,
-	}
-}
-
-func parse_if_statement(parser *parser) ast.Statement {
-	parser.expect(lexer.IF)
-	parser.advance(1)
-
-	condition := parse_expression(parser, assignment)
-	consequent := parse_block_statement(parser)
-
-	var alternate ast.Statement
-	if parser.current_token().Kind == lexer.ELSE {
-		parser.advance(1)
-
-		if parser.current_token().Kind == lexer.IF {
-			alternate = parse_if_statement(parser)
-		} else {
-			alternate = parse_block_statement(parser)
-		}
-	}
-
-	return ast.IfStatement{
-		Condition:  condition,
-		Consequent: consequent,
-		Alternate:  alternate,
-	}
-}
-
 func parse_interface_declaration_statement(parser *parser) ast.Statement {
 	panic("Not implemented yet")
 }
 
 func parse_struct_declaration_statement(parser *parser) ast.Statement {
 	panic("Not implemented yet")
-}
-
-func parse_switch_statement(parser *parser) ast.Statement {
-	parser.expect(lexer.SWITCH)
-	parser.advance(1)
-
-	value := parse_expression(parser, assignment)
-
-	parser.expect(lexer.OPEN_CURLY)
-	parser.advance(1)
-
-	cases := make([]ast.SwitchCaseStatement, 0)
-	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
-		var patterns []ast.Expression
-		var isDefault bool
-
-		if parser.current_token().Kind == lexer.DEFAULT {
-			isDefault = true
-			parser.advance(1)
-		} else {
-			// the end of the curly braces in the switch case before hand };
-			if parser.current_token().Kind == lexer.SEMI_COLON {
-				parser.advance(1)
-			}
-
-			parser.expect(lexer.CASE)
-			parser.advance(1)
-
-			for !parser.is_empty() && parser.current_token().Kind != lexer.COLON {
-				pattern := parse_expression(parser, default_bp)
-				patterns = append(patterns, pattern)
-
-				if parser.current_token().Kind != lexer.COLON {
-					parser.expect(lexer.COMMA)
-					parser.advance(1)
-				}
-			}
-		}
-
-		parser.expect(lexer.COLON)
-		parser.advance(1)
-
-		body := make([]ast.Statement, 0)
-		for !parser.is_empty() && !parser.current_token().IsOfKind(lexer.CASE, lexer.DEFAULT, lexer.CLOSE_CURLY) {
-			statement := parse_statement(parser)
-			body = append(body, statement)
-		}
-
-		cases = append(cases, ast.SwitchCaseStatement{
-			Patterns:  patterns,
-			Body:      ast.BlockStatement{Body: body},
-			IsDefault: isDefault,
-		})
-	}
-
-	parser.expect(lexer.CLOSE_CURLY)
-	parser.advance(1)
-
-	return ast.SwitchStatement{
-		Value: value,
-		Cases: cases,
-	}
 }
 
 func parse_for_statement(parser *parser) ast.Statement {
@@ -290,18 +185,17 @@ func parse_for_statement(parser *parser) ast.Statement {
 		}
 	}
 
-	body_statement := parse_block_statement(parser)
-	block_statement, err := ast.ExpectStatement[ast.BlockStatement](body_statement)
-
-	if err != nil {
-		panic("For statement body must be a block statement.")
+	body := make([]ast.Statement, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		statement := parse_statement(parser)
+		body = append(body, statement)
 	}
 
 	return ast.ForStatement{
 		Initializer: initializer,
 		Condition:   condition,
 		Post:        post,
-		Body:        block_statement,
+		Body:        body,
 	}
 }
 
@@ -371,17 +265,16 @@ func parse_function_declaration_statement(parser *parser) ast.Statement {
 		return_type = parse_type(parser, default_bp)
 	}
 
-	body := parse_block_statement(parser)
-	block, err := ast.ExpectStatement[ast.BlockStatement](body)
-
-	if err != nil {
-		panic(err)
+	body := make([]ast.Statement, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		statement := parse_statement(parser)
+		body = append(body, statement)
 	}
 
 	return ast.FunctionDeclarationStatment{
 		Identifier: identifier.Value,
 		Parameters: params,
-		Body:       block,
+		Body:       body,
 		ReturnType: return_type,
 	}
 }

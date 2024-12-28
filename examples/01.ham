@@ -1,5 +1,33 @@
-let x = 1, y: string = ""
+let x = 2;
+const y = {
+  let x = 3
 
-let z = x == 123 ? 1 : "123123"
-//z = false
-x = nil
+  if true {
+    x;
+  }
+
+  1;
+}
+
+x = if true {
+  5 
+} else {
+  x
+} 
+
+//let x = switch foo {
+//  case 1, 2 {
+//    return 1
+//  }
+//  case 3, 4 {
+//    return 2
+//  }
+//  default {
+//    3
+//  }
+//}
+
+// if = expression
+// switch = expression
+// functions = expression
+// for = statement

@@ -66,7 +66,7 @@ func (repl *REPL) evaluate(input string) RuntimeValue {
 	ast := parser.Parse(tokens)
 
 	var lastResult RuntimeValue
-	for _, statement := range ast.Body {
+	for _, statement := range ast {
 		lastResult = repl.evaluate_statement(statement)
 	}
 

@@ -2,12 +2,6 @@ package ast
 
 import "github.com/table-harmony/HarmonyLang/src/lexer"
 
-type BlockStatement struct {
-	Body []Statement
-}
-
-func (BlockStatement) statement() {}
-
 type ExpressionStatement struct {
 	Expression Expression
 }
@@ -46,7 +40,7 @@ type Parameter struct {
 type FunctionDeclarationStatment struct {
 	Identifier string
 	Parameters []Parameter
-	Body       BlockStatement
+	Body       []Statement
 	ReturnType Type
 }
 
@@ -57,36 +51,13 @@ type ImportStatement struct {
 	From string
 }
 
-func (node ImportStatement) statement() {}
-
-type IfStatement struct {
-	Condition  Expression
-	Consequent Statement
-	Alternate  Statement
-}
-
-func (IfStatement) statement() {}
-
-type SwitchCaseStatement struct {
-	Patterns  []Expression
-	Body      BlockStatement
-	IsDefault bool
-}
-
-func (SwitchCaseStatement) statement() {}
-
-type SwitchStatement struct {
-	Value Expression
-	Cases []SwitchCaseStatement
-}
-
-func (SwitchStatement) statement() {}
+func (ImportStatement) statement() {}
 
 type ForStatement struct {
 	Initializer Statement
 	Condition   Expression
 	Post        []Expression
-	Body        BlockStatement
+	Body        []Statement
 }
 
 func (ForStatement) statement() {}

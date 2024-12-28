@@ -18,7 +18,6 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 
 	left := nud_handler(parser)
 	token = parser.current_token()
-
 	for binding_power_lookup[token.Kind] > bp {
 		led_handler, exists := led_lookup[token.Kind]
 		if !exists {
@@ -107,75 +106,6 @@ func parse_prefix_expression(parser *parser) ast.Expression {
 	}
 }
 
-func parse_switch_expression(parser *parser) ast.Expression {
-	parser.expect(lexer.SWITCH)
-	parser.advance(1)
-
-	value := parse_expression(parser, assignment)
-
-	parser.expect(lexer.OPEN_CURLY)
-	parser.advance(1)
-
-	switchCases := make([]ast.SwitchCase, 0)
-	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
-		if parser.current_token().Kind == lexer.IDENTIFIER && parser.current_token().Value == "_" {
-			parser.advance(1)
-
-			parser.expect_error(lexer.ARROW, fmt.Errorf("expected arrow after 'default' case in switch expression"))
-			parser.advance(1)
-
-			value := parse_expression(parser, assignment)
-
-			switchCases = append(switchCases, ast.DefaultSwitchCase{
-				Value: value,
-			})
-
-			if parser.current_token().Kind != lexer.CLOSE_CURLY {
-				parser.expect(lexer.COMMA)
-				parser.advance(1)
-			}
-
-			continue
-		}
-
-		var patterns []ast.Expression
-
-		for !parser.is_empty() && parser.current_token().Kind != lexer.ARROW {
-			pattern := parse_expression(parser, assignment)
-
-			patterns = append(patterns, pattern)
-
-			if parser.current_token().Kind != lexer.ARROW {
-				parser.expect(lexer.COMMA)
-				parser.advance(1)
-			}
-		}
-
-		parser.expect(lexer.ARROW)
-		parser.advance(1)
-
-		value := parse_expression(parser, assignment)
-
-		if parser.current_token().Kind != lexer.CLOSE_CURLY {
-			parser.expect(lexer.COMMA)
-			parser.advance(1)
-		}
-
-		switchCases = append(switchCases, ast.NormalSwitchCase{
-			Patterns: patterns,
-			Value:    value,
-		})
-	}
-
-	parser.expect(lexer.CLOSE_CURLY)
-	parser.advance(1)
-
-	return ast.SwitchExpression{
-		Value: value,
-		Cases: switchCases,
-	}
-}
-
 func parse_ternary_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
 	parser.expect(lexer.QUESTION)
 	parser.advance(1)
@@ -191,5 +121,159 @@ func parse_ternary_expression(parser *parser, left ast.Expression, bp binding_po
 		Condition:  left,
 		Consequent: consequent,
 		Alternate:  alternate,
+	}
+}
+
+func parse_call_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	params := make([]ast.Expression, 0)
+
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_PAREN {
+		param := parse_expression(parser, default_bp)
+		params = append(params, param)
+
+		if !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_PAREN {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
+
+	return ast.CallExpression{
+		Caller: left,
+		Params: params,
+	}
+}
+
+func parse_member_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	parser.expect(lexer.DOT)
+	parser.advance(1)
+
+	property, err := ast.ExpectExpression[ast.SymbolExpression](parse_primary_expression(parser))
+
+	if err != nil {
+		panic(err)
+	}
+
+	return ast.MemberExpression{
+		Owner:    left,
+		Property: property,
+	}
+}
+
+func parse_computed_member_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	parser.expect(lexer.OPEN_BRACKET)
+	parser.advance(1)
+
+	property := parse_expression(parser, default_bp)
+
+	parser.expect(lexer.CLOSE_BRACKET)
+	parser.advance(1)
+
+	return ast.ComputedMemberExpression{
+		Owner:    left,
+		Property: property,
+	}
+}
+
+// TODO: semi colon before close curly
+func parse_block_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	statements := make([]ast.Statement, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		statement := parse_statement(parser)
+		statements = append(statements, statement)
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.BlockExpression{
+		Statements: statements,
+	}
+}
+
+func parse_if_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.IF)
+	parser.advance(1)
+
+	condition := parse_expression(parser, assignment)
+	consequent := parse_block_expression(parser).(ast.BlockExpression)
+
+	var alternate ast.BlockExpression
+	if parser.current_token().Kind == lexer.ELSE {
+		parser.advance(1)
+
+		if parser.current_token().Kind == lexer.IF {
+			alternate = parse_if_expression(parser).(ast.BlockExpression)
+		} else {
+			alternate = parse_block_expression(parser).(ast.BlockExpression)
+		}
+	}
+
+	return ast.IfExpression{
+		Condition:  condition,
+		Consequent: consequent,
+		Alternate:  alternate,
+	}
+}
+
+func parse_switch_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.SWITCH)
+	parser.advance(1)
+
+	value := parse_expression(parser, assignment)
+
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	cases := make([]ast.SwitchCaseStatement, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		if parser.current_token().Kind == lexer.DEFAULT {
+			parser.advance(1)
+
+			body := parse_block_expression(parser).(ast.BlockExpression)
+
+			cases = append(cases, ast.SwitchCaseStatement{
+				Body:      body,
+				IsDefault: true,
+			})
+		} else {
+			parser.expect(lexer.CASE)
+			parser.advance(1)
+
+			var patterns []ast.Expression
+			for !parser.is_empty() && parser.current_token().Kind != lexer.OPEN_CURLY {
+				pattern := parse_expression(parser, assignment)
+
+				patterns = append(patterns, pattern)
+
+				if parser.current_token().Kind != lexer.OPEN_CURLY {
+					parser.expect(lexer.COMMA)
+					parser.advance(1)
+				}
+			}
+
+			body := parse_block_expression(parser).(ast.BlockExpression)
+
+			cases = append(cases, ast.SwitchCaseStatement{
+				Patterns: patterns,
+				Body:     body,
+			})
+		}
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.SwitchExpression{
+		Value: value,
+		Cases: cases,
 	}
 }

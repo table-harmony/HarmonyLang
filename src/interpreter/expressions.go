@@ -224,44 +224,6 @@ func evaluate_symbol_expression(expression ast.Expression, env *Environment) Run
 	return variable
 }
 
-func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {
-	expectedExpression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
-
-	if err != nil {
-		panic(err)
-	}
-
-	value := evaluate_expression(expectedExpression.Value, env)
-	var defaultCase *ast.DefaultSwitchCase
-
-	for _, switchCase := range expectedExpression.Cases {
-		if defaultSwitchCase, ok := switchCase.(ast.DefaultSwitchCase); ok {
-			if defaultCase != nil {
-				panic("duplicate default patterns in switch expression")
-			}
-
-			defaultCase = &defaultSwitchCase
-		}
-	}
-
-	for _, switchCase := range expectedExpression.Cases {
-		for _, pattern := range switchCase.GetPatterns() {
-			casePatternValue := evaluate_expression(pattern, env)
-
-			if isEqual(casePatternValue, value) {
-				scope := create_enviorment(env)
-				return evaluate_expression(switchCase.GetValue(), scope)
-			}
-		}
-	}
-
-	if defaultCase == nil {
-		return nil
-	}
-
-	return evaluate_expression(defaultCase.Value, env)
-}
-
 func evaluate_ternary_expression(expression ast.Expression, env *Environment) RuntimeValue {
 	expected_expression, err := ast.ExpectExpression[ast.TernaryExpression](expression)
 
@@ -281,4 +243,101 @@ func evaluate_ternary_expression(expression ast.Expression, env *Environment) Ru
 	}
 
 	return evaluate_expression(expected_expression.Alternate, env)
+}
+
+func evaluate_block_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expectedExpression, err := ast.ExpectExpression[ast.BlockExpression](expression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	scope := create_enviorment(env)
+
+	for index, underlyingStatement := range expectedExpression.Statements {
+		if index == len(expectedExpression.Statements)-1 {
+			break
+		}
+
+		evaluate_statement(underlyingStatement, scope)
+	}
+
+	lastStatement := expectedExpression.Statements[len(expectedExpression.Statements)-1]
+
+	if returnStatement, ok := lastStatement.(ast.ReturnStatement); ok {
+		return evaluate_expression(returnStatement.Value, scope)
+	}
+
+	if expressionStatement, ok := lastStatement.(ast.ExpressionStatement); ok {
+		return evaluate_expression(expressionStatement.Expression, scope)
+	}
+
+	return RuntimeNil{}
+}
+
+// TODO: i dont iterate each statement cause i changed it from ast.BlockStatement to []ast.Statement
+func evaluate_if_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expectedExpression, err := ast.ExpectExpression[ast.IfExpression](expression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	conditionExpression := evaluate_expression(expectedExpression.Condition, env)
+	expectedCondition, err := ExpectRuntimeValue[RuntimeBoolean](conditionExpression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if expectedCondition.Value {
+		return evaluate_block_expression(expectedExpression.Consequent, env)
+	} else if &expectedExpression.Alternate != nil {
+		alternateExpression, err := ast.ExpectExpression[ast.IfExpression](expectedExpression.Alternate)
+
+		if err != nil {
+			return evaluate_if_expression(alternateExpression, env)
+		} else {
+			return evaluate_block_expression(expectedExpression.Alternate, env)
+		}
+	}
+
+	return RuntimeNil{}
+}
+
+func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expectedExpression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
+
+	if err != nil {
+		panic(err)
+	}
+
+	value := evaluate_expression(expectedExpression.Value, env)
+	var defaultCase *ast.SwitchCaseStatement
+
+	for _, switchCase := range expectedExpression.Cases {
+		if switchCase.IsDefault {
+			if defaultCase != nil {
+				panic("duplicate default patterns in switch expression")
+			}
+
+			defaultCase = &switchCase
+		}
+	}
+
+	for _, switchCase := range expectedExpression.Cases {
+		for _, pattern := range switchCase.Patterns {
+			casePatternValue := evaluate_expression(pattern, env)
+
+			if isEqual(casePatternValue, value) {
+				return evaluate_expression(switchCase.Body, env)
+			}
+		}
+	}
+
+	if defaultCase == nil {
+		return nil
+	}
+
+	return evaluate_expression(defaultCase.Body, env)
 }

@@ -105,22 +105,27 @@ func create_token_lookups() {
 	// Ternary
 	register_led(lexer.QUESTION, ternary, parse_ternary_expression)
 
-	// Member / Computed / Call
-
 	// Grouping Expression
 	register_nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)
 	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
 
+	// Member / Computed / Call
+	register_led(lexer.OPEN_PAREN, call, parse_call_expression)
+	register_led(lexer.DOT, member, parse_member_expression)
+	register_led(lexer.OPEN_BRACKET, member, parse_computed_member_expression)
+
+	// Block
+	register_nud(lexer.OPEN_CURLY, default_bp, parse_block_expression)
+	register_nud(lexer.IF, default_bp, parse_if_expression)
+	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
+
 	// Statements
+	register_statement(lexer.IMPORT, parse_import_statement)
 	register_statement(lexer.LET, parse_multi_variable_declaration_statement)
 	register_statement(lexer.CONST, parse_multi_variable_declaration_statement)
 	register_statement(lexer.INTERFACE, parse_interface_declaration_statement)
 	register_statement(lexer.STRUCT, parse_struct_declaration_statement)
 	register_statement(lexer.FN, parse_function_declaration_statement)
-	register_statement(lexer.IMPORT, parse_import_statement)
-	register_statement(lexer.IF, parse_if_statement)
-	register_statement(lexer.OPEN_CURLY, parse_block_statement)
-	register_statement(lexer.SWITCH, parse_switch_statement)
 	register_statement(lexer.FOR, parse_for_statement)
 	register_statement(lexer.CONTINUE, parse_loop_control_statement)
 	register_statement(lexer.BREAK, parse_loop_control_statement)
