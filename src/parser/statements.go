@@ -283,7 +283,12 @@ func parse_return_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.RETURN)
 	parser.advance(1)
 
-	value := parse_expression(parser, default_bp)
+	var value ast.Expression
+	if parser.is_empty() || parser.current_token().Kind == lexer.SEMI_COLON {
+		value = ast.NilExpression{}
+	} else {
+		value = parse_expression(parser, default_bp)
+	}
 
 	return ast.ReturnStatement{
 		Value: value,

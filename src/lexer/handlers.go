@@ -6,6 +6,14 @@ import (
 
 func default_handler(kind TokenKind, value string) regex_handler {
 	return func(lex *lexer, _ *regexp.Regexp) {
+		// semi colon before close curly
+		if kind == CLOSE_CURLY && len(lex.Tokens) > 0 {
+			last := lex.peek()
+			if needs_semi_colon(last) {
+				lex.push(CreateToken(SEMI_COLON, ";"))
+			}
+		}
+
 		lex.advance(len(value))
 		lex.push(CreateToken(kind, value))
 	}
@@ -64,10 +72,6 @@ func newline_handler(lex *lexer, regex *regexp.Regexp) {
 	lex.line++
 	lex.advance(len(match))
 }
-
-// TODO: semi colon insertion hurts stuff like switch statements either
-// TODO: i need to specify to disregard them on switch statements and more things in the future
-// TODO: or just remove it and think of something else
 
 func needs_semi_colon(token Token) bool {
 	return token.IsOfKind(

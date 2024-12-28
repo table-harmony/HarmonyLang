@@ -252,6 +252,10 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 		panic(err)
 	}
 
+	if len(expectedExpression.Statements) == 0 {
+		return RuntimeNil{}
+	}
+
 	scope := create_enviorment(env)
 
 	for index, underlyingStatement := range expectedExpression.Statements {
@@ -264,18 +268,17 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 
 	lastStatement := expectedExpression.Statements[len(expectedExpression.Statements)-1]
 
-	if returnStatement, ok := lastStatement.(ast.ReturnStatement); ok {
-		return evaluate_expression(returnStatement.Value, scope)
-	}
-
 	if expressionStatement, ok := lastStatement.(ast.ExpressionStatement); ok {
 		return evaluate_expression(expressionStatement.Expression, scope)
+	}
+
+	if returnStatement, ok := lastStatement.(ast.ReturnStatement); ok {
+		panic(ReturnError{Value: evaluate_expression(returnStatement.Value, env)})
 	}
 
 	return RuntimeNil{}
 }
 
-// TODO: i dont iterate each statement cause i changed it from ast.BlockStatement to []ast.Statement
 func evaluate_if_expression(expression ast.Expression, env *Environment) RuntimeValue {
 	expectedExpression, err := ast.ExpectExpression[ast.IfExpression](expression)
 

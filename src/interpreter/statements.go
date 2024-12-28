@@ -73,8 +73,16 @@ func evaluate_break_statement(statement ast.Statement, env *Environment) {
 }
 
 func evaluate_return_statement(statement ast.Statement, env *Environment) {
+	expectedStatement, err := ast.ExpectStatement[ast.ReturnStatement](statement)
+
+	if err != nil {
+		panic(err)
+	}
+
+	panic(ReturnError{Value: evaluate_expression(expectedStatement.Value, env)})
 }
 
+// TODO: i dont iterate each statement cause i changed it from ast.BlockStatement to []ast.Statement
 func evaluate_for_statement(statement ast.Statement, env *Environment) {
 	expected_statement, err := ast.ExpectStatement[ast.ForStatement](statement)
 	if err != nil {
@@ -126,7 +134,6 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 }
 
 func evaluate_function_declaration_statement(statement ast.Statement, env *Environment) {
-	panic("Not implemented yet")
 }
 
 func evaluate_assignment_statement(statement ast.Statement, env *Environment) {

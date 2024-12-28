@@ -180,7 +180,6 @@ func parse_computed_member_expression(parser *parser, left ast.Expression, bp bi
 	}
 }
 
-// TODO: semi colon before close curly
 func parse_block_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
@@ -244,6 +243,9 @@ func parse_switch_expression(parser *parser) ast.Expression {
 				Body:      body,
 				IsDefault: true,
 			})
+			for !parser.is_empty() && parser.current_token().Kind == lexer.SEMI_COLON {
+				parser.advance(1)
+			}
 		} else {
 			parser.expect(lexer.CASE)
 			parser.advance(1)
@@ -266,6 +268,10 @@ func parse_switch_expression(parser *parser) ast.Expression {
 				Patterns: patterns,
 				Body:     body,
 			})
+
+			for !parser.is_empty() && parser.current_token().Kind == lexer.SEMI_COLON {
+				parser.advance(1)
+			}
 		}
 	}
 
