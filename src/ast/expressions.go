@@ -28,10 +28,10 @@ type BooleanExpression struct {
 
 func (BooleanExpression) expression() {}
 
-type NullExpression struct {
+type NilExpression struct {
 }
 
-func (NullExpression) expression() {}
+func (NilExpression) expression() {}
 
 // Complex Expressions
 
@@ -42,14 +42,6 @@ type BinaryExpression struct {
 }
 
 func (BinaryExpression) expression() {}
-
-type AssignmentExpression struct {
-	Assigne  Expression
-	Value    Expression
-	Operator lexer.Token
-}
-
-func (AssignmentExpression) expression() {}
 
 type PrefixExpression struct {
 	Operator lexer.Token

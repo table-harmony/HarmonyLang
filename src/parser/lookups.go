@@ -24,11 +24,13 @@ const (
 
 type statement_handler func(parser *parser) ast.Statement
 type nud_handler func(parser *parser) ast.Expression
+type sed_handler func(parser *parser, left ast.Expression) ast.Statement
 type led_handler func(parser *parser, left ast.Expression, bp binding_power) ast.Expression
 
 var binding_power_lookup = map[lexer.TokenKind]binding_power{}
 var nud_lookup = map[lexer.TokenKind]nud_handler{}
 var led_lookup = map[lexer.TokenKind]led_handler{}
+var sed_lookup = map[lexer.TokenKind]sed_handler{}
 var statement_lookup = map[lexer.TokenKind]statement_handler{}
 
 func register_led(kind lexer.TokenKind, bp binding_power, handler led_handler) {
@@ -41,6 +43,10 @@ func register_nud(kind lexer.TokenKind, bp binding_power, handler nud_handler) {
 	nud_lookup[kind] = handler
 }
 
+func register_sed(kind lexer.TokenKind, handler sed_handler) {
+	sed_lookup[kind] = handler
+}
+
 func register_statement(kind lexer.TokenKind, handler statement_handler) {
 	binding_power_lookup[kind] = default_bp
 	statement_lookup[kind] = handler
@@ -48,17 +54,17 @@ func register_statement(kind lexer.TokenKind, handler statement_handler) {
 
 func create_token_lookups() {
 	// Assignment
-	register_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
-	register_led(lexer.NULLISH_ASSIGNMENT, assignment, parse_assignment_expression)
-	register_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.PERCENT_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.AND_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.OR_EQUALS, assignment, parse_assignment_expression)
-	register_led(lexer.PLUS_PLUS, assignment, parse_assignment_expression)
-	register_led(lexer.MINUS_MINUS, assignment, parse_assignment_expression)
+	register_sed(lexer.ASSIGNMENT, parse_assignment_statement)
+	register_sed(lexer.PLUS_EQUALS, parse_assignment_statement)
+	register_sed(lexer.MINUS_EQUALS, parse_assignment_statement)
+	register_sed(lexer.STAR_EQUALS, parse_assignment_statement)
+	register_sed(lexer.SLASH_EQUALS, parse_assignment_statement)
+	register_sed(lexer.PERCENT_EQUALS, parse_assignment_statement)
+	register_sed(lexer.AND_EQUALS, parse_assignment_statement)
+	register_sed(lexer.OR_EQUALS, parse_assignment_statement)
+	register_sed(lexer.NULLISH_ASSIGNMENT, parse_assignment_statement)
+	register_sed(lexer.PLUS_PLUS, parse_assignment_statement)
+	register_sed(lexer.MINUS_MINUS, parse_assignment_statement)
 
 	// Logical
 	register_led(lexer.AND, logical, parse_binary_expression)
@@ -88,7 +94,7 @@ func create_token_lookups() {
 	register_nud(lexer.IDENTIFIER, primary, parse_primary_expression)
 	register_nud(lexer.TRUE, primary, parse_primary_expression)
 	register_nud(lexer.FALSE, primary, parse_primary_expression)
-	register_nud(lexer.NULL, primary, parse_primary_expression)
+	register_nud(lexer.NIL, primary, parse_primary_expression)
 
 	// Unary / Prefix
 	register_nud(lexer.DASH, additive, parse_prefix_expression) // binding power of additive sense a dash or a plus as unary are the same as additive operations
@@ -110,7 +116,7 @@ func create_token_lookups() {
 	register_statement(lexer.CONST, parse_multi_variable_declaration_statement)
 	register_statement(lexer.INTERFACE, parse_interface_declaration_statement)
 	register_statement(lexer.STRUCT, parse_struct_declaration_statement)
-	register_statement(lexer.FUNC, parse_function_declaration_statement)
+	register_statement(lexer.FN, parse_function_declaration_statement)
 	register_statement(lexer.IMPORT, parse_import_statement)
 	register_statement(lexer.IF, parse_if_statement)
 	register_statement(lexer.OPEN_CURLY, parse_block_statement)

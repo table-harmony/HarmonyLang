@@ -17,16 +17,22 @@ func create_enviorment(parent *Environment) *Environment {
 }
 
 func (env *Environment) declare_variable(variable RuntimeVariable) error {
-	_, err := env.resolve(variable.Identifier)
+	_, exists := env.variables[variable.Identifier]
 
-	if err == nil {
+	if exists {
 		return fmt.Errorf("variable '%s' already declared", variable.Identifier)
 	}
 
-	if variable.getValue().getType() != variable.ExplicitType && variable.ExplicitType != AnyType {
+	value := variable.getValue()
+
+	if value == nil {
+		value = GetDefaultValue(variable.ExplicitType)
+	}
+
+	if value.getType() != variable.ExplicitType && variable.ExplicitType != AnyType {
 		return fmt.Errorf("type mismatch: variable '%s' declared as %v but got %v",
 			variable.Identifier, variable.ExplicitType.ToString(),
-			variable.getValue().getType().ToString(),
+			value.getType().ToString(),
 		)
 	}
 
@@ -45,6 +51,10 @@ func (env *Environment) get_variable(identifier string) (RuntimeVariable, error)
 }
 
 func (env *Environment) assign_variable(identifier string, value RuntimeValue) error {
+	if value == nil {
+		value = RuntimeNil{}
+	}
+
 	env, err := env.resolve(identifier)
 
 	if err != nil {

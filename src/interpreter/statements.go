@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
 func (interpreter *interpreter) evalute_current_statement(enviorment *Environment) {
@@ -40,10 +41,10 @@ func evaluate_variable_declaration_statement(statement ast.Statement, env *Envir
 	}
 
 	err = env.declare_variable(RuntimeVariable{
-		Value:        evaluate_expression(expectedStatement.Value, env),
-		IsConstant:   expectedStatement.IsConstant,
-		Identifier:   expectedStatement.Identifier,
-		ExplicitType: evaluate_type(expectedStatement.ExplicitType),
+		expectedStatement.Identifier,
+		expectedStatement.IsConstant,
+		evaluate_expression(expectedStatement.Value, env),
+		evaluate_type(expectedStatement.ExplicitType),
 	})
 
 	if err != nil {
@@ -107,6 +108,9 @@ func evaluate_continue_statement(statement ast.Statement, env *Environment) {
 
 func evaluate_break_statement(statement ast.Statement, env *Environment) {
 	panic(BreakError{})
+}
+
+func evaluate_return_statement(statement ast.Statement, env *Environment) {
 }
 
 func evaluate_for_statement(statement ast.Statement, env *Environment) {
@@ -200,4 +204,32 @@ func evaluate_switch_statement(statement ast.Statement, env *Environment) {
 
 func evaluate_function_declaration_statement(statement ast.Statement, env *Environment) {
 	panic("Not implemented yet")
+}
+
+func evaluate_assignment_statement(statement ast.Statement, env *Environment) {
+	expectedStatement, err := ast.ExpectStatement[ast.AssignmentStatement](statement)
+
+	if err != nil {
+		panic(err)
+	}
+
+	//TODO: this is not expected it could be member or call
+	assigneExpression, _ := ast.ExpectExpression[ast.SymbolExpression](expectedStatement.Assigne)
+	declaredVariable, err := env.get_variable(assigneExpression.Value)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if expectedStatement.Operator.Kind == lexer.NULLISH_ASSIGNMENT &&
+		declaredVariable.getValue().getType() != (RuntimeNil{}).getType() {
+		return
+	}
+
+	err = env.assign_variable(assigneExpression.Value,
+		evaluate_expression(expectedStatement.Value, env))
+
+	if err != nil {
+		panic(err)
+	}
 }

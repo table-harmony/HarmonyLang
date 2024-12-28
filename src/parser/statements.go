@@ -29,8 +29,63 @@ func parse_statement(parser *parser) ast.Statement {
 func parse_expression_statement(parser *parser) ast.Statement {
 	expression := parse_expression(parser, default_bp)
 
+	if handler, exists := sed_lookup[parser.current_token().Kind]; exists {
+		return handler(parser, expression)
+	}
+
 	return ast.ExpressionStatement{
 		Expression: expression,
+	}
+}
+
+func parse_assignment_statement(parser *parser, left ast.Expression) ast.Statement {
+	operator := parser.current_token()
+	parser.advance(1)
+
+	valueExpression := ast.BinaryExpression{
+		Left: left,
+	}
+
+	binaryOperators := map[lexer.TokenKind]lexer.TokenKind{
+		lexer.PLUS_PLUS:      lexer.PLUS,
+		lexer.MINUS_MINUS:    lexer.DASH,
+		lexer.PLUS_EQUALS:    lexer.PLUS,
+		lexer.MINUS_EQUALS:   lexer.DASH,
+		lexer.STAR_EQUALS:    lexer.STAR,
+		lexer.PERCENT_EQUALS: lexer.PERCENT,
+		lexer.AND_EQUALS:     lexer.AND,
+		lexer.OR_EQUALS:      lexer.OR,
+	}
+
+	getBinaryOperator := func() lexer.TokenKind {
+		if op, exists := binaryOperators[operator.Kind]; exists {
+			return op
+		}
+		return operator.Kind
+	}
+
+	switch operator.Kind {
+	case lexer.PLUS_PLUS:
+		valueExpression.Operator = lexer.CreateToken(lexer.PLUS, "++")
+		valueExpression.Right = ast.NumberExpression{Value: 1}
+	case lexer.MINUS_MINUS:
+		valueExpression.Operator = lexer.CreateToken(lexer.DASH, "--")
+		valueExpression.Right = ast.NumberExpression{Value: 1}
+	case lexer.NULLISH_ASSIGNMENT, lexer.ASSIGNMENT:
+		return ast.AssignmentStatement{
+			Assigne:  left,
+			Value:    parse_expression(parser, default_bp),
+			Operator: lexer.CreateToken(getBinaryOperator(), ""),
+		}
+	default:
+		valueExpression.Operator = lexer.CreateToken(getBinaryOperator(), "")
+		valueExpression.Right = parse_expression(parser, default_bp)
+	}
+
+	return ast.AssignmentStatement{
+		Assigne:  left,
+		Value:    valueExpression,
+		Operator: valueExpression.Operator,
 	}
 }
 
@@ -265,7 +320,7 @@ func parse_loop_control_statement(parser *parser) ast.Statement {
 }
 
 func parse_function_declaration_statement(parser *parser) ast.Statement {
-	parser.expect(lexer.FUNC)
+	parser.expect(lexer.FN)
 	parser.advance(1)
 
 	identifier := parser.expect(lexer.IDENTIFIER)
@@ -316,8 +371,8 @@ func parse_function_declaration_statement(parser *parser) ast.Statement {
 		return_type = parse_type(parser, default_bp)
 	}
 
-	body_statement := parse_block_statement(parser)
-	block_statement, err := ast.ExpectStatement[ast.BlockStatement](body_statement)
+	body := parse_block_statement(parser)
+	block, err := ast.ExpectStatement[ast.BlockStatement](body)
 
 	if err != nil {
 		panic(err)
@@ -326,7 +381,7 @@ func parse_function_declaration_statement(parser *parser) ast.Statement {
 	return ast.FunctionDeclarationStatment{
 		Identifier: identifier.Value,
 		Parameters: params,
-		Body:       block_statement,
+		Body:       block,
 		ReturnType: return_type,
 	}
 }
@@ -336,9 +391,6 @@ func parse_return_statement(parser *parser) ast.Statement {
 	parser.advance(1)
 
 	value := parse_expression(parser, default_bp)
-
-	parser.expect(lexer.SEMI_COLON)
-	parser.advance(1)
 
 	return ast.ReturnStatement{
 		Value: value,

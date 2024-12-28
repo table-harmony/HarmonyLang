@@ -6,7 +6,7 @@ type TokenKind int
 
 const (
 	EOF TokenKind = iota
-	NULL
+	NIL
 	TRUE
 	FALSE
 	NUMBER
@@ -70,7 +70,7 @@ const (
 	CONST
 	IMPORT
 	FROM
-	FUNC
+	FN
 	STRUCT
 	INTERFACE
 	IF
@@ -93,12 +93,12 @@ const (
 var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"true":      TRUE,
 	"false":     FALSE,
-	"null":      NULL,
+	"nil":       NIL,
 	"let":       LET,
 	"const":     CONST,
 	"import":    IMPORT,
 	"from":      FROM,
-	"func":      FUNC,
+	"fn":        FN,
 	"if":        IF,
 	"else":      ELSE,
 	"foreach":   FOREACH,
@@ -153,8 +153,8 @@ func (kind TokenKind) ToString() string {
 	switch kind {
 	case EOF:
 		return "eof"
-	case NULL:
-		return "null"
+	case NIL:
+		return "nil"
 	case NUMBER:
 		return "number"
 	case STRING:
@@ -247,7 +247,7 @@ func (kind TokenKind) ToString() string {
 		return "import"
 	case FROM:
 		return "from"
-	case FUNC:
+	case FN:
 		return "function"
 	case IF:
 		return "if"

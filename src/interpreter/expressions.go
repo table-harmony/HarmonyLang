@@ -38,8 +38,8 @@ func evaluate_primary_statement(expression ast.Expression, env *Environment) Run
 		return RuntimeBoolean{
 			Value: expression.(ast.BooleanExpression).Value,
 		}
-	case reflect.TypeOf(ast.NullExpression{}):
-		return RuntimeNull{}
+	case reflect.TypeOf(ast.NilExpression{}):
+		return RuntimeNil{}
 	default:
 		panic(fmt.Sprintf("Unknown statement type %s", expression_type))
 	}
@@ -222,36 +222,6 @@ func evaluate_symbol_expression(expression ast.Expression, env *Environment) Run
 	}
 
 	return variable
-}
-
-func evaluate_assignment_expression(expression ast.Expression, env *Environment) RuntimeValue {
-	expected_expression, err := ast.ExpectExpression[ast.AssignmentExpression](expression)
-
-	if err != nil {
-		panic(err)
-	}
-
-	//TODO: this is not expected it could be member or call
-	expected_assigne_expression, _ := ast.ExpectExpression[ast.SymbolExpression](expected_expression.Assigne)
-	declared_variable, err := env.get_variable(expected_assigne_expression.Value)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if expected_expression.Operator.Kind == lexer.NULLISH_ASSIGNMENT &&
-		declared_variable.getValue().getType() != (RuntimeNull{}).getType() {
-		return declared_variable
-	}
-
-	err = env.assign_variable(expected_assigne_expression.Value,
-		evaluate_expression(expected_expression.Value, env))
-
-	if err != nil {
-		panic(err)
-	}
-
-	return declared_variable
 }
 
 func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {

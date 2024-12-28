@@ -1,28 +1,5 @@
-let foo = 2;
+let x = 1, y: string = ""
 
-const bar = switch foo + 1 {
-  1 + 2, 1 + 1 -> "1",
-  4, 3 -> "2",
-  _, 2 -> "3",
-}
-
-foo = 1;
-
-//for (index, value) in range(slice) {
-//} 
-//
-//for let x = 2; x < 10; x++ {
-//}
-
-//let x = 0;
-//for ; x < 10; x++ {
-//
-//}
-
-//for boolean {
-//
-//}
-//
-//for (index, value) in range(slice) {
-//
-//}
+let z = x == 123 ? 1 : "123123"
+//z = false
+x = nil

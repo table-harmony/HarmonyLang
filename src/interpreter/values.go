@@ -13,7 +13,7 @@ const (
 	NumberType RuntimeValueType = iota
 	StringType
 	BooleanType
-	NullType
+	NilType
 
 	VariableType
 	FunctionType
@@ -28,7 +28,7 @@ func (_type RuntimeValueType) ToString() string {
 		return "string"
 	case BooleanType:
 		return "bool"
-	case NullType:
+	case NilType:
 		return "null"
 	case VariableType:
 		return "variable"
@@ -50,12 +50,40 @@ func ExpectRuntimeValue[T RuntimeValue](value RuntimeValue) (T, error) {
 	return helpers.ExpectType[T](value)
 }
 
+func GetDefaultValue(valueType RuntimeValueType) RuntimeValue {
+	switch valueType {
+	case NumberType:
+		return RuntimeNumber{Value: 0}
+	case StringType:
+		return RuntimeString{Value: ""}
+	case BooleanType:
+		return RuntimeBoolean{Value: false}
+	case NilType:
+		return RuntimeNil{}
+	case FunctionType:
+		return RuntimeNil{}
+	default:
+		return RuntimeNil{}
+	}
+}
+
 func isEqual(variable1 RuntimeValue, variable2 RuntimeValue) bool {
-	if variable1.getValue().getType() != variable2.getValue().getType() {
+	if variable1 == nil || variable2 == nil {
+		return variable1 == variable2
+	}
+
+	value1 := variable1.getValue()
+	value2 := variable2.getValue()
+
+	if value1 == nil || value2 == nil {
+		return value1 == value2
+	}
+
+	if value1.getType() != value2.getType() {
 		return false
 	}
 
-	return variable1.getValue() == variable2.getValue()
+	return value1 == value2
 }
 
 type RuntimeNumber struct {
@@ -79,11 +107,11 @@ type RuntimeBoolean struct {
 func (RuntimeBoolean) getType() RuntimeValueType { return BooleanType }
 func (b RuntimeBoolean) getValue() RuntimeValue  { return b }
 
-type RuntimeNull struct {
+type RuntimeNil struct {
 }
 
-func (RuntimeNull) getType() RuntimeValueType { return NullType }
-func (n RuntimeNull) getValue() RuntimeValue  { return n }
+func (RuntimeNil) getType() RuntimeValueType { return NilType }
+func (n RuntimeNil) getValue() RuntimeValue  { return n }
 
 type RuntimeVariable struct {
 	Identifier   string

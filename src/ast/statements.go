@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/table-harmony/HarmonyLang/src/lexer"
+
 type BlockStatement struct {
 	Body []Statement
 }
@@ -11,6 +13,14 @@ type ExpressionStatement struct {
 }
 
 func (ExpressionStatement) statement() {}
+
+type AssignmentStatement struct {
+	Assigne  Expression
+	Value    Expression
+	Operator lexer.Token
+}
+
+func (AssignmentStatement) statement() {}
 
 type VariableDeclarationStatement struct {
 	Identifier   string

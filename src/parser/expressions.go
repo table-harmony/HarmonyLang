@@ -50,8 +50,8 @@ func parse_primary_expression(parser *parser) ast.Expression {
 	parser.advance(1)
 
 	switch token.Kind {
-	case lexer.NULL:
-		return ast.NullExpression{}
+	case lexer.NIL:
+		return ast.NilExpression{}
 	case lexer.TRUE:
 		return ast.BooleanExpression{
 			Value: true,
@@ -80,57 +80,6 @@ func parse_primary_expression(parser *parser) ast.Expression {
 		}
 	default:
 		panic(fmt.Sprintf("Cannot create primary_expression from %s\n", token.Kind.ToString()))
-	}
-}
-
-func parse_assignment_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
-	parser.advance(1)
-	operator := parser.previous_token()
-
-	valueExpression := ast.BinaryExpression{
-		Left: left,
-	}
-
-	binaryOperators := map[lexer.TokenKind]lexer.TokenKind{
-		lexer.PLUS_PLUS:      lexer.PLUS,
-		lexer.MINUS_MINUS:    lexer.DASH,
-		lexer.PLUS_EQUALS:    lexer.PLUS,
-		lexer.MINUS_EQUALS:   lexer.DASH,
-		lexer.STAR_EQUALS:    lexer.STAR,
-		lexer.PERCENT_EQUALS: lexer.PERCENT,
-		lexer.AND_EQUALS:     lexer.AND,
-		lexer.OR_EQUALS:      lexer.OR,
-	}
-
-	getBinaryOperator := func() lexer.TokenKind {
-		if op, exists := binaryOperators[operator.Kind]; exists {
-			return op
-		}
-		return operator.Kind
-	}
-
-	switch operator.Kind {
-	case lexer.PLUS_PLUS:
-		valueExpression.Operator = lexer.CreateToken(lexer.PLUS, "++")
-		valueExpression.Right = ast.NumberExpression{Value: 1}
-	case lexer.MINUS_MINUS:
-		valueExpression.Operator = lexer.CreateToken(lexer.DASH, "--")
-		valueExpression.Right = ast.NumberExpression{Value: -1}
-	case lexer.NULLISH_ASSIGNMENT, lexer.ASSIGNMENT:
-		return ast.AssignmentExpression{
-			Assigne:  left,
-			Value:    parse_expression(parser, bp),
-			Operator: lexer.CreateToken(getBinaryOperator(), ""),
-		}
-	default:
-		valueExpression.Operator = lexer.CreateToken(getBinaryOperator(), "")
-		valueExpression.Right = parse_expression(parser, bp)
-	}
-
-	return ast.AssignmentExpression{
-		Assigne:  left,
-		Value:    valueExpression,
-		Operator: valueExpression.Operator,
 	}
 }
 

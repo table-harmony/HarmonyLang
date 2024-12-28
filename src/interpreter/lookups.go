@@ -33,12 +33,13 @@ func create_lookups() {
 	register_statement_handler[ast.SwitchStatement](evaluate_switch_statement)
 	register_statement_handler[ast.ContinueStatement](evaluate_continue_statement)
 	register_statement_handler[ast.BreakStatement](evaluate_break_statement)
+	register_statement_handler[ast.ReturnStatement](evaluate_return_statement)
 	register_statement_handler[ast.FunctionDeclarationStatment](evaluate_function_declaration_statement)
+	register_statement_handler[ast.AssignmentStatement](evaluate_assignment_statement)
 
 	// Expressions
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)
 	register_expression_handler[ast.BinaryExpression](evalute_binary_expression)
-	register_expression_handler[ast.AssignmentExpression](evaluate_assignment_expression)
 	register_expression_handler[ast.SymbolExpression](evaluate_symbol_expression)
 	register_expression_handler[ast.SwitchExpression](evaluate_switch_expression)
 	register_expression_handler[ast.TernaryExpression](evaluate_ternary_expression)
@@ -47,5 +48,5 @@ func create_lookups() {
 	register_expression_handler[ast.BooleanExpression](evaluate_primary_statement)
 	register_expression_handler[ast.NumberExpression](evaluate_primary_statement)
 	register_expression_handler[ast.StringExpression](evaluate_primary_statement)
-	register_expression_handler[ast.NullExpression](evaluate_primary_statement)
+	register_expression_handler[ast.NilExpression](evaluate_primary_statement)
 }
