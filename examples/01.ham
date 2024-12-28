@@ -1,7 +1,12 @@
-let foo = true,
-  bar = 1;
+let foo = 2;
 
-//foo = 1;
+const bar = switch foo + 1 {
+  1 + 2, 1 + 1 -> "1",
+  4, 3 -> "2",
+  _, 2 -> "3",
+}
+
+foo = 1;
 
 //for (index, value) in range(slice) {
 //} 

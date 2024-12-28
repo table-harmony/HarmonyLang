@@ -49,13 +49,16 @@ func register_statement(kind lexer.TokenKind, handler statement_handler) {
 func create_token_lookups() {
 	// Assignment
 	register_led(lexer.ASSIGNMENT, assignment, parse_assignment_expression)
+	register_led(lexer.NULLISH_ASSIGNMENT, assignment, parse_assignment_expression)
 	register_led(lexer.PLUS_EQUALS, assignment, parse_assignment_expression)
 	register_led(lexer.MINUS_EQUALS, assignment, parse_assignment_expression)
 	register_led(lexer.STAR_EQUALS, assignment, parse_assignment_expression)
 	register_led(lexer.SLASH_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.PERCENT_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.AND_EQUALS, assignment, parse_assignment_expression)
+	register_led(lexer.OR_EQUALS, assignment, parse_assignment_expression)
 	register_led(lexer.PLUS_PLUS, assignment, parse_assignment_expression)
 	register_led(lexer.MINUS_MINUS, assignment, parse_assignment_expression)
-	register_led(lexer.NULLISH_ASSIGNMENT, assignment, parse_assignment_expression)
 
 	// Logical
 	register_led(lexer.AND, logical, parse_binary_expression)
@@ -88,8 +91,8 @@ func create_token_lookups() {
 	register_nud(lexer.NULL, primary, parse_primary_expression)
 
 	// Unary / Prefix
-	register_nud(lexer.DASH, additive, parse_prefix_expression)
-	register_nud(lexer.PLUS, additive, parse_prefix_expression)
+	register_nud(lexer.DASH, additive, parse_prefix_expression) // binding power of additive sense a dash or a plus as unary are the same as additive operations
+	register_nud(lexer.PLUS, additive, parse_prefix_expression) // making them unary would cause errors because they would have higher precedence than multiplicative
 	register_nud(lexer.NOT, unary, parse_prefix_expression)
 	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
 

@@ -164,11 +164,14 @@ func parse_switch_statement(parser *parser) ast.Statement {
 
 	cases := make([]ast.SwitchCaseStatement, 0)
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
-		var pattern ast.Expression
+		var patterns []ast.Expression
+		var isDefault bool
 
 		if parser.current_token().Kind == lexer.DEFAULT {
+			isDefault = true
 			parser.advance(1)
 		} else {
+			// the end of the curly braces in the switch case before hand };
 			if parser.current_token().Kind == lexer.SEMI_COLON {
 				parser.advance(1)
 			}
@@ -176,7 +179,15 @@ func parse_switch_statement(parser *parser) ast.Statement {
 			parser.expect(lexer.CASE)
 			parser.advance(1)
 
-			pattern = parse_expression(parser, assignment)
+			for !parser.is_empty() && parser.current_token().Kind != lexer.COLON {
+				pattern := parse_expression(parser, default_bp)
+				patterns = append(patterns, pattern)
+
+				if parser.current_token().Kind != lexer.COLON {
+					parser.expect(lexer.COMMA)
+					parser.advance(1)
+				}
+			}
 		}
 
 		parser.expect(lexer.COLON)
@@ -189,8 +200,9 @@ func parse_switch_statement(parser *parser) ast.Statement {
 		}
 
 		cases = append(cases, ast.SwitchCaseStatement{
-			Pattern: pattern,
-			Body:    ast.BlockStatement{Body: body},
+			Patterns:  patterns,
+			Body:      ast.BlockStatement{Body: body},
+			IsDefault: isDefault,
 		})
 	}
 

@@ -98,6 +98,8 @@ func parse_assignment_expression(parser *parser, left ast.Expression, bp binding
 		lexer.MINUS_EQUALS:   lexer.DASH,
 		lexer.STAR_EQUALS:    lexer.STAR,
 		lexer.PERCENT_EQUALS: lexer.PERCENT,
+		lexer.AND_EQUALS:     lexer.AND,
+		lexer.OR_EQUALS:      lexer.OR,
 	}
 
 	getBinaryOperator := func() lexer.TokenKind {
@@ -165,9 +167,40 @@ func parse_switch_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
 
-	cases := make([]ast.SwitchCase, 0)
+	switchCases := make([]ast.SwitchCase, 0)
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
-		pattern := parse_expression(parser, assignment)
+		if parser.current_token().Kind == lexer.IDENTIFIER && parser.current_token().Value == "_" {
+			parser.advance(1)
+
+			parser.expect_error(lexer.ARROW, fmt.Errorf("expected arrow after 'default' case in switch expression"))
+			parser.advance(1)
+
+			value := parse_expression(parser, assignment)
+
+			switchCases = append(switchCases, ast.DefaultSwitchCase{
+				Value: value,
+			})
+
+			if parser.current_token().Kind != lexer.CLOSE_CURLY {
+				parser.expect(lexer.COMMA)
+				parser.advance(1)
+			}
+
+			continue
+		}
+
+		var patterns []ast.Expression
+
+		for !parser.is_empty() && parser.current_token().Kind != lexer.ARROW {
+			pattern := parse_expression(parser, assignment)
+
+			patterns = append(patterns, pattern)
+
+			if parser.current_token().Kind != lexer.ARROW {
+				parser.expect(lexer.COMMA)
+				parser.advance(1)
+			}
+		}
 
 		parser.expect(lexer.ARROW)
 		parser.advance(1)
@@ -179,9 +212,9 @@ func parse_switch_expression(parser *parser) ast.Expression {
 			parser.advance(1)
 		}
 
-		cases = append(cases, ast.SwitchCase{
-			Pattern: pattern,
-			Value:   value,
+		switchCases = append(switchCases, ast.NormalSwitchCase{
+			Patterns: patterns,
+			Value:    value,
 		})
 	}
 
@@ -190,7 +223,7 @@ func parse_switch_expression(parser *parser) ast.Expression {
 
 	return ast.SwitchExpression{
 		Value: value,
-		Cases: cases,
+		Cases: switchCases,
 	}
 }
 

@@ -16,5 +16,5 @@ func ExpectType[T any](r any) (T, error) {
 	}
 
 	var zeroValue T
-	return zeroValue, fmt.Errorf("expected %T but instead received %T inside ExpectType[T](r)", expectedType, recievedType)
+	return zeroValue, fmt.Errorf("expected %v but instead received %v", expectedType, recievedType)
 }

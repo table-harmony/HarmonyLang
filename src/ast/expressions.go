@@ -65,10 +65,25 @@ type SwitchExpression struct {
 
 func (SwitchExpression) expression() {}
 
-type SwitchCase struct {
-	Pattern Expression
-	Value   Expression
+type SwitchCase interface {
+	GetValue() Expression
+	GetPatterns() []Expression
 }
+
+type NormalSwitchCase struct {
+	Patterns []Expression
+	Value    Expression
+}
+
+func (n NormalSwitchCase) GetValue() Expression      { return n.Value }
+func (n NormalSwitchCase) GetPatterns() []Expression { return n.Patterns }
+
+type DefaultSwitchCase struct {
+	Value Expression
+}
+
+func (n DefaultSwitchCase) GetValue() Expression      { return n.Value }
+func (n DefaultSwitchCase) GetPatterns() []Expression { return make([]Expression, 0) }
 
 type TernaryExpression struct {
 	Condition  Expression

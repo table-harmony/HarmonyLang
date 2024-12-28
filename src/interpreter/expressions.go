@@ -254,37 +254,42 @@ func evaluate_assignment_expression(expression ast.Expression, env *Environment)
 	return declared_variable
 }
 
-// TODO: duplicate keys
 func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {
-	expected_expression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
+	expectedExpression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
 
 	if err != nil {
 		panic(err)
 	}
 
-	value := evaluate_expression(expected_expression.Value, env)
-	var default_case ast.Expression
+	value := evaluate_expression(expectedExpression.Value, env)
+	var defaultCase *ast.DefaultSwitchCase
 
-	underscore_symbol := ast.SymbolExpression{Value: "_"}
+	for _, switchCase := range expectedExpression.Cases {
+		if defaultSwitchCase, ok := switchCase.(ast.DefaultSwitchCase); ok {
+			if defaultCase != nil {
+				panic("duplicate default patterns in switch expression")
+			}
 
-	for _, case_statement := range expected_expression.Cases {
-		if case_statement.Pattern == underscore_symbol {
-			default_case = case_statement.Value
-			continue
-		}
-
-		case_value := evaluate_expression(case_statement.Pattern, env)
-
-		if isEqual(case_value, value) {
-			return evaluate_expression(case_statement.Value, env)
+			defaultCase = &defaultSwitchCase
 		}
 	}
 
-	if default_case == nil {
+	for _, switchCase := range expectedExpression.Cases {
+		for _, pattern := range switchCase.GetPatterns() {
+			casePatternValue := evaluate_expression(pattern, env)
+
+			if isEqual(casePatternValue, value) {
+				scope := create_enviorment(env)
+				return evaluate_expression(switchCase.GetValue(), scope)
+			}
+		}
+	}
+
+	if defaultCase == nil {
 		return nil
 	}
 
-	return evaluate_expression(default_case, env)
+	return evaluate_expression(defaultCase.Value, env)
 }
 
 func evaluate_ternary_expression(expression ast.Expression, env *Environment) RuntimeValue {

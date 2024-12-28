@@ -159,35 +159,42 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 	}
 }
 
-// TODO: duplicate keys
 func evaluate_switch_statement(statement ast.Statement, env *Environment) {
-	expected_statement, err := ast.ExpectStatement[ast.SwitchStatement](statement)
+	expectedStatement, err := ast.ExpectStatement[ast.SwitchStatement](statement)
 
 	if err != nil {
 		panic(err)
 	}
 
-	value := evaluate_expression(expected_statement.Value, env)
-	var default_case ast.SwitchCaseStatement
+	value := evaluate_expression(expectedStatement.Value, env)
+	var defaultCase *ast.SwitchCaseStatement
 
-	for _, case_statement := range expected_statement.Cases {
-		if case_statement.Pattern == nil {
-			default_case = case_statement
+	for _, caseStatement := range expectedStatement.Cases {
+		if caseStatement.IsDefault {
+			if defaultCase != nil {
+				panic("duplicate default patterns at a switch statement")
+			}
+
+			defaultCase = &caseStatement
 			continue
-		}
-
-		case_value := evaluate_expression(case_statement.Pattern, env)
-
-		if isEqual(case_value, value) {
-			scope := create_enviorment(env)
-			evaluate_block_statement(case_statement.Body, scope)
-			return
 		}
 	}
 
-	if len(default_case.Body.Body) > 0 {
+	for _, caseStatement := range expectedStatement.Cases {
+		for _, pattern := range caseStatement.Patterns {
+			case_value := evaluate_expression(pattern, env)
+
+			if isEqual(case_value, value) {
+				scope := create_enviorment(env)
+				evaluate_block_statement(caseStatement.Body, scope)
+				return
+			}
+		}
+	}
+
+	if defaultCase != nil {
 		scope := create_enviorment(env)
-		evaluate_block_statement(default_case.Body, scope)
+		evaluate_block_statement(defaultCase.Body, scope)
 	}
 }
 

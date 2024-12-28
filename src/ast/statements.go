@@ -58,9 +58,12 @@ type IfStatement struct {
 func (IfStatement) statement() {}
 
 type SwitchCaseStatement struct {
-	Pattern Expression
-	Body    BlockStatement
+	Patterns  []Expression
+	Body      BlockStatement
+	IsDefault bool
 }
+
+func (SwitchCaseStatement) statement() {}
 
 type SwitchStatement struct {
 	Value Expression

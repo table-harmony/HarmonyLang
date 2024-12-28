@@ -124,7 +124,6 @@ var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`\.`), default_handler(DOT, ".")},
 	{regexp.MustCompile(`;`), default_handler(SEMI_COLON, ";")},
 	{regexp.MustCompile(`:`), default_handler(COLON, ":")},
-	{regexp.MustCompile(`\?\?=`), default_handler(NULLISH_ASSIGNMENT, "??=")},
 	{regexp.MustCompile(`\?`), default_handler(QUESTION, "?")},
 	{regexp.MustCompile(`,`), default_handler(COMMA, ",")},
 	{regexp.MustCompile(`->`), default_handler(ARROW, "->")},
@@ -137,6 +136,9 @@ var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`\*=`), default_handler(STAR_EQUALS, "*=")},
 	{regexp.MustCompile(`/=`), default_handler(SLASH_EQUALS, "/=")},
 	{regexp.MustCompile(`%=`), default_handler(PERCENT_EQUALS, "%=")},
+	{regexp.MustCompile(`\?\?=`), default_handler(NULLISH_ASSIGNMENT, "??=")},
+	{regexp.MustCompile(`\&=`), default_handler(AND_EQUALS, "&=")},
+	{regexp.MustCompile(`\|=`), default_handler(OR_EQUALS, "|=")},
 
 	// Math Operators
 	{regexp.MustCompile(`\+`), default_handler(PLUS, "+")},

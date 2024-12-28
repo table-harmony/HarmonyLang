@@ -54,6 +54,8 @@ const (
 	STAR_EQUALS
 	SLASH_EQUALS
 	PERCENT_EQUALS
+	AND_EQUALS
+	OR_EQUALS
 	NULLISH_ASSIGNMENT
 
 	//Maths
@@ -223,6 +225,10 @@ func (kind TokenKind) ToString() string {
 		return "nullish_assignment"
 	case PERCENT_EQUALS:
 		return "percent_equals"
+	case OR_EQUALS:
+		return "or_equals"
+	case AND_EQUALS:
+		return "and_equals"
 	case PLUS:
 		return "plus"
 	case DASH:
