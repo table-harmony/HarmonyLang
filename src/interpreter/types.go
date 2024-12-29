@@ -2,6 +2,7 @@ package interpreter
 
 import "github.com/table-harmony/HarmonyLang/src/ast"
 
+//TODO: lookups
 func evaluate_type(_type ast.Type) RuntimeValueType {
 	if _type == nil {
 		return AnyType

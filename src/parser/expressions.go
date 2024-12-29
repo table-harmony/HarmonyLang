@@ -205,6 +205,11 @@ func parse_if_expression(parser *parser) ast.Expression {
 	condition := parse_expression(parser, assignment)
 	consequent := parse_block_expression(parser).(ast.BlockExpression)
 
+	// auto semi colon insertion insert semi colon after the end curly so skip it then check for else
+	if parser.current_token().Kind == lexer.SEMI_COLON {
+		parser.advance(1)
+	}
+
 	var alternate ast.BlockExpression
 	if parser.current_token().Kind == lexer.ELSE {
 		parser.advance(1)

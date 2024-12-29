@@ -45,6 +45,7 @@ const (
 	QUESTION
 	COMMA
 	ARROW
+	AMPERSAND
 
 	// Shorthand
 	PLUS_PLUS
@@ -58,7 +59,7 @@ const (
 	OR_EQUALS
 	NULLISH_ASSIGNMENT
 
-	//Maths
+	// Maths
 	PLUS
 	DASH
 	SLASH
@@ -79,7 +80,6 @@ const (
 	WHILE
 	FOR
 	EXPORT
-	TYPEOF
 	IN
 	RETURN
 	STATIC
@@ -105,7 +105,6 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"while":     WHILE,
 	"for":       FOR,
 	"export":    EXPORT,
-	"typeof":    TYPEOF,
 	"in":        IN,
 	"return":    RETURN,
 	"struct":    STRUCT,
@@ -261,8 +260,6 @@ func (kind TokenKind) ToString() string {
 		return "while"
 	case EXPORT:
 		return "export"
-	case TYPEOF:
-		return "typeof"
 	case IN:
 		return "in"
 	case RETURN:
@@ -285,6 +282,8 @@ func (kind TokenKind) ToString() string {
 		return "continue"
 	case BREAK:
 		return "break"
+	case AMPERSAND:
+		return "ampersand"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

@@ -79,7 +79,7 @@ func evaluate_return_statement(statement ast.Statement, env *Environment) {
 		panic(err)
 	}
 
-	panic(ReturnError{Value: evaluate_expression(expectedStatement.Value, env)})
+	panic(ReturnError{evaluate_expression(expectedStatement.Value, env)})
 }
 
 // TODO: i dont iterate each statement cause i changed it from ast.BlockStatement to []ast.Statement
@@ -138,28 +138,38 @@ func evaluate_function_declaration_statement(statement ast.Statement, env *Envir
 
 func evaluate_assignment_statement(statement ast.Statement, env *Environment) {
 	expectedStatement, err := ast.ExpectStatement[ast.AssignmentStatement](statement)
-
 	if err != nil {
 		panic(err)
 	}
 
-	//TODO: this is not expected it could be member or computed member e.t.c
-	assigneExpression, _ := ast.ExpectExpression[ast.SymbolExpression](expectedStatement.Assigne)
-	declaredVariable, err := env.get_variable(assigneExpression.Value)
-
+	assignable, err := evaluate_assignable(expectedStatement.Assigne, env)
 	if err != nil {
 		panic(err)
 	}
 
-	if expectedStatement.Operator.Kind == lexer.NULLISH_ASSIGNMENT &&
-		declaredVariable.getValue().getType() != (RuntimeNil{}).getType() {
-		return
+	if expectedStatement.Operator.Kind == lexer.NULLISH_ASSIGNMENT {
+		if assignable.getValue().getType() != NilType {
+			return
+		}
 	}
 
-	err = env.assign_variable(assigneExpression.Value,
-		evaluate_expression(expectedStatement.Value, env))
+	value := evaluate_expression(expectedStatement.Value, env)
 
+	err = assignable.assign(value)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func evaluate_assignable(expr ast.Expression, env *Environment) (AssignableValue, error) {
+	switch e := expr.(type) {
+	case ast.SymbolExpression:
+		variable, err := env.get_variable(e.Value)
+		if err != nil {
+			return nil, err
+		}
+		return &variable, nil
+	default:
+		return nil, fmt.Errorf("invalid assignable expression type: %T", expr)
 	}
 }

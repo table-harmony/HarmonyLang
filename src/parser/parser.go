@@ -34,6 +34,10 @@ func create_parser(tokens []lexer.Token) *parser {
 	}
 }
 
+func (parser *parser) next_token() lexer.Token {
+	return parser.tokens[parser.pos+1]
+}
+
 func (parser *parser) current_token() lexer.Token {
 	return parser.tokens[parser.pos]
 }

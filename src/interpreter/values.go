@@ -9,13 +9,23 @@ import (
 type RuntimeValueType int
 
 const (
-	// Literals
+	// Primitive Types
 	NumberType RuntimeValueType = iota
 	StringType
 	BooleanType
 	NilType
 
+	// Reference Types
+	PointerType
+	ReferenceType
+
+	// Complex Types
 	VariableType
+	ArrayType
+	SliceType
+	MapType
+	StructType
+	InterfaceType
 	FunctionType
 	AnyType
 )
@@ -30,8 +40,22 @@ func (_type RuntimeValueType) ToString() string {
 		return "bool"
 	case NilType:
 		return "null"
+	case PointerType:
+		return "pointer"
+	case ReferenceType:
+		return "reference"
 	case VariableType:
 		return "variable"
+	case ArrayType:
+		return "array"
+	case SliceType:
+		return "slice"
+	case MapType:
+		return "map"
+	case StructType:
+		return "struct"
+	case InterfaceType:
+		return "interface"
 	case FunctionType:
 		return "function"
 	case AnyType:
@@ -46,44 +70,23 @@ type RuntimeValue interface {
 	getValue() RuntimeValue
 }
 
-func ExpectRuntimeValue[T RuntimeValue](value RuntimeValue) (T, error) {
-	return helpers.ExpectType[T](value)
+type RuntimeReference struct {
+	Value RuntimeValue
 }
 
-func GetDefaultValue(valueType RuntimeValueType) RuntimeValue {
-	switch valueType {
-	case NumberType:
-		return RuntimeNumber{Value: 0}
-	case StringType:
-		return RuntimeString{Value: ""}
-	case BooleanType:
-		return RuntimeBoolean{Value: false}
-	case NilType:
-		return RuntimeNil{}
-	case FunctionType:
-		return RuntimeNil{}
-	default:
-		return RuntimeNil{}
-	}
+func (RuntimeReference) getType() RuntimeValueType { return ReferenceType }
+func (r RuntimeReference) getValue() RuntimeValue  { return r.Value.getValue() }
+
+type RuntimePointer struct {
+	Target *RuntimeValue
 }
 
-func isEqual(variable1 RuntimeValue, variable2 RuntimeValue) bool {
-	if variable1 == nil || variable2 == nil {
-		return variable1 == variable2
+func (RuntimePointer) getType() RuntimeValueType { return PointerType }
+func (p RuntimePointer) getValue() RuntimeValue {
+	if p.Target == nil {
+		return RuntimeNil{}
 	}
-
-	value1 := variable1.getValue()
-	value2 := variable2.getValue()
-
-	if value1 == nil || value2 == nil {
-		return value1 == value2
-	}
-
-	if value1.getType() != value2.getType() {
-		return false
-	}
-
-	return value1 == value2
+	return (*p.Target).getValue()
 }
 
 type RuntimeNumber struct {
@@ -108,10 +111,66 @@ func (RuntimeBoolean) getType() RuntimeValueType { return BooleanType }
 func (b RuntimeBoolean) getValue() RuntimeValue  { return b }
 
 type RuntimeNil struct {
+	Value RuntimeValue
 }
 
 func (RuntimeNil) getType() RuntimeValueType { return NilType }
 func (n RuntimeNil) getValue() RuntimeValue  { return n }
+
+func ExpectRuntimeValue[T RuntimeValue](value RuntimeValue) (T, error) {
+	if value.getType() == ReferenceType || value.getType() == PointerType {
+		value = value.getValue()
+	}
+	return helpers.ExpectType[T](value)
+}
+
+func GetDefaultValue(valueType RuntimeValueType) RuntimeValue {
+	switch valueType {
+	case NumberType:
+		return RuntimeNumber{0}
+	case StringType:
+		return RuntimeString{""}
+	case BooleanType:
+		return RuntimeBoolean{false}
+	case PointerType:
+		return RuntimePointer{nil}
+	default:
+		return RuntimeNil{}
+	}
+}
+
+func isEqual(v1, v2 RuntimeValue) bool {
+	if v1 == nil || v2 == nil {
+		return v1 == v2
+	}
+
+	value1 := v1.getValue()
+	value2 := v2.getValue()
+
+	if value1 == nil || value2 == nil {
+		return value1 == value2
+	}
+
+	if value1.getType() != value2.getType() {
+		return false
+	}
+
+	switch val1 := value1.(type) {
+	case RuntimeNumber:
+		val2 := value2.(RuntimeNumber)
+		return val1.Value == val2.Value
+	case RuntimeString:
+		val2 := value2.(RuntimeString)
+		return val1.Value == val2.Value
+	case RuntimeBoolean:
+		val2 := value2.(RuntimeBoolean)
+		return val1.Value == val2.Value
+	case RuntimeNil:
+		return true
+	default:
+		return value1 == value2
+	}
+}
 
 type RuntimeVariable struct {
 	Identifier   string
@@ -120,5 +179,24 @@ type RuntimeVariable struct {
 	ExplicitType RuntimeValueType
 }
 
-func (RuntimeVariable) getType() RuntimeValueType { return VariableType }
-func (v RuntimeVariable) getValue() RuntimeValue  { return v.Value }
+func (v RuntimeVariable) getType() RuntimeValueType { return v.Value.getType() }
+func (v RuntimeVariable) getValue() RuntimeValue    { return v.Value.getValue() }
+
+type AssignableValue interface {
+	RuntimeValue
+	assign(value RuntimeValue) error
+}
+
+func (v *RuntimeVariable) assign(value RuntimeValue) error {
+	if v.IsConstant {
+		return fmt.Errorf("cannot reassign constant variable '%s'", v.Identifier)
+	}
+
+	if v.ExplicitType != value.getType() && v.ExplicitType != AnyType {
+		return fmt.Errorf("type mismatch: variable '%s' explicit type %v but assigned a %v",
+			v.Identifier, v.ExplicitType.ToString(), value.getType().ToString())
+	}
+
+	v.Value = value
+	return nil
+}

@@ -24,6 +24,7 @@ func (env *Environment) declare_variable(variable RuntimeVariable) error {
 	}
 
 	value := variable.getValue()
+	//variable.Value = value
 
 	if value == nil {
 		value = GetDefaultValue(variable.ExplicitType)
@@ -51,33 +52,13 @@ func (env *Environment) get_variable(identifier string) (RuntimeVariable, error)
 }
 
 func (env *Environment) assign_variable(identifier string, value RuntimeValue) error {
-	if value == nil {
-		value = RuntimeNil{}
-	}
-
 	env, err := env.resolve(identifier)
 
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	variable := env.variables[identifier]
-
-	if variable.IsConstant {
-		return fmt.Errorf("cannot reassign constant variable '%s'", variable.Identifier)
-	}
-
-	if variable.ExplicitType != value.getValue().getType() && variable.ExplicitType != AnyType {
-		return fmt.Errorf("type mismatch: variable '%s' explicit type %v but assigned a %v",
-			variable.Identifier, variable.ExplicitType.ToString(),
-			value.getValue().getType().ToString(),
-		)
-	}
-
-	variable.Value = value
-	env.variables[identifier] = variable
-
-	return nil
+	panic("not implemented yet use assign function")
 }
 
 func (env *Environment) resolve(identifier string) (*Environment, error) {

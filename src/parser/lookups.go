@@ -100,7 +100,8 @@ func create_token_lookups() {
 	register_nud(lexer.DASH, additive, parse_prefix_expression) // binding power of additive sense a dash or a plus as unary are the same as additive operations
 	register_nud(lexer.PLUS, additive, parse_prefix_expression) // making them unary would cause errors because they would have higher precedence than multiplicative
 	register_nud(lexer.NOT, unary, parse_prefix_expression)
-	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
+	register_nud(lexer.AMPERSAND, unary, parse_prefix_expression)
+	register_nud(lexer.STAR, unary, parse_prefix_expression)
 
 	// Ternary
 	register_led(lexer.QUESTION, ternary, parse_ternary_expression)
