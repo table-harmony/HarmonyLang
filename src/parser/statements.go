@@ -130,6 +130,10 @@ func parse_multi_variable_declaration_statement(parser *parser) ast.Statement {
 		}
 	}
 
+	if len(declarations) == 1 {
+		return declarations[0]
+	}
+
 	return ast.MultiVariableDeclarationStatement{
 		Declarations: declarations,
 	}
@@ -265,11 +269,17 @@ func parse_function_declaration_statement(parser *parser) ast.Statement {
 		return_type = parse_type(parser, default_bp)
 	}
 
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
 	body := make([]ast.Statement, 0)
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
 		statement := parse_statement(parser)
 		body = append(body, statement)
 	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
 
 	return ast.FunctionDeclarationStatment{
 		Identifier: identifier.Value,

@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/interpreter"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 	"github.com/table-harmony/HarmonyLang/src/parser"
@@ -19,5 +20,6 @@ func main() {
 
 	tokens := lexer.Tokenize(source)
 	ast := parser.Parse(tokens)
+	litter.Dump(ast)
 	interpreter.Interpret(ast)
 }

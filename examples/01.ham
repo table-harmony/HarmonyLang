@@ -1,0 +1,5 @@
+let x = fn() {
+  return 2
+}
+
+const y = x()

@@ -88,6 +88,7 @@ const (
 	DEFAULT
 	CONTINUE
 	BREAK
+	MAP
 )
 
 var reserved_keywords map[string]TokenKind = map[string]TokenKind{
@@ -115,6 +116,7 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"default":   DEFAULT,
 	"continue":  CONTINUE,
 	"break":     BREAK,
+	"map":       MAP,
 }
 
 type Token struct {
@@ -284,6 +286,8 @@ func (kind TokenKind) ToString() string {
 		return "break"
 	case AMPERSAND:
 		return "ampersand"
+	case MAP:
+		return "map"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

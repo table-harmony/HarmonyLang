@@ -26,8 +26,8 @@ func type_nud(kind lexer.TokenKind, bp binding_power, handler type_nud_handler) 
 
 func create_type_token_lookups() {
 	type_nud(lexer.IDENTIFIER, primary, parse_symbol_type)
-
-	type_led(lexer.OPEN_BRACKET, call, parse_array_type)
+	type_nud(lexer.MAP, primary, parse_map_type)
+	type_nud(lexer.OPEN_BRACKET, call, parse_collection_type)
 }
 
 func parse_type(parser *parser, bp binding_power) ast.Type {
@@ -72,13 +72,49 @@ func parse_symbol_type(parser *parser) ast.Type {
 	}
 }
 
-func parse_array_type(parser *parser, left ast.Type, bp binding_power) ast.Type {
+func parse_collection_type(parser *parser) ast.Type {
 	parser.expect(lexer.OPEN_BRACKET)
 	parser.advance(1)
+
+	if !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_BRACKET {
+		size := parse_expression(parser, default_bp)
+
+		parser.expect(lexer.CLOSE_BRACKET)
+		parser.advance(1)
+
+		return ast.ArrayType{
+			Size:       size,
+			Underlying: parse_type(parser, default_bp),
+		}
+	}
+
 	parser.expect(lexer.CLOSE_BRACKET)
 	parser.advance(1)
 
-	return ast.ArrayType{
-		Underlying: left,
+	return ast.SliceType{
+		Underlying: parse_type(parser, default_bp),
+	}
+}
+
+func parse_map_type(parser *parser) ast.Type {
+	parser.expect(lexer.MAP)
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_BRACKET)
+	parser.advance(1)
+
+	keyType := parse_type(parser, default_bp)
+
+	parser.expect(lexer.ARROW)
+	parser.advance(1)
+
+	valueType := parse_type(parser, default_bp)
+
+	parser.expect(lexer.CLOSE_BRACKET)
+	parser.advance(1)
+
+	return ast.MapType{
+		Key:   keyType,
+		Value: valueType,
 	}
 }

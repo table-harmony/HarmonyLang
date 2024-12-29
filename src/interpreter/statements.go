@@ -134,6 +134,28 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 }
 
 func evaluate_function_declaration_statement(statement ast.Statement, env *Environment) {
+	expectedStatement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	function := RuntimeFunction{
+		Name:       expectedStatement.Identifier,
+		Parameters: expectedStatement.Parameters,
+		Body:       expectedStatement.Body,
+		ReturnType: evaluate_type(expectedStatement.ReturnType),
+	}
+
+	err = env.declare_variable(RuntimeVariable{
+		Identifier:   expectedStatement.Identifier,
+		IsConstant:   true,
+		Value:        function,
+		ExplicitType: FunctionType,
+	})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func evaluate_assignment_statement(statement ast.Statement, env *Environment) {
@@ -161,10 +183,10 @@ func evaluate_assignment_statement(statement ast.Statement, env *Environment) {
 	}
 }
 
-func evaluate_assignable(expr ast.Expression, env *Environment) (AssignableValue, error) {
-	switch e := expr.(type) {
+func evaluate_assignable(expression ast.Expression, env *Environment) (AssignableValue, error) {
+	switch expr := expression.(type) {
 	case ast.SymbolExpression:
-		variable, err := env.get_variable(e.Value)
+		variable, err := env.get_variable(expr.Value)
 		if err != nil {
 			return nil, err
 		}

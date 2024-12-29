@@ -344,3 +344,21 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 
 	return evaluate_expression(defaultCase.Body, env)
 }
+
+// TODO: implement dude
+func evaluate_call_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	return RuntimeNumber{1}
+}
+
+func evaluate_function_declaration_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expectedExpression, err := ast.ExpectExpression[ast.FunctionDeclarationExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	return RuntimeAnonymousFunction{
+		Parameters: expectedExpression.Parameters,
+		Body:       expectedExpression.Body,
+		ReturnType: evaluate_type(expectedExpression.ReturnType),
+	}
+}

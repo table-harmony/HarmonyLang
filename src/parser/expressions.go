@@ -288,3 +288,95 @@ func parse_switch_expression(parser *parser) ast.Expression {
 		Cases: cases,
 	}
 }
+
+func parse_array_instantiation_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.OPEN_BRACKET)
+	parser.advance(1)
+
+	elements := make([]ast.Expression, 0)
+
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_BRACKET {
+		element := parse_expression(parser, comma)
+		elements = append(elements, element)
+
+		if !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_BRACKET {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_BRACKET)
+	parser.advance(1)
+
+	return ast.ArrayExpression{
+		Elements: elements,
+	}
+}
+
+func parse_function_declaration_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.FN)
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
+	params := make([]ast.Parameter, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_PAREN {
+		param_name := parser.expect(lexer.IDENTIFIER).Value
+		parser.advance(1)
+
+		var param_type ast.Type
+		if parser.current_token().Kind == lexer.COLON {
+			parser.expect(lexer.COLON)
+			parser.advance(1)
+
+			param_type = parse_type(parser, default_bp)
+		}
+
+		var param_default_value ast.Expression
+		if parser.current_token().Kind == lexer.ASSIGNMENT {
+			parser.expect(lexer.ASSIGNMENT)
+			parser.advance(1)
+
+			param_default_value = parse_expression(parser, default_bp)
+		}
+
+		params = append(params, ast.Parameter{
+			Name:         param_name,
+			Type:         param_type,
+			DefaultValue: param_default_value,
+		})
+
+		if !parser.current_token().IsOfKind(lexer.CLOSE_PAREN, lexer.EOF) {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
+
+	var returnType ast.Type
+	if parser.current_token().Kind == lexer.ARROW {
+		parser.advance(1)
+		returnType = parse_type(parser, default_bp)
+	}
+
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	body := make([]ast.Statement, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		statement := parse_statement(parser)
+		body = append(body, statement)
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.FunctionDeclarationExpression{
+		Parameters: params,
+		Body:       body,
+		ReturnType: returnType,
+	}
+}

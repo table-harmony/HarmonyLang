@@ -75,3 +75,11 @@ type ReturnStatement struct {
 }
 
 func (ReturnStatement) statement() {}
+
+type SwitchCaseStatement struct {
+	Patterns  []Expression
+	Body      BlockExpression
+	IsDefault bool
+}
+
+func (SwitchCaseStatement) statement() {}

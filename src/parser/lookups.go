@@ -96,6 +96,9 @@ func create_token_lookups() {
 	register_nud(lexer.FALSE, primary, parse_primary_expression)
 	register_nud(lexer.NIL, primary, parse_primary_expression)
 
+	// Data types
+	register_nud(lexer.OPEN_BRACKET, default_bp, parse_array_instantiation_expression)
+
 	// Unary / Prefix
 	register_nud(lexer.DASH, additive, parse_prefix_expression) // binding power of additive sense a dash or a plus as unary are the same as additive operations
 	register_nud(lexer.PLUS, additive, parse_prefix_expression) // making them unary would cause errors because they would have higher precedence than multiplicative
@@ -119,6 +122,7 @@ func create_token_lookups() {
 	register_nud(lexer.OPEN_CURLY, default_bp, parse_block_expression)
 	register_nud(lexer.IF, default_bp, parse_if_expression)
 	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
+	register_nud(lexer.FN, default_bp, parse_function_declaration_expression)
 
 	// Statements
 	register_statement(lexer.IMPORT, parse_import_statement)

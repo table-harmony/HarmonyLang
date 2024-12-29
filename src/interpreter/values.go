@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 
+	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
@@ -27,6 +28,7 @@ const (
 	StructType
 	InterfaceType
 	FunctionType
+	AnonymousFunctionType
 	AnyType
 )
 
@@ -58,6 +60,8 @@ func (_type RuntimeValueType) ToString() string {
 		return "interface"
 	case FunctionType:
 		return "function"
+	case AnonymousFunctionType:
+		return "anonymous_function"
 	case AnyType:
 		return "any"
 	default:
@@ -200,3 +204,24 @@ func (v *RuntimeVariable) assign(value RuntimeValue) error {
 	v.Value = value
 	return nil
 }
+
+type RuntimeFunction struct {
+	Name       string
+	Parameters []ast.Parameter
+	Body       []ast.Statement
+	ReturnType RuntimeValueType
+	//TODO: functions should probably have their closure env (sense the call env is not necciraly the same as the declaration env)
+}
+
+func (RuntimeFunction) getType() RuntimeValueType { return FunctionType }
+func (f RuntimeFunction) getValue() RuntimeValue  { return f }
+
+type RuntimeAnonymousFunction struct {
+	Parameters []ast.Parameter
+	Body       []ast.Statement
+	ReturnType RuntimeValueType
+	//TODO: functions should probably have their closure env (sense the call env is not necciraly the same as the declaration env)
+}
+
+func (RuntimeAnonymousFunction) getType() RuntimeValueType { return AnonymousFunctionType }
+func (f RuntimeAnonymousFunction) getValue() RuntimeValue  { return f }

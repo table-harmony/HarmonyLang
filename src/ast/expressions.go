@@ -100,10 +100,22 @@ type SwitchExpression struct {
 
 func (SwitchExpression) expression() {}
 
-type SwitchCaseStatement struct {
-	Patterns  []Expression
-	Body      BlockExpression
-	IsDefault bool
+type ArrayExpression struct {
+	Elements []Expression
 }
 
-func (SwitchCaseStatement) statement() {}
+func (ArrayExpression) expression() {}
+
+type SliceExpression struct {
+	Elements []Expression
+}
+
+func (SliceExpression) expression() {}
+
+type FunctionDeclarationExpression struct {
+	Parameters []Parameter
+	Body       []Statement
+	ReturnType Type
+}
+
+func (FunctionDeclarationExpression) expression() {}
