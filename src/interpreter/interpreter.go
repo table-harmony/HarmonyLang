@@ -12,7 +12,7 @@ type interpreter struct {
 
 func Interpret(ast []ast.Statement) {
 	interpreter := create_interpreter(ast)
-	global_env := create_enviorment(nil)
+	global_env := create_environment(nil)
 
 	for !interpreter.is_empty() {
 		interpreter.evalute_current_statement(global_env)

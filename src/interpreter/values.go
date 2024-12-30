@@ -183,7 +183,12 @@ type RuntimeVariable struct {
 }
 
 func (v RuntimeVariable) getType() RuntimeValueType { return v.Value.getType() }
-func (v RuntimeVariable) getValue() RuntimeValue    { return v.Value.getValue() }
+func (v RuntimeVariable) getValue() RuntimeValue {
+	if v.Value == nil {
+		return RuntimeNil{}
+	}
+	return v.Value.getValue()
+}
 
 type AssignableValue interface {
 	RuntimeValue
@@ -205,11 +210,11 @@ func (v *RuntimeVariable) assign(value RuntimeValue) error {
 }
 
 type RuntimeFunction struct {
-	Name       string
+	Identifier string
 	Parameters []ast.Parameter
 	Body       []ast.Statement
 	ReturnType RuntimeValueType
-	//TODO: functions should probably have their closure env (sense the call env is not necciraly the same as the declaration env)
+	Closure    *Environment
 }
 
 func (RuntimeFunction) getType() RuntimeValueType { return FunctionType }
@@ -219,7 +224,7 @@ type RuntimeAnonymousFunction struct {
 	Parameters []ast.Parameter
 	Body       []ast.Statement
 	ReturnType RuntimeValueType
-	//TODO: functions should probably have their closure env (sense the call env is not necciraly the same as the declaration env)
+	Closure    *Environment
 }
 
 func (RuntimeAnonymousFunction) getType() RuntimeValueType { return AnonymousFunctionType }

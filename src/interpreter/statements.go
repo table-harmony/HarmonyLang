@@ -89,7 +89,7 @@ func evaluate_for_statement(statement ast.Statement, env *Environment) {
 		panic(err)
 	}
 
-	loop_env := create_enviorment(env)
+	loop_env := create_environment(env)
 
 	evaluate_statement(expected_statement.Initializer, loop_env)
 
@@ -140,19 +140,14 @@ func evaluate_function_declaration_statement(statement ast.Statement, env *Envir
 	}
 
 	function := RuntimeFunction{
-		Name:       expectedStatement.Identifier,
+		Identifier: expectedStatement.Identifier,
 		Parameters: expectedStatement.Parameters,
 		Body:       expectedStatement.Body,
 		ReturnType: evaluate_type(expectedStatement.ReturnType),
+		Closure:    env,
 	}
 
-	err = env.declare_variable(RuntimeVariable{
-		Identifier:   expectedStatement.Identifier,
-		IsConstant:   true,
-		Value:        function,
-		ExplicitType: FunctionType,
-	})
-
+	err = env.declare_function(function)
 	if err != nil {
 		panic(err)
 	}
@@ -184,14 +179,21 @@ func evaluate_assignment_statement(statement ast.Statement, env *Environment) {
 }
 
 func evaluate_assignable(expression ast.Expression, env *Environment) (AssignableValue, error) {
-	switch expr := expression.(type) {
+	switch expression := expression.(type) {
 	case ast.SymbolExpression:
-		variable, err := env.get_variable(expr.Value)
+		variable, err := env.get_variable(expression.Value)
 		if err != nil {
 			return nil, err
 		}
 		return &variable, nil
+	case ast.MemberExpression:
+		return nil, fmt.Errorf("not implemented yet")
+	case ast.ComputedMemberExpression:
+		return nil, fmt.Errorf("not implemented yet")
+	case ast.PrefixExpression:
+		//TODO: for pointers e.t.c
+		return nil, fmt.Errorf("not implemented yet")
 	default:
-		return nil, fmt.Errorf("invalid assignable expression type: %T", expr)
+		return nil, fmt.Errorf("invalid assignable expression type: %T", expression)
 	}
 }

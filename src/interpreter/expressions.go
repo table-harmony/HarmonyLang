@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -20,9 +19,9 @@ func evaluate_expression(expression ast.Expression, env *Environment) RuntimeVal
 }
 
 func evaluate_primary_statement(expression ast.Expression, env *Environment) RuntimeValue {
-	expression_type := reflect.TypeOf(expression)
+	expressionType := reflect.TypeOf(expression)
 
-	switch expression_type {
+	switch expressionType {
 	case reflect.TypeOf(ast.NumberExpression{}):
 		return RuntimeNumber{expression.(ast.NumberExpression).Value}
 	case reflect.TypeOf(ast.StringExpression{}):
@@ -32,7 +31,7 @@ func evaluate_primary_statement(expression ast.Expression, env *Environment) Run
 	case reflect.TypeOf(ast.NilExpression{}):
 		return RuntimeNil{}
 	default:
-		panic(fmt.Sprintf("Unknown statement type %s", expression_type))
+		panic(fmt.Sprintf("Unknown statement type %s", expressionType))
 	}
 }
 
@@ -92,6 +91,10 @@ func handle_logical_operations(operator lexer.TokenKind, left, right RuntimeValu
 }
 
 func handle_arithmetic_operations(operator lexer.TokenKind, left, right RuntimeValue) RuntimeValue {
+	if left == nil || right == nil {
+		panic("Cannot perform arithmetic operation on nil value")
+	}
+
 	leftValue := left.getValue()
 	rightValue := right.getValue()
 
@@ -228,11 +231,16 @@ func evaluate_symbol_expression(expression ast.Expression, env *Environment) Run
 	}
 
 	variable, err := env.get_variable(expectedExpression.Value)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		return variable
 	}
 
-	return variable
+	function, err := env.get_function(expectedExpression.Value, make([]ast.Parameter, 0))
+	if err == nil {
+		return function
+	}
+
+	panic(err)
 }
 
 func evaluate_ternary_expression(expression ast.Expression, env *Environment) RuntimeValue {
@@ -261,7 +269,7 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 		panic(err)
 	}
 
-	scope := create_enviorment(env)
+	scope := create_environment(env)
 
 	statements := expectedExpression.Statements
 	for _, statement := range statements[:len(statements)-1] {
@@ -274,10 +282,10 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 
 	lastStatement := statements[len(statements)-1]
 	if expressionStatement, ok := lastStatement.(ast.ExpressionStatement); ok {
-		x := evaluate_expression(expressionStatement.Expression, scope)
-		litter.Dump("RESULT: ", x)
-		return x
+		return evaluate_expression(expressionStatement.Expression, scope)
 	}
+
+	evaluate_statement(lastStatement, env)
 
 	return RuntimeNil{}
 }
@@ -348,9 +356,73 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 	return evaluate_expression(defaultCase.Body, env)
 }
 
-// TODO: implement dude
-func evaluate_call_expression(expression ast.Expression, env *Environment) RuntimeValue {
-	return RuntimeNumber{1}
+func evaluate_call_expression(expression ast.Expression, env *Environment) (result RuntimeValue) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch err := r.(type) {
+			case ReturnError:
+				result = err.Value
+			case error:
+				// Re-panic other errors
+				panic(err)
+			default:
+				// Re-panic unknown panic types
+				panic(r)
+			}
+		}
+	}()
+
+	expectedExpression, err := ast.ExpectExpression[ast.CallExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	callerValue := evaluate_expression(expectedExpression.Caller, env)
+	var function RuntimeFunction
+
+	switch caller := callerValue.(type) {
+	case RuntimeFunction:
+		function = caller
+	case RuntimeAnonymousFunction:
+		function = RuntimeFunction{
+			Parameters: caller.Parameters,
+			Body:       caller.Body,
+			ReturnType: caller.ReturnType,
+			Closure:    caller.Closure,
+		}
+	default:
+		panic(fmt.Sprintf("Cannot call value of type %v", caller.getType().ToString()))
+	}
+
+	functionEnv := create_environment(function.Closure)
+
+	if len(expectedExpression.Params) != len(function.Parameters) {
+		panic(fmt.Errorf("Expected %d arguments but got %d",
+			len(function.Parameters), len(expectedExpression.Params)))
+	}
+
+	for i, param := range function.Parameters {
+		argValue := evaluate_expression(expectedExpression.Params[i], env)
+		if argValue == nil {
+			argValue = RuntimeNil{}
+		}
+
+		err := functionEnv.declare_variable(RuntimeVariable{
+			Identifier:   param.Name,
+			Value:        argValue,
+			ExplicitType: evaluate_type(param.Type),
+		})
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	var lastValue RuntimeValue = RuntimeNil{}
+	for _, statement := range function.Body {
+		evaluate_statement(statement, functionEnv)
+	}
+
+	return lastValue
 }
 
 func evaluate_function_declaration_expression(expression ast.Expression, env *Environment) RuntimeValue {
@@ -366,14 +438,11 @@ func evaluate_function_declaration_expression(expression ast.Expression, env *En
 	}
 }
 
-// TODO: this just doesn't work
-func evaluate_try_catch_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_try_catch_expression(expression ast.Expression, env *Environment) (result RuntimeValue) {
 	expectedExpression, err := ast.ExpectExpression[ast.TryCatchExpression](expression)
 	if err != nil {
 		panic(err)
 	}
-
-	var result RuntimeValue
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -381,7 +450,6 @@ func evaluate_try_catch_expression(expression ast.Expression, env *Environment) 
 		}
 	}()
 
-	result = evalute_binary_expression(expectedExpression.TryBlock, env)
-
+	result = evaluate_expression(expectedExpression.TryBlock, env)
 	return result
 }

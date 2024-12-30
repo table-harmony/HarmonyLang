@@ -50,7 +50,7 @@ func create_repl() REPL {
 	create_lookups()
 
 	return REPL{
-		environment: create_enviorment(nil),
+		environment: create_environment(nil),
 		reader:      bufio.NewReader(os.Stdin),
 	}
 }
