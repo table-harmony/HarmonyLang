@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"regexp"
+	"strings"
 )
 
 func default_handler(kind TokenKind, value string) regex_handler {
@@ -36,7 +37,8 @@ func number_handler(lex *lexer, regex *regexp.Regexp) {
 func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
-	if kind, found := reserved_keywords[match]; found {
+	// to disregrard uppercase in keywords so IF = if
+	if kind, found := reserved_keywords[strings.ToLower(match)]; found {
 		lex.push(CreateToken(kind, match))
 	} else {
 		lex.push(CreateToken(IDENTIFIER, match))
@@ -97,7 +99,7 @@ var reserved_patterns = []regex_pattern{
 	{regexp.MustCompile(`\/\/.*`), comment_handler},
 	{regexp.MustCompile(`"[^"]*"`), string_handler},
 	{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), number_handler},
-	{regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), symbol_handler},
+	{regexp.MustCompile(`([a-zA-Z_]|[\x{1F600}-\x{1F64F}\x{2700}-\x{27BF}\x{1F680}-\x{1F6FF}\x{1F300}-\x{1F5FF}\x{1F900}-\x{1F9FF}\x{2600}-\x{26FF}\x{2300}-\x{23FF}\x{1F100}-\x{1F1FF}\x{1F200}-\x{1F2FF}\x{3297}\x{3299}\x{1F191}-\x{1F19A}\x{1F170}-\x{1F19A}])([a-zA-Z0-9_]|[\x{1F600}-\x{1F64F}\x{2700}-\x{27BF}\x{1F680}-\x{1F6FF}\x{1F300}-\x{1F5FF}\x{1F900}-\x{1F9FF}\x{2600}-\x{26FF}\x{2300}-\x{23FF}\x{1F100}-\x{1F1FF}\x{1F200}-\x{1F2FF}\x{3297}\x{3299}\x{1F191}-\x{1F19A}\x{1F170}-\x{1F19A}])*`), symbol_handler},
 
 	// Grouping & Braces
 	{regexp.MustCompile(`\[`), default_handler(OPEN_BRACKET, "[")},

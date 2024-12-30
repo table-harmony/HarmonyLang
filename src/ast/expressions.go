@@ -88,7 +88,7 @@ func (BlockExpression) expression() {}
 type IfExpression struct {
 	Condition  Expression
 	Consequent BlockExpression
-	Alternate  BlockExpression
+	Alternate  Expression
 }
 
 func (IfExpression) expression() {}
@@ -119,3 +119,10 @@ type FunctionDeclarationExpression struct {
 }
 
 func (FunctionDeclarationExpression) expression() {}
+
+type TryCatchExpression struct {
+	TryBlock   Expression
+	CatchBlock Expression
+}
+
+func (TryCatchExpression) expression() {}

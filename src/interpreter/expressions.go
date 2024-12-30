@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -273,10 +274,12 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 
 	lastStatement := statements[len(statements)-1]
 	if expressionStatement, ok := lastStatement.(ast.ExpressionStatement); ok {
-		return evaluate_expression(expressionStatement.Expression, scope)
-	} else {
-		panic("Block does not return a value.")
+		x := evaluate_expression(expressionStatement.Expression, scope)
+		litter.Dump("RESULT: ", x)
+		return x
 	}
+
+	return RuntimeNil{}
 }
 
 func evaluate_if_expression(expression ast.Expression, env *Environment) RuntimeValue {
@@ -295,10 +298,10 @@ func evaluate_if_expression(expression ast.Expression, env *Environment) Runtime
 
 	if expectedCondition.Value {
 		return evaluate_block_expression(expectedExpression.Consequent, env)
-	} else if &expectedExpression.Alternate != nil {
+	} else if expectedExpression.Alternate != nil {
 		alternateExpression, err := ast.ExpectExpression[ast.IfExpression](expectedExpression.Alternate)
 
-		if err != nil {
+		if err == nil {
 			return evaluate_if_expression(alternateExpression, env)
 		} else {
 			return evaluate_block_expression(expectedExpression.Alternate, env)
@@ -361,4 +364,24 @@ func evaluate_function_declaration_expression(expression ast.Expression, env *En
 		Body:       expectedExpression.Body,
 		ReturnType: evaluate_type(expectedExpression.ReturnType),
 	}
+}
+
+// TODO: this just doesn't work
+func evaluate_try_catch_expression(expression ast.Expression, env *Environment) RuntimeValue {
+	expectedExpression, err := ast.ExpectExpression[ast.TryCatchExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	var result RuntimeValue
+
+	defer func() {
+		if r := recover(); r != nil {
+			result = evaluate_expression(expectedExpression.CatchBlock, env)
+		}
+	}()
+
+	result = evalute_binary_expression(expectedExpression.TryBlock, env)
+
+	return result
 }

@@ -46,6 +46,7 @@ func create_lookups() {
 	register_expression_handler[ast.BlockExpression](evaluate_block_expression)
 	register_expression_handler[ast.IfExpression](evaluate_if_expression)
 	register_expression_handler[ast.SwitchExpression](evaluate_switch_expression)
+	register_expression_handler[ast.TryCatchExpression](evaluate_try_catch_expression)
 
 	// Primary expressions
 	register_expression_handler[ast.BooleanExpression](evaluate_primary_statement)

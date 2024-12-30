@@ -115,7 +115,6 @@ func (RuntimeBoolean) getType() RuntimeValueType { return BooleanType }
 func (b RuntimeBoolean) getValue() RuntimeValue  { return b }
 
 type RuntimeNil struct {
-	Value RuntimeValue
 }
 
 func (RuntimeNil) getType() RuntimeValueType { return NilType }

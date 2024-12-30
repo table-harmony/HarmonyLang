@@ -89,6 +89,9 @@ const (
 	CONTINUE
 	BREAK
 	MAP
+	TRY
+	CATCH
+	THROW
 )
 
 var reserved_keywords map[string]TokenKind = map[string]TokenKind{
@@ -100,6 +103,8 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"import":    IMPORT,
 	"from":      FROM,
 	"fn":        FN,
+	"func":      FN,
+	"function":  FN,
 	"if":        IF,
 	"else":      ELSE,
 	"foreach":   FOREACH,
@@ -117,6 +122,9 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"continue":  CONTINUE,
 	"break":     BREAK,
 	"map":       MAP,
+	"try":       TRY,
+	"catch":     CATCH,
+	"throw":     THROW,
 }
 
 type Token struct {
@@ -288,6 +296,12 @@ func (kind TokenKind) ToString() string {
 		return "ampersand"
 	case MAP:
 		return "map"
+	case TRY:
+		return "try"
+	case CATCH:
+		return "catch"
+	case THROW:
+		return "throw"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

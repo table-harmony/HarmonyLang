@@ -1,5 +1,17 @@
-let x = fn() {
-  return 2
+fn x() {
+  return 1
 }
 
-const y = x()
+const y = fn() {
+  return 1
+}
+
+
+// let numbers: map[number -> string];  // maps
+//let numbers: number = [foo(), 2 + 21, 3]  // arrays
+//let numbers: number[1][] = [1, 2, 3]   // slices
+
+//TODO: detect instansiation....
+//TODO: do all arrays and slices today
+
+//TODO: function overload

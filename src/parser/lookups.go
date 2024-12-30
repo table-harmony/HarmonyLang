@@ -111,7 +111,6 @@ func create_token_lookups() {
 
 	// Grouping Expression
 	register_nud(lexer.OPEN_PAREN, default_bp, parse_grouping_expression)
-	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
 
 	// Member / Computed / Call
 	register_led(lexer.OPEN_PAREN, call, parse_call_expression)
@@ -123,6 +122,7 @@ func create_token_lookups() {
 	register_nud(lexer.IF, default_bp, parse_if_expression)
 	register_nud(lexer.SWITCH, default_bp, parse_switch_expression)
 	register_nud(lexer.FN, default_bp, parse_function_declaration_expression)
+	register_nud(lexer.TRY, default_bp, parse_try_catch_expression)
 
 	// Statements
 	register_statement(lexer.IMPORT, parse_import_statement)

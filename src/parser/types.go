@@ -25,9 +25,12 @@ func type_nud(kind lexer.TokenKind, bp binding_power, handler type_nud_handler) 
 }
 
 func create_type_token_lookups() {
+	// Primitive types
 	type_nud(lexer.IDENTIFIER, primary, parse_symbol_type)
+
+	// Data types
 	type_nud(lexer.MAP, primary, parse_map_type)
-	type_nud(lexer.OPEN_BRACKET, call, parse_collection_type)
+	type_led(lexer.OPEN_BRACKET, member, parse_array_type_suffix)
 }
 
 func parse_type(parser *parser, bp binding_power) ast.Type {
@@ -40,7 +43,7 @@ func parse_type(parser *parser, bp binding_power) ast.Type {
 
 	left := nud_handler(parser)
 
-	for type_bp_lookup[parser.current_token().Kind] > bp {
+	for !parser.is_empty() && type_bp_lookup[parser.current_token().Kind] > bp {
 		token = parser.current_token()
 		led_handler, exists := type_led_lookup[token.Kind]
 
@@ -48,7 +51,7 @@ func parse_type(parser *parser, bp binding_power) ast.Type {
 			panic(fmt.Sprintf("type: LED Handler expected for token %s\n", token.Kind.ToString()))
 		}
 
-		left = led_handler(parser, left, bp)
+		left = led_handler(parser, left, type_bp_lookup[token.Kind])
 	}
 
 	return left
@@ -72,27 +75,25 @@ func parse_symbol_type(parser *parser) ast.Type {
 	}
 }
 
-func parse_collection_type(parser *parser) ast.Type {
+func parse_array_type_suffix(parser *parser, underlying ast.Type, bp binding_power) ast.Type {
 	parser.expect(lexer.OPEN_BRACKET)
 	parser.advance(1)
 
-	if !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_BRACKET {
-		size := parse_expression(parser, default_bp)
-
-		parser.expect(lexer.CLOSE_BRACKET)
+	if parser.current_token().Kind == lexer.CLOSE_BRACKET {
 		parser.advance(1)
-
-		return ast.ArrayType{
-			Size:       size,
-			Underlying: parse_type(parser, default_bp),
+		return ast.SliceType{
+			Underlying: underlying,
 		}
 	}
+
+	size := parse_expression(parser, default_bp)
 
 	parser.expect(lexer.CLOSE_BRACKET)
 	parser.advance(1)
 
-	return ast.SliceType{
-		Underlying: parse_type(parser, default_bp),
+	return ast.ArrayType{
+		Size:       size,
+		Underlying: underlying,
 	}
 }
 

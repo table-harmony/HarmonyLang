@@ -206,16 +206,19 @@ func parse_if_expression(parser *parser) ast.Expression {
 	consequent := parse_block_expression(parser).(ast.BlockExpression)
 
 	// auto semi colon insertion insert semi colon after the end curly so skip it then check for else
-	if parser.current_token().Kind == lexer.SEMI_COLON {
-		parser.advance(1)
-	}
+	//	pos := parser.pos
+	//	for parser.tokens[pos].Kind == lexer.SEMI_COLON {
+	//		//parser.advance(1)
+	//		pos++
+	//	}
+	//TODO: decide whether i want like go no seperation between if and else
 
-	var alternate ast.BlockExpression
+	var alternate ast.Expression
 	if parser.current_token().Kind == lexer.ELSE {
 		parser.advance(1)
 
 		if parser.current_token().Kind == lexer.IF {
-			alternate = parse_if_expression(parser).(ast.BlockExpression)
+			alternate = parse_if_expression(parser).(ast.IfExpression)
 		} else {
 			alternate = parse_block_expression(parser).(ast.BlockExpression)
 		}
@@ -378,5 +381,30 @@ func parse_function_declaration_expression(parser *parser) ast.Expression {
 		Parameters: params,
 		Body:       body,
 		ReturnType: returnType,
+	}
+}
+
+func parse_try_catch_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.TRY)
+	parser.advance(1)
+
+	tryBlock := parse_block_expression(parser)
+
+	// auto semi colon insertion insert semi colon after the end curly so skip it then check for else
+	//	for parser.current_token().Kind == lexer.SEMI_COLON {
+	//		parser.advance(1)
+	//	}
+	//TODO: similar to evaluate if problem with semi colons
+
+	parser.expect(lexer.CATCH)
+	parser.advance(1)
+
+	//TODO: parse error as well
+
+	catchBlock := parse_block_expression(parser)
+
+	return ast.TryCatchExpression{
+		TryBlock:   tryBlock,
+		CatchBlock: catchBlock,
 	}
 }
