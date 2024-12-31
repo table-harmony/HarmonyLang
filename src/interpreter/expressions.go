@@ -8,34 +8,32 @@ import (
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
-func evaluate_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_expression(expression ast.Expression, scope *Scope) Value {
 	expressionType := reflect.TypeOf(expression)
 
 	if handler, exists := expression_lookup[expressionType]; exists {
-		return handler(expression, env)
+		return handler(expression, scope)
 	} else {
 		panic(fmt.Sprintf("No handler registered for statement type: %v", expressionType))
 	}
 }
 
-func evaluate_primary_statement(expression ast.Expression, env *Environment) RuntimeValue {
-	expressionType := reflect.TypeOf(expression)
-
-	switch expressionType {
-	case reflect.TypeOf(ast.NumberExpression{}):
-		return RuntimeNumber{expression.(ast.NumberExpression).Value}
-	case reflect.TypeOf(ast.StringExpression{}):
-		return RuntimeString{expression.(ast.StringExpression).Value}
-	case reflect.TypeOf(ast.BooleanExpression{}):
-		return RuntimeBoolean{expression.(ast.BooleanExpression).Value}
-	case reflect.TypeOf(ast.NilExpression{}):
-		return RuntimeNil{}
+func evaluate_primary_expression(expression ast.Expression, scope *Scope) Value {
+	switch expression := expression.(type) {
+	case ast.NumberExpression:
+		return Number{expression.Value}
+	case ast.StringExpression:
+		return String{expression.Value}
+	case ast.BooleanExpression:
+		return Boolean{expression.Value}
+	case ast.NilExpression:
+		return Nil{}
 	default:
-		panic(fmt.Sprintf("Unknown statement type %s", expressionType))
+		panic(fmt.Sprintf("Unknown expression type %s"))
 	}
 }
 
-func evalute_binary_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evalute_binary_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.BinaryExpression](expression)
 	if err != nil {
 		panic(err)
@@ -58,23 +56,23 @@ func evalute_binary_expression(expression ast.Expression, env *Environment) Runt
 	}
 }
 
-func handle_equality_operations(operator lexer.TokenKind, left, right RuntimeValue) RuntimeValue {
+func handle_equality_operations(operator lexer.TokenKind, left, right RuntimeValue) Value {
 	leftValue := left.getValue()
 	rightValue := right.getValue()
 
 	switch operator {
 	case lexer.EQUALS:
-		return RuntimeBoolean{isEqual(leftValue, rightValue)}
+		return Boolean{isEqual(leftValue, rightValue)}
 	case lexer.NOT_EQUALS:
-		return RuntimeBoolean{!isEqual(leftValue, rightValue)}
+		return Boolean{!isEqual(leftValue, rightValue)}
 	default:
 		panic(fmt.Sprintf("Unsupported equality operator: %v", operator.ToString()))
 	}
 }
 
-func handle_logical_operations(operator lexer.TokenKind, left, right RuntimeValue) RuntimeValue {
-	leftValue, err1 := ExpectRuntimeValue[RuntimeBoolean](left.getValue())
-	rightValue, err2 := ExpectRuntimeValue[RuntimeBoolean](right.getValue())
+func handle_logical_operations(operator lexer.TokenKind, left, right RuntimeValue) Value {
+	leftValue, err1 := ExpectRuntimeValue[Boolean](left.getValue())
+	rightValue, err2 := ExpectRuntimeValue[Boolean](right.getValue())
 
 	if err1 != nil || err2 != nil {
 		panic(fmt.Sprintf("Logical operations require boolean values: %v, %v", err1, err2))
@@ -82,15 +80,15 @@ func handle_logical_operations(operator lexer.TokenKind, left, right RuntimeValu
 
 	switch operator {
 	case lexer.OR:
-		return RuntimeBoolean{leftValue.Value || rightValue.Value}
+		return Boolean{leftValue.Value || rightValue.Value}
 	case lexer.AND:
-		return RuntimeBoolean{leftValue.Value && rightValue.Value}
+		return Boolean{leftValue.Value && rightValue.Value}
 	default:
 		panic(fmt.Sprintf("Unsupported logical operator: %v", operator.ToString()))
 	}
 }
 
-func handle_arithmetic_operations(operator lexer.TokenKind, left, right RuntimeValue) RuntimeValue {
+func handle_arithmetic_operations(operator lexer.TokenKind, left, right RuntimeValue) Value {
 	if left == nil || right == nil {
 		panic("Cannot perform arithmetic operation on nil value")
 	}
@@ -100,13 +98,13 @@ func handle_arithmetic_operations(operator lexer.TokenKind, left, right RuntimeV
 
 	if leftValue.getType() == StringType || rightValue.getType() == StringType {
 		if operator == lexer.PLUS {
-			return RuntimeString{handle_string_concatenation(leftValue, rightValue).Value}
+			return String{handle_string_concatenation(leftValue, rightValue).Value}
 		}
 		panic(fmt.Sprintf("Invalid operation %v between string types", operator.ToString()))
 	}
 
-	leftNum, leftErr := ExpectRuntimeValue[RuntimeNumber](leftValue)
-	rightNum, rightErr := ExpectRuntimeValue[RuntimeNumber](rightValue)
+	leftNum, leftErr := ExpectRuntimeValue[Number](leftValue)
+	rightNum, rightErr := ExpectRuntimeValue[Number](rightValue)
 
 	if leftErr != nil || rightErr != nil {
 		panic(fmt.Sprintf("Invalid operation '%v' between %v and %v",
@@ -117,114 +115,124 @@ func handle_arithmetic_operations(operator lexer.TokenKind, left, right RuntimeV
 
 	switch operator {
 	case lexer.PLUS:
-		return RuntimeNumber{leftNum.Value + rightNum.Value}
+		return Number{leftNum.Value + rightNum.Value}
 	case lexer.DASH:
-		return RuntimeNumber{leftNum.Value - rightNum.Value}
+		return Number{leftNum.Value - rightNum.Value}
 	case lexer.STAR:
-		return RuntimeNumber{leftNum.Value * rightNum.Value}
+		return Number{leftNum.Value * rightNum.Value}
 	case lexer.SLASH:
 		if rightNum.Value == 0 {
 			panic("Division by zero")
 		}
-		return RuntimeNumber{leftNum.Value / rightNum.Value}
+		return Number{leftNum.Value / rightNum.Value}
 	case lexer.PERCENT:
 		if rightNum.Value == 0 {
 			panic("Modulo by zero")
 		}
-		return RuntimeNumber{float64(int64(leftNum.Value) % int64(rightNum.Value))}
+		return Number{float64(int64(leftNum.Value) % int64(rightNum.Value))}
 	default:
 		panic(fmt.Sprintf("Unsupported arithmetic operator: %v", operator.ToString()))
 	}
 }
 
-func handle_relational_operations(operator lexer.TokenKind, left, right RuntimeValue) RuntimeValue {
-	leftNum, _ := ExpectRuntimeValue[RuntimeNumber](left.getValue())
-	rightNum, _ := ExpectRuntimeValue[RuntimeNumber](right.getValue())
+func handle_relational_operations(operator lexer.TokenKind, left, right RuntimeValue) Value {
+	leftNum, _ := ExpectRuntimeValue[Number](left.getValue())
+	rightNum, _ := ExpectRuntimeValue[Number](right.getValue())
 
 	switch operator {
 	case lexer.LESS:
-		return RuntimeBoolean{leftNum.Value < rightNum.Value}
+		return Boolean{leftNum.Value < rightNum.Value}
 	case lexer.GREATER:
-		return RuntimeBoolean{leftNum.Value > rightNum.Value}
+		return Boolean{leftNum.Value > rightNum.Value}
 	case lexer.LESS_EQUALS:
-		return RuntimeBoolean{leftNum.Value <= rightNum.Value}
+		return Boolean{leftNum.Value <= rightNum.Value}
 	case lexer.GREATER_EQUALS:
-		return RuntimeBoolean{leftNum.Value >= rightNum.Value}
+		return Boolean{leftNum.Value >= rightNum.Value}
 	default:
 		panic(fmt.Sprintf("Unsupported relational operator: %v", operator.ToString()))
 	}
 }
 
-func handle_string_concatenation(left RuntimeValue, right RuntimeValue) RuntimeString {
+func handle_string_concatenation(left RuntimeValue, right RuntimeValue) String {
 	var leftStr string
 	var rightStr string
 
 	switch v := left.(type) {
-	case RuntimeString:
+	case String:
 		leftStr = v.Value
-	case RuntimeNumber:
+	case Number:
 		leftStr = fmt.Sprintf("%g", v.Value)
-	case RuntimeBoolean:
+	case Boolean:
 		leftStr = fmt.Sprintf("%v", v.Value)
 	default:
 		panic(fmt.Sprintf("Cannot convert type '%v' to string", left.getType().ToString()))
 	}
 
 	switch v := right.(type) {
-	case RuntimeString:
+	case String:
 		rightStr = v.Value
-	case RuntimeNumber:
+	case Number:
 		rightStr = fmt.Sprintf("%g", v.Value)
-	case RuntimeBoolean:
+	case Boolean:
 		rightStr = fmt.Sprintf("%t", v.Value)
 	default:
 		panic(fmt.Sprintf("Cannot convert type '%v' to string", right.getType().ToString()))
 	}
 
-	return RuntimeString{leftStr + rightStr}
+	return String{leftStr + rightStr}
 }
 
-func evaluate_prefix_expression(expression ast.Expression, env *Environment) RuntimeValue {
-	prefixExpression := expression.(ast.PrefixExpression)
+func evaluate_prefix_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.PrefixExpression](expression)
+	if err != nil {
+		panic(err)
+	}
 
-	right := evaluate_expression(prefixExpression.Right, env)
-	rightType := right.getType()
+	right := evaluate_expression(expectedExpression.Right, scope)
 
-	switch prefixExpression.Operator.Kind {
+	switch expectedExpression.Operator.Kind {
 	case lexer.NOT:
-		right, err := ExpectRuntimeValue[RuntimeBoolean](right)
-
+		right, err := ExpectValue[Boolean](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
-				lexer.NOT.ToString(), rightType))
+				lexer.NOT.ToString(), right.Type().String()))
 		}
 
-		return RuntimeBoolean{!right.Value}
+		return Boolean{!right.Value()}
 	case lexer.DASH:
-		right, err := ExpectRuntimeValue[RuntimeNumber](right)
-
+		right, err := ExpectValue[Number](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
-				lexer.DASH.ToString(), rightType))
+				lexer.DASH.ToString(), right.Type().String()))
 		}
 
-		return RuntimeNumber{-right.Value}
+		return Number{-right.Value()}
 	case lexer.PLUS:
-		right, err := ExpectRuntimeValue[RuntimeNumber](right)
-
+		right, err := ExpectValue[Number](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
-				lexer.PLUS.ToString(), rightType))
+				lexer.PLUS.ToString(), right.Type().String()))
 		}
 
-		return RuntimeNumber{right.Value}
+		return Number{right.Value()}
+	case lexer.AMPERSAND:
+		//\right, err := ExpectReference[*VariableReference](right)
+		//\if err != nil {
+		//\	panic(err)
+		//\}
+
+		return right
+	case lexer.STAR:
+
+		//return NewPointer(right)
 	default:
 		panic(fmt.Sprintf("Invalid operation %v with type %v",
-			prefixExpression.Operator.Kind.ToString(), rightType.ToString()))
+			expectedExpression.Operator.Kind.ToString(), right.Type().String()))
 	}
 }
 
-func evaluate_symbol_expression(expression ast.Expression, env *Environment) RuntimeValue {
+// TODO: this implementation is made so there cannot exist a duplicate identifier in a scope even for a function and a variable
+func evaluate_symbol_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.SymbolExpression](expression)
 	if err != nil {
 		panic(err)
@@ -235,15 +243,15 @@ func evaluate_symbol_expression(expression ast.Expression, env *Environment) Run
 		return variable
 	}
 
-	function, err := env.get_function(expectedExpression.Value, make([]ast.Parameter, 0))
+	function, err := env.get_function(expectedExpression.Value)
 	if err == nil {
 		return function
 	}
 
-	panic(err)
+	panic(fmt.Errorf("the name '%v' does not exist in the current context", expectedExpression.Value))
 }
 
-func evaluate_ternary_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_ternary_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.TernaryExpression](expression)
 	if err != nil {
 		panic(err)
@@ -251,7 +259,7 @@ func evaluate_ternary_expression(expression ast.Expression, env *Environment) Ru
 
 	conditionValue := evaluate_expression(expectedExpression.Condition, env)
 
-	expectedValue, err := ExpectRuntimeValue[RuntimeBoolean](conditionValue)
+	expectedValue, err := ExpectRuntimeValue[Boolean](conditionValue)
 	if err != nil {
 		panic(err)
 	}
@@ -263,7 +271,7 @@ func evaluate_ternary_expression(expression ast.Expression, env *Environment) Ru
 	return evaluate_expression(expectedExpression.Alternate, env)
 }
 
-func evaluate_block_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_block_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.BlockExpression](expression)
 	if err != nil {
 		panic(err)
@@ -277,7 +285,7 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 	}
 
 	if len(statements) == 0 {
-		return RuntimeNil{}
+		return Nil{}
 	}
 
 	lastStatement := statements[len(statements)-1]
@@ -287,10 +295,10 @@ func evaluate_block_expression(expression ast.Expression, env *Environment) Runt
 
 	evaluate_statement(lastStatement, env)
 
-	return RuntimeNil{}
+	return Nil{}
 }
 
-func evaluate_if_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_if_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.IfExpression](expression)
 
 	if err != nil {
@@ -298,7 +306,7 @@ func evaluate_if_expression(expression ast.Expression, env *Environment) Runtime
 	}
 
 	conditionExpression := evaluate_expression(expectedExpression.Condition, env)
-	expectedCondition, err := ExpectRuntimeValue[RuntimeBoolean](conditionExpression)
+	expectedCondition, err := ExpectRuntimeValue[Boolean](conditionExpression)
 
 	if err != nil {
 		panic(err)
@@ -316,10 +324,10 @@ func evaluate_if_expression(expression ast.Expression, env *Environment) Runtime
 		}
 	}
 
-	return RuntimeNil{}
+	return Nil{}
 }
 
-func evaluate_switch_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_switch_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
 
 	if err != nil {
@@ -356,17 +364,13 @@ func evaluate_switch_expression(expression ast.Expression, env *Environment) Run
 	return evaluate_expression(defaultCase.Body, env)
 }
 
-func evaluate_call_expression(expression ast.Expression, env *Environment) (result RuntimeValue) {
+func evaluate_call_expression(expression ast.Expression, env *Environment) (result Value) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch err := r.(type) {
 			case ReturnError:
 				result = err.Value
-			case error:
-				// Re-panic other errors
-				panic(err)
 			default:
-				// Re-panic unknown panic types
 				panic(r)
 			}
 		}
@@ -377,55 +381,90 @@ func evaluate_call_expression(expression ast.Expression, env *Environment) (resu
 		panic(err)
 	}
 
-	callerValue := evaluate_expression(expectedExpression.Caller, env)
-	var function RuntimeFunction
+	caller := evaluate_expression(expectedExpression.Caller, env)
+	callerValue := caller.getValue()
 
-	switch caller := callerValue.(type) {
-	case RuntimeFunction:
-		function = caller
-	case RuntimeAnonymousFunction:
-		function = RuntimeFunction{
-			Parameters: caller.Parameters,
-			Body:       caller.Body,
-			ReturnType: caller.ReturnType,
-			Closure:    caller.Closure,
-		}
-	default:
-		panic(fmt.Sprintf("Cannot call value of type %v", caller.getType().ToString()))
+	if callerValue.getType() != AnonymousFunctionType && callerValue.getType() != FunctionType {
+		panic(fmt.Errorf("cannot call non-function value of type %v", callerValue.getType().ToString()))
 	}
 
-	functionEnv := create_environment(function.Closure)
-
-	if len(expectedExpression.Params) != len(function.Parameters) {
-		panic(fmt.Errorf("Expected %d arguments but got %d",
-			len(function.Parameters), len(expectedExpression.Params)))
-	}
-
-	for i, param := range function.Parameters {
-		argValue := evaluate_expression(expectedExpression.Params[i], env)
-		if argValue == nil {
-			argValue = RuntimeNil{}
-		}
-
-		err := functionEnv.declare_variable(RuntimeVariable{
-			Identifier:   param.Name,
-			Value:        argValue,
-			ExplicitType: evaluate_type(param.Type),
-		})
+	var function RuntimeAnonymousFunction
+	if callerValue.getType() == AnonymousFunctionType {
+		function, _ = ExpectRuntimeValue[RuntimeAnonymousFunction](callerValue)
+	} else {
+		functionValue, err := ExpectRuntimeValue[RuntimeFunction](callerValue)
 		if err != nil {
 			panic(err)
 		}
+
+		function = RuntimeAnonymousFunction{
+			Parameters: functionValue.Parameters,
+			Body:       functionValue.Body,
+			ReturnType: functionValue.ReturnType,
+			Closure:    functionValue.Closure,
+		}
 	}
 
-	var lastValue RuntimeValue = RuntimeNil{}
+	if len(expectedExpression.Params) != len(function.Parameters) {
+		panic(fmt.Errorf("expected %d arguments but got %d",
+			len(function.Parameters), len(expectedExpression.Params)))
+	}
+
+	functionScope := create_environment(function.Closure)
+
+	for index, param := range expectedExpression.Params {
+		expectedParam := function.Parameters[index]
+		expectedParamType := evaluate_type(expectedParam.Type)
+
+		paramValue := evaluate_expression(param, env).getValue()
+
+		if paramValue.getType() != expectedParamType && expectedParamType != AnyType {
+			panic(fmt.Sprintf("parameter '%s' expected type '%s' but got '%s'",
+				expectedParam.Name,
+				expectedParamType.ToString(),
+				paramValue.getType().ToString()))
+		}
+
+		if expectedParamType == FunctionType {
+			passedFunction, err := ExpectRuntimeValue[RuntimeFunction](paramValue)
+
+			if err != nil {
+				panic(err)
+			}
+
+			err = functionScope.declare_function(RuntimeFunction{
+				Identifier: expectedParam.Name,
+				Parameters: passedFunction.Parameters,
+				Body:       passedFunction.Body,
+				ReturnType: passedFunction.ReturnType,
+				Closure:    passedFunction.Closure,
+			})
+
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			err = functionScope.declare_variable(RuntimeVariable{
+				Identifier:   expectedParam.Name,
+				IsConstant:   false,
+				Value:        paramValue,
+				ExplicitType: expectedParamType,
+			})
+
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	for _, statement := range function.Body {
-		evaluate_statement(statement, functionEnv)
+		evaluate_statement(statement, functionScope)
 	}
 
-	return lastValue
+	return Nil{}
 }
 
-func evaluate_function_declaration_expression(expression ast.Expression, env *Environment) RuntimeValue {
+func evaluate_function_declaration_expression(expression ast.Expression, env *Environment) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.FunctionDeclarationExpression](expression)
 	if err != nil {
 		panic(err)
@@ -438,7 +477,7 @@ func evaluate_function_declaration_expression(expression ast.Expression, env *En
 	}
 }
 
-func evaluate_try_catch_expression(expression ast.Expression, env *Environment) (result RuntimeValue) {
+func evaluate_try_catch_expression(expression ast.Expression, env *Environment) (result Value) {
 	expectedExpression, err := ast.ExpectExpression[ast.TryCatchExpression](expression)
 	if err != nil {
 		panic(err)
@@ -451,5 +490,5 @@ func evaluate_try_catch_expression(expression ast.Expression, env *Environment) 
 	}()
 
 	result = evaluate_expression(expectedExpression.TryBlock, env)
-	return result
+	return
 }

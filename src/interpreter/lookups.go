@@ -6,8 +6,8 @@ import (
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
-type statement_handler func(statement ast.Statement, env *Environment)
-type expression_handler func(expression ast.Expression, env *Environment) RuntimeValue
+type statement_handler func(statement ast.Statement, env *Scope)
+type expression_handler func(expression ast.Expression, env *Scope) Value
 
 var statement_lookup = make(map[reflect.Type]statement_handler)
 var expression_lookup = make(map[reflect.Type]expression_handler)
@@ -49,8 +49,8 @@ func create_lookups() {
 	register_expression_handler[ast.TryCatchExpression](evaluate_try_catch_expression)
 
 	// Primary expressions
-	register_expression_handler[ast.BooleanExpression](evaluate_primary_statement)
-	register_expression_handler[ast.NumberExpression](evaluate_primary_statement)
-	register_expression_handler[ast.StringExpression](evaluate_primary_statement)
-	register_expression_handler[ast.NilExpression](evaluate_primary_statement)
+	register_expression_handler[ast.BooleanExpression](evaluate_primary_expression)
+	register_expression_handler[ast.NumberExpression](evaluate_primary_expression)
+	register_expression_handler[ast.StringExpression](evaluate_primary_expression)
+	register_expression_handler[ast.NilExpression](evaluate_primary_expression)
 }

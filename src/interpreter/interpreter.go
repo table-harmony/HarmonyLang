@@ -12,14 +12,14 @@ type interpreter struct {
 
 func Interpret(ast []ast.Statement) {
 	interpreter := create_interpreter(ast)
-	global_env := create_environment(nil)
+	scope := NewScope(nil)
 
 	for !interpreter.is_empty() {
-		interpreter.evalute_current_statement(global_env)
+		interpreter.evalute_current_statement(scope)
 		interpreter.advance(1)
 	}
 
-	litter.Dump(global_env.variables)
+	litter.Dump(scope.variables)
 }
 
 func create_interpreter(ast []ast.Statement) *interpreter {

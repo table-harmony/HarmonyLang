@@ -9,7 +9,7 @@ func (ContinueError) Error() string {
 }
 
 type ReturnError struct {
-	Value RuntimeValue
+	Value Value
 }
 
 func (ReturnError) Error() string {

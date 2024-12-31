@@ -7,47 +7,47 @@ import (
 	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
-type RuntimeValueType int
+type ValueType int
 
 const (
-	// Primitive Types
-	NumberType RuntimeValueType = iota
+	NumberType ValueType = iota
 	StringType
 	BooleanType
 	NilType
-
-	// Reference Types
-	PointerType
-	ReferenceType
-
-	// Complex Types
-	VariableType
 	ArrayType
 	SliceType
 	MapType
 	StructType
 	InterfaceType
 	FunctionType
-	AnonymousFunctionType
+	PointerType
+	ReferenceType
 	AnyType
 )
 
-func (_type RuntimeValueType) ToString() string {
-	switch _type {
+// TODO: evaluate type from ast to a value type
+func evaluate_type(t ast.Type) ValueType {
+	return AnyType
+}
+
+func ExpectValue[T Value](value Value) (T, error) {
+	return helpers.ExpectType[T](value)
+}
+
+func ExpectReference[T Reference](value Reference) (T, error) {
+	return helpers.ExpectType[T](value)
+}
+
+func (t ValueType) String() string {
+	switch t {
 	case NumberType:
 		return "number"
 	case StringType:
 		return "string"
 	case BooleanType:
-		return "bool"
+		return "boolean"
 	case NilType:
-		return "null"
-	case PointerType:
-		return "pointer"
-	case ReferenceType:
-		return "reference"
-	case VariableType:
-		return "variable"
+		return "nil"
 	case ArrayType:
 		return "array"
 	case SliceType:
@@ -60,172 +60,139 @@ func (_type RuntimeValueType) ToString() string {
 		return "interface"
 	case FunctionType:
 		return "function"
-	case AnonymousFunctionType:
-		return "anonymous_function"
-	case AnyType:
-		return "any"
-	default:
-		return fmt.Sprintf("unknown(%d)", _type)
-	}
-}
-
-type RuntimeValue interface {
-	getType() RuntimeValueType
-	getValue() RuntimeValue
-}
-
-type RuntimeReference struct {
-	Value RuntimeValue
-}
-
-func (RuntimeReference) getType() RuntimeValueType { return ReferenceType }
-func (r RuntimeReference) getValue() RuntimeValue  { return r.Value.getValue() }
-
-type RuntimePointer struct {
-	Target *RuntimeValue
-}
-
-func (RuntimePointer) getType() RuntimeValueType { return PointerType }
-func (p RuntimePointer) getValue() RuntimeValue {
-	if p.Target == nil {
-		return RuntimeNil{}
-	}
-	return (*p.Target).getValue()
-}
-
-type RuntimeNumber struct {
-	Value float64
-}
-
-func (RuntimeNumber) getType() RuntimeValueType { return NumberType }
-func (n RuntimeNumber) getValue() RuntimeValue  { return n }
-
-type RuntimeString struct {
-	Value string
-}
-
-func (RuntimeString) getType() RuntimeValueType { return StringType }
-func (s RuntimeString) getValue() RuntimeValue  { return s }
-
-type RuntimeBoolean struct {
-	Value bool
-}
-
-func (RuntimeBoolean) getType() RuntimeValueType { return BooleanType }
-func (b RuntimeBoolean) getValue() RuntimeValue  { return b }
-
-type RuntimeNil struct {
-}
-
-func (RuntimeNil) getType() RuntimeValueType { return NilType }
-func (n RuntimeNil) getValue() RuntimeValue  { return n }
-
-func ExpectRuntimeValue[T RuntimeValue](value RuntimeValue) (T, error) {
-	if value.getType() == ReferenceType || value.getType() == PointerType {
-		value = value.getValue()
-	}
-	return helpers.ExpectType[T](value)
-}
-
-func GetDefaultValue(valueType RuntimeValueType) RuntimeValue {
-	switch valueType {
-	case NumberType:
-		return RuntimeNumber{0}
-	case StringType:
-		return RuntimeString{""}
-	case BooleanType:
-		return RuntimeBoolean{false}
 	case PointerType:
-		return RuntimePointer{nil}
+		return "pointer"
+	case ReferenceType:
+		return "reference"
 	default:
-		return RuntimeNil{}
+		return "unknown"
 	}
 }
 
-func isEqual(v1, v2 RuntimeValue) bool {
-	if v1 == nil || v2 == nil {
-		return v1 == v2
-	}
-
-	value1 := v1.getValue()
-	value2 := v2.getValue()
-
-	if value1 == nil || value2 == nil {
-		return value1 == value2
-	}
-
-	if value1.getType() != value2.getType() {
-		return false
-	}
-
-	switch val1 := value1.(type) {
-	case RuntimeNumber:
-		val2 := value2.(RuntimeNumber)
-		return val1.Value == val2.Value
-	case RuntimeString:
-		val2 := value2.(RuntimeString)
-		return val1.Value == val2.Value
-	case RuntimeBoolean:
-		val2 := value2.(RuntimeBoolean)
-		return val1.Value == val2.Value
-	case RuntimeNil:
-		return true
-	default:
-		return value1 == value2
-	}
+type Value interface {
+	Type() ValueType
+	Clone() Value
+	String() string
 }
 
-type RuntimeVariable struct {
-	Identifier   string
-	IsConstant   bool
-	Value        RuntimeValue
-	ExplicitType RuntimeValueType
+type Reference interface {
+	Value
+	Load() Value
+	Store(Value) error
+	Address() Value
 }
 
-func (v RuntimeVariable) getType() RuntimeValueType { return v.Value.getType() }
-func (v RuntimeVariable) getValue() RuntimeValue {
-	if v.Value == nil {
-		return RuntimeNil{}
-	}
-	return v.Value.getValue()
+// Primitive type implementations
+type Number struct{ value float64 }
+type String struct{ value string }
+type Boolean struct{ value bool }
+type Nil struct{}
+
+// Number implementation
+func (n Number) Type() ValueType { return NumberType }
+func (n Number) Clone() Value    { return Number{n.value} }
+func (n Number) String() string  { return fmt.Sprintf("%g", n.value) }
+func (n Number) Value() float64  { return n.value }
+
+// String implementation
+func (s String) Type() ValueType { return StringType }
+func (s String) Clone() Value    { return String{s.value} }
+func (s String) String() string  { return s.value }
+func (s String) Value() string   { return s.value }
+
+// Boolean implementation
+func (b Boolean) Type() ValueType { return BooleanType }
+func (b Boolean) Clone() Value    { return Boolean{b.value} }
+func (b Boolean) String() string  { return fmt.Sprintf("%t", b.value) }
+func (b Boolean) Value() bool     { return b.value }
+
+// Nil implementation
+func (Nil) Type() ValueType { return NilType }
+func (Nil) Clone() Value    { return Nil{} }
+func (Nil) String() string  { return "nil" }
+
+type VariableReference struct {
+	identifier   string
+	isConstant   bool
+	value        Value
+	explicitType ValueType
 }
 
-type AssignableValue interface {
-	RuntimeValue
-	assign(value RuntimeValue) error
-}
+// Implement Value interface
+func (s *VariableReference) Type() ValueType { return s.value.Type() }
+func (s *VariableReference) Clone() Value    { return s.value.Clone() }
+func (s *VariableReference) String() string  { return s.value.String() }
 
-func (v *RuntimeVariable) assign(value RuntimeValue) error {
-	if v.IsConstant {
-		return fmt.Errorf("cannot reassign constant variable '%s'", v.Identifier)
+// Implement Reference interface
+func (s *VariableReference) Load() Value { return s.value }
+func (s *VariableReference) Store(v Value) error {
+	if s.isConstant {
+		return fmt.Errorf("cannot assign to constant '%s'", s.identifier)
 	}
-
-	if v.ExplicitType != value.getType() && v.ExplicitType != AnyType {
-		return fmt.Errorf("type mismatch: variable '%s' explicit type %v but assigned a %v",
-			v.Identifier, v.ExplicitType.ToString(), value.getType().ToString())
+	if s.explicitType != v.Type() && s.explicitType != AnyType {
+		return fmt.Errorf("type mismatch: cannot assign %v to %s of type %v",
+			v.Type(), s.identifier, s.explicitType)
 	}
-
-	v.Value = value
+	s.value = v
 	return nil
 }
-
-type RuntimeFunction struct {
-	Identifier string
-	Parameters []ast.Parameter
-	Body       []ast.Statement
-	ReturnType RuntimeValueType
-	Closure    *Environment
+func (s *VariableReference) Address() Value {
+	return NewPointer(s)
 }
 
-func (RuntimeFunction) getType() RuntimeValueType { return FunctionType }
-func (f RuntimeFunction) getValue() RuntimeValue  { return f }
-
-type RuntimeAnonymousFunction struct {
-	Parameters []ast.Parameter
-	Body       []ast.Statement
-	ReturnType RuntimeValueType
-	Closure    *Environment
+type ReferenceValue struct {
+	value Value
 }
 
-func (RuntimeAnonymousFunction) getType() RuntimeValueType { return AnonymousFunctionType }
-func (f RuntimeAnonymousFunction) getValue() RuntimeValue  { return f }
+func NewReference(value Value) *ReferenceValue {
+	return &ReferenceValue{value}
+}
+
+// Implement Value interface
+func (r *ReferenceValue) Type() ValueType { return ReferenceType }
+func (r *ReferenceValue) Clone() Value    { return NewReference(r.value.Clone()) }
+func (r *ReferenceValue) String() string  { return r.value.String() }
+
+// Implement Reference interface
+func (r *ReferenceValue) Load() Value { return r.value }
+func (r *ReferenceValue) Store(v Value) error {
+	r.value = v
+	return nil
+}
+func (r *ReferenceValue) Address() Value {
+	return NewPointer(r)
+}
+
+type Pointer struct {
+	target Reference
+}
+
+func NewPointer(target Reference) *Pointer {
+	return &Pointer{target}
+}
+
+// Implement Value interface
+func (p *Pointer) Type() ValueType { return PointerType }
+func (p *Pointer) Clone() Value    { return NewPointer(p.target) }
+func (p *Pointer) String() string {
+	if p.target == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("&%v", p.target.String())
+}
+
+func (p *Pointer) Deref() Reference {
+	return p.target
+}
+
+func Deref(v Value) (Value, error) {
+	switch ptr := v.(type) {
+	case *Pointer:
+		if ptr.target == nil {
+			return nil, fmt.Errorf("null pointer dereference")
+		}
+		return ptr.target.Load(), nil
+	default:
+		return nil, fmt.Errorf("cannot dereference non-pointer type %v", v.Type())
+	}
+}

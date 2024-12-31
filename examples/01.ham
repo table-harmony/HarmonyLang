@@ -1,22 +1,22 @@
-fn x(y) {
-  let z = 1
+//fn foo(x) {
+//  return x()
+//}
+//
+//const y = fn() {
+//  return 1
+//}
+//
+//const z = foo(foo)
 
-  if z + y == 1 + 1 {
-    return y + z
-  }
-  
-  return z
+const y = fn(a, b) {
+  return 1 + b(a)
 }
 
-const z = x(1)
+fn z(a) {
+  return a
+}
 
-
-//const z = try {
-//  1 / 0
-//} catch { 
-//  1
-//}
-
+const x = y(1, func(number) { return number * 10 })
 
 // let numbers: map[number -> string];  // maps
 //let numbers: number = [foo(), 2 + 21, 3]  // arrays

@@ -85,15 +85,15 @@ func (repl *REPL) evaluate_statement(statement ast.Statement) RuntimeValue {
 
 func print_value(value RuntimeValue) {
 	switch v := value.(type) {
-	case RuntimeNumber:
+	case Number:
 		if v.Value == float64(int(v.Value)) {
 			fmt.Printf("%d\n", int(v.Value))
 		} else {
 			fmt.Printf("%g\n", v.Value)
 		}
-	case RuntimeString:
+	case String:
 		fmt.Printf("%q\n", v.Value)
-	case RuntimeBoolean:
+	case Boolean:
 		fmt.Printf("%t\n", v.Value)
 	case RuntimeVariable:
 		print_value(v.Value)
