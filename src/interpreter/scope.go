@@ -24,8 +24,8 @@ func (scope *Scope) DeclareVariable(variable *VariableReference) error {
 }
 
 func (scope *Scope) Resolve(identifier string) (Reference, error) {
-	if storage, exists := scope.variables[identifier]; exists {
-		return storage, nil
+	if ref, exists := scope.variables[identifier]; exists {
+		return ref, nil
 	}
 	if scope.parent != nil {
 		return scope.parent.Resolve(identifier)

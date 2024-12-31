@@ -1,28 +1,3 @@
-//fn foo(x) {
-//  return x()
-//}
-//
-//const y = fn() {
-//  return 1
-//}
-//
-//const z = foo(foo)
-
-const y = fn(a, b) {
-  return 1 + b(a)
-}
-
-fn z(a) {
-  return a
-}
-
-const x = y(1, func(number) { return number * 10 })
-
-// let numbers: map[number -> string];  // maps
-//let numbers: number = [foo(), 2 + 21, 3]  // arrays
-//let numbers: number[1][] = [1, 2, 3]   // slices
-
-//TODO: detect instansiation....
-//TODO: do all arrays and slices today
-
-//TODO: function overload
+let x = 1
+let y = &x
+y = *y + 1

@@ -91,19 +91,19 @@ type Nil struct{}
 // Number implementation
 func (n Number) Type() ValueType { return NumberType }
 func (n Number) Clone() Value    { return Number{n.value} }
-func (n Number) String() string  { return fmt.Sprintf("%g", n.value) }
+func (n Number) String() string  { return fmt.Sprintf("type: number, value: %g", n.value) }
 func (n Number) Value() float64  { return n.value }
 
 // String implementation
 func (s String) Type() ValueType { return StringType }
 func (s String) Clone() Value    { return String{s.value} }
-func (s String) String() string  { return s.value }
+func (s String) String() string  { return fmt.Sprintf("type: string, value: %s", s.value) }
 func (s String) Value() string   { return s.value }
 
 // Boolean implementation
 func (b Boolean) Type() ValueType { return BooleanType }
 func (b Boolean) Clone() Value    { return Boolean{b.value} }
-func (b Boolean) String() string  { return fmt.Sprintf("%t", b.value) }
+func (b Boolean) String() string  { return fmt.Sprintf("type: boolean, value: %t", b.value) }
 func (b Boolean) Value() bool     { return b.value }
 
 // Nil implementation
@@ -140,29 +140,6 @@ func (s *VariableReference) Address() Value {
 	return NewPointer(s)
 }
 
-type ReferenceValue struct {
-	value Value
-}
-
-func NewReference(value Value) *ReferenceValue {
-	return &ReferenceValue{value}
-}
-
-// Implement Value interface
-func (r *ReferenceValue) Type() ValueType { return ReferenceType }
-func (r *ReferenceValue) Clone() Value    { return NewReference(r.value.Clone()) }
-func (r *ReferenceValue) String() string  { return r.value.String() }
-
-// Implement Reference interface
-func (r *ReferenceValue) Load() Value { return r.value }
-func (r *ReferenceValue) Store(v Value) error {
-	r.value = v
-	return nil
-}
-func (r *ReferenceValue) Address() Value {
-	return NewPointer(r)
-}
-
 type Pointer struct {
 	target Reference
 }
@@ -196,3 +173,27 @@ func Deref(v Value) (Value, error) {
 		return nil, fmt.Errorf("cannot dereference non-pointer type %v", v.Type())
 	}
 }
+
+type FunctionValue struct {
+	parameters []ast.Parameter
+	body       []ast.Statement
+	returnType ValueType
+	closure    *Scope
+}
+
+func (f FunctionValue) Type() ValueType { return FunctionType }
+func (f FunctionValue) Clone() Value {
+	paramsCopy := make([]ast.Parameter, len(f.parameters))
+	copy(paramsCopy, f.parameters)
+
+	bodyCopy := make([]ast.Statement, len(f.body))
+	copy(bodyCopy, f.body)
+
+	return FunctionValue{
+		parameters: paramsCopy,
+		body:       bodyCopy,
+		returnType: f.returnType,
+		closure:    f.closure,
+	}
+}
+func (f FunctionValue) String() string { return "function" }

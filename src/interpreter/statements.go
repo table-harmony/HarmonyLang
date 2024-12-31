@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
 func (interpreter *interpreter) evalute_current_statement(scope *Scope) {
@@ -85,11 +86,10 @@ func evaluate_for_statement(statement ast.Statement, env *Scope) {
 }
 
 func evaluate_function_declaration_statement(statement ast.Statement, scope *Scope) {
-	expectedStatement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
-	if err != nil {
-		panic(err)
-	}
-
+	//expectedStatement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
+	//if err != nil {
+	//	panic(err)
+	//}
 	//TODO: create a function reference
 	//TODO: declare the reference in the scope
 }
@@ -100,6 +100,39 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 		panic(err)
 	}
 
-	//TODO: get the reference of the assigne
-	//TODO: store the new value in the reference
+	var ref Reference
+	switch assigne := expectedStatement.Assigne.(type) {
+	case ast.SymbolExpression:
+		ref, err = scope.Resolve(assigne.Value)
+		if err != nil {
+			panic(fmt.Sprintf("cannot assign to undefined variable %s", assigne.Value))
+		}
+
+	case ast.PrefixExpression:
+		if assigne.Operator.Kind != lexer.STAR {
+			panic("invalid assignment target")
+		}
+
+		value := evaluate_expression(assigne.Right, scope)
+		ptr, err := ExpectValue[*Pointer](value)
+		if err != nil {
+			panic("cannot dereference non-pointer type")
+		}
+		ref = ptr.Deref()
+
+	case ast.ComputedMemberExpression:
+		panic("TODO: computed member expression in assignment statement evaluation")
+
+	case ast.MemberExpression:
+		panic("TODO: member expression in assignment statement evaluation")
+
+	default:
+		panic("invalid assignment target")
+	}
+
+	value := evaluate_expression(expectedStatement.Value, scope)
+
+	if err := ref.Store(value); err != nil {
+		panic(err)
+	}
 }

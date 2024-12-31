@@ -36,7 +36,7 @@ func create_lookups() {
 
 	// Expressions
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)
-	register_expression_handler[ast.BinaryExpression](evalute_binary_expression)
+	register_expression_handler[ast.BinaryExpression](evaluate_binary_expression)
 	register_expression_handler[ast.SymbolExpression](evaluate_symbol_expression)
 	register_expression_handler[ast.TernaryExpression](evaluate_ternary_expression)
 	register_expression_handler[ast.CallExpression](evaluate_call_expression)

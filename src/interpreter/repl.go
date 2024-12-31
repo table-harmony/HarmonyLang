@@ -12,8 +12,8 @@ import (
 )
 
 type REPL struct {
-	environment *Environment
-	reader      *bufio.Reader
+	scope  *Scope
+	reader *bufio.Reader
 }
 
 func StartREPL() {
@@ -50,12 +50,12 @@ func create_repl() REPL {
 	create_lookups()
 
 	return REPL{
-		environment: create_environment(nil),
-		reader:      bufio.NewReader(os.Stdin),
+		scope:  NewScope(nil),
+		reader: bufio.NewReader(os.Stdin),
 	}
 }
 
-func (repl *REPL) evaluate(input string) RuntimeValue {
+func (repl *REPL) evaluate(input string) Value {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Error: %v\n", r)
@@ -65,7 +65,7 @@ func (repl *REPL) evaluate(input string) RuntimeValue {
 	tokens := lexer.Tokenize(input)
 	ast := parser.Parse(tokens)
 
-	var lastResult RuntimeValue
+	var lastResult Value
 	for _, statement := range ast {
 		lastResult = repl.evaluate_statement(statement)
 	}
@@ -73,21 +73,21 @@ func (repl *REPL) evaluate(input string) RuntimeValue {
 	return lastResult
 }
 
-func (repl *REPL) evaluate_statement(statement ast.Statement) RuntimeValue {
+func (repl *REPL) evaluate_statement(statement ast.Statement) Value {
 	switch statement := statement.(type) {
 	case ast.ExpressionStatement:
-		return evaluate_expression(statement.Expression, repl.environment)
+		return evaluate_expression(statement.Expression, repl.scope)
 	default:
-		evaluate_statement(statement, repl.environment)
+		evaluate_statement(statement, repl.scope)
 		return nil
 	}
 }
 
-func print_value(value RuntimeValue) {
+func print_value(value Value) {
 	switch v := value.(type) {
 	case Number:
-		if v.Value == float64(int(v.Value)) {
-			fmt.Printf("%d\n", int(v.Value))
+		if v.Value() == float64(int(v.Value())) {
+			fmt.Printf("%d\n", int(v.Value()))
 		} else {
 			fmt.Printf("%g\n", v.Value)
 		}
@@ -95,8 +95,8 @@ func print_value(value RuntimeValue) {
 		fmt.Printf("%q\n", v.Value)
 	case Boolean:
 		fmt.Printf("%t\n", v.Value)
-	case RuntimeVariable:
-		print_value(v.Value)
+	case Reference:
+		print_value(v.Load())
 	default:
 		fmt.Printf("%v\n", value)
 	}

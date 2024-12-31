@@ -1,7 +1,8 @@
 package interpreter
 
 import (
-	"github.com/sanity-io/litter"
+	"fmt"
+
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
@@ -19,7 +20,9 @@ func Interpret(ast []ast.Statement) {
 		interpreter.advance(1)
 	}
 
-	litter.Dump(scope.variables)
+	for identifier, variable := range scope.variables {
+		fmt.Printf("%s: { %s } \n", identifier, variable.String())
+	}
 }
 
 func create_interpreter(ast []ast.Statement) *interpreter {
