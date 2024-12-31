@@ -1,3 +1,16 @@
-let x = 1
-let y = &x
-y = *y + 1
+const x = fn(a: number) {
+  return fn(b: number) { return a + b }
+}
+
+let add2 = x(2)
+let a = add2(10)
+
+fn recursive(a) {
+  if a == 0 {
+    return 0
+  }  
+
+  return recursive(a - 1) + a
+}
+
+a = recursive(10)

@@ -118,12 +118,10 @@ type VariableReference struct {
 	explicitType ValueType
 }
 
-// Implement Value interface
 func (s *VariableReference) Type() ValueType { return s.value.Type() }
 func (s *VariableReference) Clone() Value    { return s.value.Clone() }
 func (s *VariableReference) String() string  { return s.value.String() }
 
-// Implement Reference interface
 func (s *VariableReference) Load() Value { return s.value }
 func (s *VariableReference) Store(v Value) error {
 	if s.isConstant {
@@ -148,14 +146,13 @@ func NewPointer(target Reference) *Pointer {
 	return &Pointer{target}
 }
 
-// Implement Value interface
 func (p *Pointer) Type() ValueType { return PointerType }
 func (p *Pointer) Clone() Value    { return NewPointer(p.target) }
 func (p *Pointer) String() string {
 	if p.target == nil {
 		return "nil"
 	}
-	return fmt.Sprintf("&%v", p.target.String())
+	return fmt.Sprintf("&{ %v }", p.target.String())
 }
 
 func (p *Pointer) Deref() Reference {
@@ -197,3 +194,79 @@ func (f FunctionValue) Clone() Value {
 	}
 }
 func (f FunctionValue) String() string { return "function" }
+
+func (f FunctionValue) Call(params []Value, scope *Scope) (result Value) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch err := r.(type) {
+			case ReturnError:
+				result = err.Value
+			default:
+				panic(r)
+			}
+		}
+	}()
+
+	functionScope := NewScope(f.closure)
+
+	if len(params) != len(f.parameters) {
+		panic(fmt.Errorf("expected %d arguments but got %d",
+			len(f.parameters), len(params)))
+	}
+
+	for i, param := range f.parameters {
+		paramType := evaluate_type(param.Type)
+		paramValue := params[i]
+
+		if paramValue.Type() != paramType && paramType != AnyType {
+			panic(fmt.Sprintf("parameter '%s' expected type '%s' but got '%s'",
+				param.Name, paramType.String(), paramValue.Type().String()))
+		}
+
+		paramRef := &VariableReference{param.Name, false, paramValue, paramType}
+		functionScope.Declare(paramRef)
+	}
+
+	for _, statement := range f.body {
+		evaluate_statement(statement, functionScope)
+	}
+
+	return Nil{}
+}
+
+type FunctionReference struct {
+	identifier string
+	value      FunctionValue
+}
+
+func (f *FunctionReference) Type() ValueType { return FunctionType }
+func (f *FunctionReference) Clone() Value    { return f.value.Clone() }
+func (f *FunctionReference) String() string {
+	return fmt.Sprintf("type: function, identifier: %s", f.identifier)
+}
+
+func (f *FunctionReference) Load() Value { return f.value }
+
+func (f *FunctionReference) Store(v Value) error {
+	fn, ok := v.(FunctionValue)
+	if !ok {
+		return fmt.Errorf("cannot assign non-function value to function reference '%s'", f.identifier)
+	}
+
+	if fn.returnType != f.value.returnType {
+		return fmt.Errorf("type mismatch: cannot assign function with return type %v to function '%s' expecting return type %v",
+			fn.returnType, f.identifier, f.value.returnType)
+	}
+
+	if len(fn.parameters) != len(f.value.parameters) {
+		return fmt.Errorf("parameter count mismatch: function '%s' expects %d parameters but got %d",
+			f.identifier, len(f.value.parameters), len(fn.parameters))
+	}
+
+	f.value = fn
+	return nil
+}
+
+func (f *FunctionReference) Address() Value {
+	return NewPointer(f)
+}

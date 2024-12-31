@@ -3,28 +3,37 @@ package interpreter
 import "fmt"
 
 type Scope struct {
-	parent    *Scope
-	variables map[string]*VariableReference
+	parent  *Scope
+	storage map[string]Reference
 }
 
 func NewScope(parent *Scope) *Scope {
 	return &Scope{
-		parent:    parent,
-		variables: make(map[string]*VariableReference),
+		parent:  parent,
+		storage: make(map[string]Reference),
 	}
 }
 
-func (scope *Scope) DeclareVariable(variable *VariableReference) error {
-	if _, exists := scope.variables[variable.identifier]; exists {
-		return fmt.Errorf("redeclaration of '%s'", variable.identifier)
+func (scope *Scope) Declare(ref Reference) error {
+	var identifier string
+
+	switch ref := ref.(type) {
+	case *VariableReference:
+		identifier = ref.identifier
+	case *FunctionReference:
+		identifier = ref.identifier
 	}
 
-	scope.variables[variable.identifier] = variable
+	if _, exists := scope.storage[identifier]; exists {
+		return fmt.Errorf("redeclaration of '%s'", identifier)
+	}
+
+	scope.storage[identifier] = ref
 	return nil
 }
 
 func (scope *Scope) Resolve(identifier string) (Reference, error) {
-	if ref, exists := scope.variables[identifier]; exists {
+	if ref, exists := scope.storage[identifier]; exists {
 		return ref, nil
 	}
 	if scope.parent != nil {

@@ -20,8 +20,8 @@ func Interpret(ast []ast.Statement) {
 		interpreter.advance(1)
 	}
 
-	for identifier, variable := range scope.variables {
-		fmt.Printf("%s: { %s } \n", identifier, variable.String())
+	for identifier, ref := range scope.storage {
+		fmt.Printf("%s: { %s } \n", identifier, ref.String())
 	}
 }
 

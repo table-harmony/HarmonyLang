@@ -46,7 +46,7 @@ func evaluate_variable_declaration_statement(statement ast.Statement, scope *Sco
 		explicitType: evaluate_type(expectedStatement.ExplicitType),
 	}
 
-	scope.DeclareVariable(&variable)
+	err = scope.Declare(&variable)
 
 	if err != nil {
 		panic(err)
@@ -86,12 +86,26 @@ func evaluate_for_statement(statement ast.Statement, env *Scope) {
 }
 
 func evaluate_function_declaration_statement(statement ast.Statement, scope *Scope) {
-	//expectedStatement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//TODO: create a function reference
-	//TODO: declare the reference in the scope
+	expectedStatement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	function := FunctionReference{
+		identifier: expectedStatement.Identifier,
+		value: FunctionValue{
+			parameters: expectedStatement.Parameters,
+			body:       expectedStatement.Body,
+			returnType: evaluate_type(expectedStatement.ReturnType),
+			closure:    scope,
+		},
+	}
+
+	err = scope.Declare(&function)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {

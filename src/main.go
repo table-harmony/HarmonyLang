@@ -9,15 +9,19 @@ import (
 )
 
 func main() {
-	bytes, err := os.ReadFile("examples/01.ham")
+	source := read_file("examples/01.ham")
 
+	tokens := lexer.Tokenize(source)
+	ast := parser.Parse(tokens)
+	interpreter.Interpret(ast)
+}
+
+func read_file(path string) string {
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
 
 	source := string(bytes)
-
-	tokens := lexer.Tokenize(source)
-	ast := parser.Parse(tokens)
-	interpreter.Interpret(ast)
+	return source
 }

@@ -29,7 +29,7 @@ func evaluate_primary_expression(expression ast.Expression, scope *Scope) Value 
 	case ast.NilExpression:
 		return Nil{}
 	default:
-		panic(fmt.Sprintf("Unknown expression type %s"))
+		panic("Unknown expression type")
 	}
 }
 
@@ -201,7 +201,7 @@ func evaluate_block_expression(expression ast.Expression, scope *Scope) Value {
 
 	lastStatement := statements[len(statements)-1]
 	if expressionStatement, ok := lastStatement.(ast.ExpressionStatement); ok {
-		return evaluate_expression(expressionStatement.Expression, scope)
+		return evaluate_expression(expressionStatement.Expression, blockScope)
 	}
 
 	evaluate_statement(lastStatement, blockScope)
@@ -275,7 +275,62 @@ func evaluate_switch_expression(expression ast.Expression, scope *Scope) Value {
 }
 
 func evaluate_call_expression(expression ast.Expression, scope *Scope) Value {
-	return Nil{}
+	expectedExpression, err := ast.ExpectExpression[ast.CallExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	var function FunctionValue
+	switch caller := expectedExpression.Caller.(type) {
+	case ast.SymbolExpression:
+		ref, err := scope.Resolve(caller.Value)
+		if err != nil {
+			panic(fmt.Sprintf("cannot assign to undefined variable %s", caller.Value))
+		}
+
+		function, err = ExpectValue[FunctionValue](ref.Load())
+		if err != nil {
+			panic("cannot call non-function values")
+		}
+
+	case ast.PrefixExpression:
+		if caller.Operator.Kind != lexer.STAR {
+			panic("invalid call target")
+		}
+
+		value := evaluate_expression(caller.Right, scope)
+		ptr, err := ExpectValue[*Pointer](value)
+		if err != nil {
+			panic("cannot dereference non-pointer type")
+		}
+		ref := ptr.Deref()
+
+		function, err = ExpectValue[FunctionValue](ref.Load())
+		if err != nil {
+			panic("cannot call non-function values")
+		}
+
+	case ast.FunctionDeclarationExpression:
+		function, err = ExpectValue[FunctionValue](evaluate_expression(caller, scope))
+		if err != nil {
+			panic("cannot call non-function values")
+		}
+
+	case ast.ComputedMemberExpression:
+		panic("TODO: computed member expression in call expression evaluation")
+
+	case ast.MemberExpression:
+		panic("TODO: member expression in call expression evaluation")
+
+	default:
+		panic("invalid call target")
+	}
+	params := make([]Value, 0)
+	for _, param := range expectedExpression.Params {
+		params = append(params, evaluate_expression(param, scope))
+	}
+
+	return function.Call(params, scope)
 }
 
 func evaluate_function_declaration_expression(expression ast.Expression, scope *Scope) Value {
