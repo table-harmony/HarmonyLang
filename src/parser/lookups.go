@@ -97,6 +97,7 @@ func create_token_lookups() {
 	register_nud(lexer.NIL, primary, parse_primary_expression)
 
 	// Data types
+	register_nud(lexer.MAP, default_bp, parse_map_instantiation_expression)
 	register_nud(lexer.OPEN_BRACKET, default_bp, parse_array_instantiation_expression)
 
 	// Unary / Prefix

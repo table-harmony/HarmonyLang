@@ -1,4 +1,4 @@
-package core
+package interpreter
 
 import (
 	"fmt"
@@ -15,7 +15,6 @@ func NewVariableReference(identifier string, isConstant bool, value Value, expli
 	if explicitType == nil {
 		explicitType = PrimitiveType{AnyType}
 	}
-
 	if value == nil {
 		value = explicitType.DefaultValue()
 	}

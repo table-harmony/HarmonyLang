@@ -5,11 +5,10 @@ import (
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
-	"github.com/table-harmony/HarmonyLang/src/core"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
-func evaluate_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_expression(expression ast.Expression, scope *Scope) Value {
 	if expression == nil {
 		return nil
 	}
@@ -23,22 +22,22 @@ func evaluate_expression(expression ast.Expression, scope *core.Scope) core.Valu
 	}
 }
 
-func evaluate_primary_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_primary_expression(expression ast.Expression, scope *Scope) Value {
 	switch expression := expression.(type) {
 	case ast.NumberExpression:
-		return core.NewNumber(expression.Value)
+		return NewNumber(expression.Value)
 	case ast.StringExpression:
-		return core.NewString(expression.Value)
+		return NewString(expression.Value)
 	case ast.BooleanExpression:
-		return core.NewBoolean(expression.Value)
+		return NewBoolean(expression.Value)
 	case ast.NilExpression:
-		return core.NewNil()
+		return NewNil()
 	default:
 		panic("Unknown expression type")
 	}
 }
 
-func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_prefix_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.PrefixExpression](expression)
 	if err != nil {
 		panic(err)
@@ -52,7 +51,7 @@ func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) co
 			if err != nil {
 				panic(fmt.Sprintf("cannot take address of undefined variable %s", right.Value))
 			}
-			return core.NewPointer(ref)
+			return NewPointer(ref)
 
 		case ast.ComputedMemberExpression:
 			panic("TODO: computed member expression in prefix expression")
@@ -62,8 +61,8 @@ func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) co
 
 		case ast.CallExpression:
 			result := evaluate_call_expression(right, scope)
-			if ref, ok := result.(core.Reference); ok {
-				return core.NewPointer(ref)
+			if ref, ok := result.(Reference); ok {
+				return NewPointer(ref)
 			}
 			panic("cannot take address of function call result")
 
@@ -72,7 +71,7 @@ func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) co
 		}
 	case lexer.STAR:
 		right := evaluate_expression(expectedExpression.Right, scope)
-		derefed, err := core.Deref(right)
+		derefed, err := Deref(right)
 		if err != nil {
 			panic(err)
 		}
@@ -83,31 +82,31 @@ func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) co
 
 	switch expectedExpression.Operator.Kind {
 	case lexer.NOT:
-		rightResult, err := core.ExpectValue[core.Boolean](right)
+		rightResult, err := ExpectValue[Boolean](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
 				lexer.NOT.String(), right.Type().String()))
 		}
-		return core.NewBoolean(!rightResult.Value())
+		return NewBoolean(!rightResult.Value())
 
 	case lexer.DASH:
-		rightResult, err := core.ExpectValue[core.Number](right)
+		rightResult, err := ExpectValue[Number](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
 				lexer.DASH.String(), right.Type().String()))
 		}
-		return core.NewNumber(-rightResult.Value())
+		return NewNumber(-rightResult.Value())
 
 	case lexer.PLUS:
-		rightResult, err := core.ExpectValue[core.Number](right)
+		rightResult, err := ExpectValue[Number](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
 				lexer.PLUS.String(), right.Type().String()))
 		}
-		return core.NewNumber(rightResult.Value())
+		return NewNumber(rightResult.Value())
 
 	case lexer.TYPEOF:
-		return core.NewString(right.Type().String()) //TODO: should return a type not a string of the type
+		return NewString(right.Type().String()) //TODO: should return a type not a string of the type
 
 	default:
 		panic(fmt.Sprintf("Invalid operation %v with type %v",
@@ -115,7 +114,7 @@ func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) co
 	}
 }
 
-func evaluate_symbol_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_symbol_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.SymbolExpression](expression)
 	if err != nil {
 		panic(err)
@@ -129,7 +128,7 @@ func evaluate_symbol_expression(expression ast.Expression, scope *core.Scope) co
 	panic(fmt.Errorf("the name '%v' does not exist in the current scope", expectedExpression.Value))
 }
 
-func evaluate_binary_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_binary_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.BinaryExpression](expression)
 	if err != nil {
 		panic(err)
@@ -170,7 +169,7 @@ func evaluate_binary_expression(expression ast.Expression, scope *core.Scope) co
 	}
 }
 
-func evaluate_ternary_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_ternary_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.TernaryExpression](expression)
 	if err != nil {
 		panic(err)
@@ -178,7 +177,7 @@ func evaluate_ternary_expression(expression ast.Expression, scope *core.Scope) c
 
 	conditionValue := evaluate_expression(expectedExpression.Condition, scope)
 
-	expectedValue, err := core.ExpectValue[core.Boolean](conditionValue)
+	expectedValue, err := ExpectValue[Boolean](conditionValue)
 	if err != nil {
 		panic(err)
 	}
@@ -190,13 +189,13 @@ func evaluate_ternary_expression(expression ast.Expression, scope *core.Scope) c
 	return evaluate_expression(expectedExpression.Alternate, scope)
 }
 
-func evaluate_block_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_block_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.BlockExpression](expression)
 	if err != nil {
 		panic(err)
 	}
 
-	blockScope := core.NewScope(scope)
+	blockScope := NewScope(scope)
 
 	statements := expectedExpression.Statements
 	for _, statement := range statements[:len(statements)-1] {
@@ -204,7 +203,7 @@ func evaluate_block_expression(expression ast.Expression, scope *core.Scope) cor
 	}
 
 	if len(statements) == 0 {
-		return core.NewNil()
+		return NewNil()
 	}
 
 	lastStatement := statements[len(statements)-1]
@@ -214,17 +213,17 @@ func evaluate_block_expression(expression ast.Expression, scope *core.Scope) cor
 
 	evaluate_statement(lastStatement, blockScope)
 
-	return core.NewNil()
+	return NewNil()
 }
 
-func evaluate_if_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_if_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.IfExpression](expression)
 	if err != nil {
 		panic(err)
 	}
 
 	conditionExpression := evaluate_expression(expectedExpression.Condition, scope)
-	expectedCondition, err := core.ExpectValue[core.Boolean](conditionExpression)
+	expectedCondition, err := ExpectValue[Boolean](conditionExpression)
 
 	if err != nil {
 		panic(err)
@@ -242,10 +241,10 @@ func evaluate_if_expression(expression ast.Expression, scope *core.Scope) core.V
 		}
 	}
 
-	return core.NewNil()
+	return NewNil()
 }
 
-func evaluate_switch_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_switch_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.SwitchExpression](expression)
 	if err != nil {
 		panic(err)
@@ -276,17 +275,17 @@ func evaluate_switch_expression(expression ast.Expression, scope *core.Scope) co
 	}
 
 	if defaultCase == nil {
-		return core.NewNil()
+		return NewNil()
 	}
 
 	return evaluate_expression(defaultCase.Body, scope)
 }
 
-func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (result core.Value) {
+func evaluate_call_expression(expression ast.Expression, scope *Scope) (result Value) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch err := r.(type) {
-			case core.ReturnError:
+			case ReturnError:
 				result = err.Value()
 			default:
 				panic(r)
@@ -299,7 +298,7 @@ func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (res
 		panic(err)
 	}
 
-	var function core.FunctionValue
+	var function FunctionValue
 	switch caller := expectedExpression.Caller.(type) {
 	case ast.SymbolExpression:
 		ref, err := scope.Resolve(caller.Value)
@@ -307,7 +306,7 @@ func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (res
 			panic(fmt.Sprintf("cannot assign to undefined variable %s", caller.Value))
 		}
 
-		function, err = core.ExpectValue[core.FunctionValue](ref.Load())
+		function, err = ExpectValue[FunctionValue](ref.Load())
 		if err != nil {
 			panic("cannot call non-function values")
 		}
@@ -318,19 +317,19 @@ func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (res
 		}
 
 		value := evaluate_expression(caller.Right, scope)
-		ptr, err := core.ExpectValue[*core.Pointer](value)
+		ptr, err := ExpectValue[*Pointer](value)
 		if err != nil {
 			panic("cannot dereference non-pointer type")
 		}
 		ref := ptr.Deref()
 
-		function, err = core.ExpectValue[core.FunctionValue](ref.Load())
+		function, err = ExpectValue[FunctionValue](ref.Load())
 		if err != nil {
 			panic("cannot call non-function values")
 		}
 
 	case ast.FunctionDeclarationExpression:
-		function, err = core.ExpectValue[core.FunctionValue](evaluate_expression(caller, scope))
+		function, err = ExpectValue[FunctionValue](evaluate_expression(caller, scope))
 		if err != nil {
 			panic("cannot call non-function values")
 		}
@@ -345,7 +344,7 @@ func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (res
 		panic("invalid call target")
 	}
 
-	params := make([]core.Value, 0)
+	params := make([]Value, 0)
 	for _, param := range expectedExpression.Params {
 		params = append(params, evaluate_expression(param, scope))
 	}
@@ -359,26 +358,26 @@ func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (res
 		evaluate_statement(statement, functionScope)
 	}
 
-	return core.NewNil()
+	return NewNil()
 }
 
-func evaluate_function_declaration_expression(expression ast.Expression, scope *core.Scope) core.Value {
+func evaluate_function_declaration_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.FunctionDeclarationExpression](expression)
 	if err != nil {
 		panic(err)
 	}
 
-	ptr := core.NewFunctionValue(
+	ptr := NewFunctionValue(
 		expectedExpression.Parameters,
 		expectedExpression.Body,
-		core.EvaluateType(expectedExpression.ReturnType),
+		EvaluateType(expectedExpression.ReturnType, scope),
 		scope,
 	)
 
 	return *ptr
 }
 
-func evaluate_try_catch_expression(expression ast.Expression, scope *core.Scope) (result core.Value) {
+func evaluate_try_catch_expression(expression ast.Expression, scope *Scope) (result Value) {
 	expectedExpression, err := ast.ExpectExpression[ast.TryCatchExpression](expression)
 	if err != nil {
 		panic(err)
@@ -393,4 +392,41 @@ func evaluate_try_catch_expression(expression ast.Expression, scope *core.Scope)
 	result = evaluate_expression(expectedExpression.TryBlock, scope)
 
 	return
+}
+
+func evaluate_array_instantiation_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.ArrayInstantiationExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	size := evaluate_expression(expectedExpression.Size, scope)
+	elementType := EvaluateType(expectedExpression.ElementType, scope)
+
+	values := make([]Value, 0)
+	for _, value := range expectedExpression.Elements {
+		values = append(values, evaluate_expression(value, scope))
+	}
+
+	return NewArray(values, size, elementType)
+}
+
+func evaluate_map_instantiation_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.MapInstantiationExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	keyType := EvaluateType(expectedExpression.KeyType, scope)
+	valueType := EvaluateType(expectedExpression.ValueType, scope)
+
+	entries := make([]MapEntry, 0)
+	for _, entry := range expectedExpression.Entries {
+		entries = append(entries, MapEntry{
+			key:   evaluate_expression(entry.Key, scope),
+			value: evaluate_expression(entry.Value, scope),
+		})
+	}
+
+	return NewMap(entries, keyType, valueType)
 }

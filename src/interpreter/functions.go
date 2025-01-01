@@ -1,4 +1,4 @@
-package core
+package interpreter
 
 import (
 	"fmt"
@@ -84,7 +84,7 @@ func (f FunctionValue) Type() Type {
 	for i, param := range f.parameters {
 		params[i] = ParameterType{
 			identifier: param.Name,
-			valueType:  EvaluateType(param.Type),
+			valueType:  EvaluateType(param.Type, f.closure),
 		}
 	}
 
@@ -114,7 +114,7 @@ func (f FunctionValue) String() string {
 		if i > 0 {
 			str += ", "
 		}
-		str += param.Name + ": " + EvaluateType(param.Type).String()
+		str += param.Name + ": " + EvaluateType(param.Type, f.closure).String()
 	}
 
 	str += ") -> " + f.returnType.String()
@@ -129,7 +129,7 @@ func (f FunctionValue) CreateScope(params []Value) (*Scope, error) {
 	}
 
 	for i, param := range f.parameters {
-		paramType := EvaluateType(param.Type)
+		paramType := EvaluateType(param.Type, f.closure)
 		paramValue := params[i]
 
 		if paramValue.Type().Equals(paramType) && paramType.Equals(PrimitiveType{AnyType}) {
@@ -137,7 +137,7 @@ func (f FunctionValue) CreateScope(params []Value) (*Scope, error) {
 				param.Name, paramType.String(), paramValue.Type())
 		}
 
-		paramRef := &VariableReference{param.Name, false, paramValue, paramType}
+		paramRef := NewVariableReference(param.Name, false, paramValue, paramType)
 		functionScope.Declare(paramRef)
 	}
 

@@ -14,26 +14,26 @@ var type_bp_lookup = map[lexer.TokenKind]binding_power{}
 var type_nud_lookup = map[lexer.TokenKind]type_nud_handler{}
 var type_led_lookup = map[lexer.TokenKind]type_led_handler{}
 
-func type_led(kind lexer.TokenKind, bp binding_power, handler type_led_handler) {
+func register_type_led(kind lexer.TokenKind, bp binding_power, handler type_led_handler) {
 	type_bp_lookup[kind] = bp
 	type_led_lookup[kind] = handler
 }
 
-func type_nud(kind lexer.TokenKind, bp binding_power, handler type_nud_handler) {
+func register_type_nud(kind lexer.TokenKind, bp binding_power, handler type_nud_handler) {
 	type_bp_lookup[kind] = bp
 	type_nud_lookup[kind] = handler
 }
 
 func create_type_token_lookups() {
 	// Primitive types
-	type_nud(lexer.IDENTIFIER, primary, parse_symbol_type)
+	register_type_nud(lexer.IDENTIFIER, primary, parse_symbol_type)
 
 	// Data types
-	type_nud(lexer.MAP, primary, parse_map_type)
-	type_led(lexer.OPEN_BRACKET, member, parse_array_type_suffix)
+	register_type_nud(lexer.MAP, primary, parse_map_type)
+	register_type_nud(lexer.OPEN_BRACKET, member, parse_array_type)
 
 	// Function types
-	type_nud(lexer.FN, primary, parse_function_type)
+	register_type_nud(lexer.FN, primary, parse_function_type)
 }
 
 func parse_type(parser *parser, bp binding_power) ast.Type {
@@ -78,14 +78,14 @@ func parse_symbol_type(parser *parser) ast.Type {
 	}
 }
 
-func parse_array_type_suffix(parser *parser, underlying ast.Type, bp binding_power) ast.Type {
+func parse_array_type(parser *parser) ast.Type {
 	parser.expect(lexer.OPEN_BRACKET)
 	parser.advance(1)
 
 	if parser.current_token().Kind == lexer.CLOSE_BRACKET {
 		parser.advance(1)
 		return ast.SliceType{
-			Underlying: underlying,
+			Underlying: parse_type(parser, default_bp),
 		}
 	}
 
@@ -96,7 +96,7 @@ func parse_array_type_suffix(parser *parser, underlying ast.Type, bp binding_pow
 
 	return ast.ArrayType{
 		Size:       size,
-		Underlying: underlying,
+		Underlying: parse_type(parser, default_bp),
 	}
 }
 

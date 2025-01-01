@@ -1,4 +1,4 @@
-package core
+package interpreter
 
 import (
 	"github.com/table-harmony/HarmonyLang/src/ast"
@@ -40,7 +40,7 @@ func ExpectType[T Type](value Type) (T, error) {
 }
 
 // EvaluateType evaluates an AST type into a runtime type
-func EvaluateType(astType ast.Type) Type {
+func EvaluateType(astType ast.Type, scope *Scope) Type {
 	if astType == nil {
 		return PrimitiveType{AnyType}
 	}
@@ -57,13 +57,16 @@ func EvaluateType(astType ast.Type) Type {
 		for i, param := range t.Parameters {
 			params[i] = ParameterType{
 				identifier: param.Name,
-				valueType:  EvaluateType(param.Type),
+				valueType:  EvaluateType(param.Type, scope),
 			}
 		}
 		return FunctionType{
 			parameters: params,
-			returnType: EvaluateType(t.Return),
+			returnType: EvaluateType(t.Return, scope),
 		}
+	case ast.ArrayType:
+		size := evaluate_expression(t.Size, scope)
+		return NewArrayType(size, EvaluateType(t.Underlying, scope))
 	default:
 		return PrimitiveType{AnyType}
 	}

@@ -4,11 +4,10 @@ import (
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
-	"github.com/table-harmony/HarmonyLang/src/core"
 )
 
-type statement_handler func(statement ast.Statement, scope *core.Scope)
-type expression_handler func(expression ast.Expression, scope *core.Scope) core.Value
+type statement_handler func(statement ast.Statement, scope *Scope)
+type expression_handler func(expression ast.Expression, scope *Scope) Value
 
 var statement_lookup = make(map[reflect.Type]statement_handler)
 var expression_lookup = make(map[reflect.Type]expression_handler)
@@ -50,6 +49,11 @@ func create_lookups() {
 	register_expression_handler[ast.IfExpression](evaluate_if_expression)
 	register_expression_handler[ast.SwitchExpression](evaluate_switch_expression)
 	register_expression_handler[ast.TryCatchExpression](evaluate_try_catch_expression)
+
+	// Data types expressions
+	register_expression_handler[ast.ArrayInstantiationExpression](evaluate_array_instantiation_expression)
+	//register_expression_handler[ast.SliceExpression](evaluate_slice_expression)
+	register_expression_handler[ast.MapInstantiationExpression](evaluate_map_instantiation_expression)
 
 	// Primary expressions
 	register_expression_handler[ast.BooleanExpression](evaluate_primary_expression)

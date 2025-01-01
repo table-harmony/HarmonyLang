@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/table-harmony/HarmonyLang/src/interpreter"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
@@ -9,7 +11,15 @@ import (
 )
 
 func main() {
-	source := read_file("examples/01.ham")
+	start := time.Now()
+	interpret_file("examples/01.ham")
+	duration := time.Since(start)
+
+	fmt.Printf("Duration: %v\n", duration)
+}
+
+func interpret_file(path string) {
+	source := read_file(path)
 
 	tokens := lexer.Tokenize(source)
 	ast := parser.Parse(tokens)

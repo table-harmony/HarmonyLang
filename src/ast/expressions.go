@@ -100,17 +100,33 @@ type SwitchExpression struct {
 
 func (SwitchExpression) expression() {}
 
-type ArrayExpression struct {
-	Elements []Expression
+type ArrayInstantiationExpression struct {
+	Size        Expression
+	ElementType Type
+	Elements    []Expression
 }
 
-func (ArrayExpression) expression() {}
+func (ArrayInstantiationExpression) expression() {}
 
-type SliceExpression struct {
-	Elements []Expression
+type SliceInstantiationExpression struct {
+	ElementType Type
+	Elements    []Expression
 }
 
-func (SliceExpression) expression() {}
+func (SliceInstantiationExpression) expression() {}
+
+type MapInstantiationExpression struct {
+	KeyType   Type
+	ValueType Type
+	Entries   []MapEntry
+}
+
+func (MapInstantiationExpression) expression() {}
+
+type MapEntry struct {
+	Key   Expression
+	Value Expression
+}
 
 type FunctionDeclarationExpression struct {
 	Parameters []Parameter

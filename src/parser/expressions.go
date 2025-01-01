@@ -274,30 +274,6 @@ func parse_switch_expression(parser *parser) ast.Expression {
 	}
 }
 
-func parse_array_instantiation_expression(parser *parser) ast.Expression {
-	parser.expect(lexer.OPEN_BRACKET)
-	parser.advance(1)
-
-	elements := make([]ast.Expression, 0)
-
-	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_BRACKET {
-		element := parse_expression(parser, comma)
-		elements = append(elements, element)
-
-		if !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_BRACKET {
-			parser.expect(lexer.COMMA)
-			parser.advance(1)
-		}
-	}
-
-	parser.expect(lexer.CLOSE_BRACKET)
-	parser.advance(1)
-
-	return ast.ArrayExpression{
-		Elements: elements,
-	}
-}
-
 func parse_function_declaration_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.FN)
 	parser.advance(1)
@@ -382,5 +358,99 @@ func parse_try_catch_expression(parser *parser) ast.Expression {
 	return ast.TryCatchExpression{
 		TryBlock:   tryBlock,
 		CatchBlock: catchBlock,
+	}
+}
+
+func parse_map_instantiation_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.MAP)
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_BRACKET)
+	parser.advance(1)
+
+	keyType := parse_type(parser, default_bp)
+
+	parser.expect(lexer.ARROW)
+	parser.advance(1)
+
+	valueType := parse_type(parser, default_bp)
+
+	parser.expect(lexer.CLOSE_BRACKET)
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	entries := make([]ast.MapEntry, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		key := parse_expression(parser, comma)
+
+		parser.expect(lexer.ARROW)
+		parser.advance(1)
+
+		value := parse_expression(parser, comma)
+
+		entries = append(entries, ast.MapEntry{
+			Key:   key,
+			Value: value,
+		})
+
+		if parser.current_token().Kind != lexer.CLOSE_CURLY {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.MapInstantiationExpression{
+		KeyType:   keyType,
+		ValueType: valueType,
+		Entries:   entries,
+	}
+}
+
+func parse_array_instantiation_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.OPEN_BRACKET)
+	parser.advance(1)
+
+	var size ast.Expression
+	if parser.current_token().Kind != lexer.CLOSE_BRACKET {
+		size = parse_expression(parser, comma)
+	}
+
+	parser.expect(lexer.CLOSE_BRACKET)
+	parser.advance(1)
+
+	elementType := parse_type(parser, default_bp)
+
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	elements := make([]ast.Expression, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		element := parse_expression(parser, comma)
+		elements = append(elements, element)
+
+		if parser.current_token().Kind == lexer.SEMI_COLON || parser.current_token().Kind == lexer.COMMA {
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	if size != nil {
+		return ast.ArrayInstantiationExpression{
+			Size:        size,
+			ElementType: elementType,
+			Elements:    elements,
+		}
+	}
+
+	return ast.SliceInstantiationExpression{
+		ElementType: elementType,
+		Elements:    elements,
 	}
 }

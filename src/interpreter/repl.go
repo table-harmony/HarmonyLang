@@ -7,13 +7,12 @@ import (
 	"strings"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
-	"github.com/table-harmony/HarmonyLang/src/core"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 	"github.com/table-harmony/HarmonyLang/src/parser"
 )
 
 type REPL struct {
-	scope  *core.Scope
+	scope  *Scope
 	reader *bufio.Reader
 }
 
@@ -51,12 +50,12 @@ func create_repl() REPL {
 	create_lookups()
 
 	return REPL{
-		scope:  core.NewScope(nil),
+		scope:  NewScope(nil),
 		reader: bufio.NewReader(os.Stdin),
 	}
 }
 
-func (repl *REPL) evaluate(input string) core.Value {
+func (repl *REPL) evaluate(input string) Value {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Error: %v\n", r)
@@ -66,7 +65,7 @@ func (repl *REPL) evaluate(input string) core.Value {
 	tokens := lexer.Tokenize(input)
 	ast := parser.Parse(tokens)
 
-	var lastResult core.Value
+	var lastResult Value
 	for _, statement := range ast {
 		lastResult = repl.evaluate_statement(statement)
 	}
@@ -74,7 +73,7 @@ func (repl *REPL) evaluate(input string) core.Value {
 	return lastResult
 }
 
-func (repl *REPL) evaluate_statement(statement ast.Statement) core.Value {
+func (repl *REPL) evaluate_statement(statement ast.Statement) Value {
 	switch statement := statement.(type) {
 	case ast.ExpressionStatement:
 		return evaluate_expression(statement.Expression, repl.scope)
@@ -84,19 +83,19 @@ func (repl *REPL) evaluate_statement(statement ast.Statement) core.Value {
 	}
 }
 
-func print_value(value core.Value) {
+func print_value(value Value) {
 	switch v := value.(type) {
-	case core.Number:
+	case Number:
 		if v.Value() == float64(int(v.Value())) {
 			fmt.Printf("%d\n", int(v.Value()))
 		} else {
 			fmt.Printf("%g\n", v.Value())
 		}
-	case core.String:
+	case String:
 		fmt.Printf("%q\n", v.Value())
-	case core.Boolean:
+	case Boolean:
 		fmt.Printf("%t\n", v.Value())
-	case core.Reference:
+	case Reference:
 		print_value(v.Load())
 	default:
 		fmt.Printf("%v\n", value)

@@ -1,4 +1,4 @@
-package core
+package interpreter
 
 import "fmt"
 
@@ -67,6 +67,7 @@ func (n Number) Type() Type         { return PrimitiveType{NumberType} }
 func (n Number) Clone() Value       { return NewNumber(n.value) }
 func (n Number) String() string     { return fmt.Sprintf("type: number, value: %g", n.value) }
 func (n Number) Value() float64     { return n.value }
+func (n Number) IsInteger() bool    { return n.value == float64(int(n.value)) }
 func NewNumber(value float64) Value { return Number{value} }
 
 // Number implements Value interface

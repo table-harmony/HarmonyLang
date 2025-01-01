@@ -1,4 +1,13 @@
-type myType number
+// Slice
+//let nums = []number{1, 2, 3}
 
-let z: myType = "1212"
-const x = typeof(z)
+// Array with type and size
+//const nums = [5]number{1, 2, 3}
+//let x: [1]number = nil;
+//
+//// Map
+//let dict = map[string -> number]{
+//    "one" -> 1,
+//    "two" -> 2,
+//}
+
