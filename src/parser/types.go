@@ -156,11 +156,14 @@ func parse_function_type(parser *parser) ast.Type {
 	parser.expect(lexer.CLOSE_PAREN)
 	parser.advance(1)
 
-	parser.expect(lexer.ARROW)
-	parser.advance(1)
+	var returnType ast.Type = nil
+	if parser.current_token().Kind == lexer.ARROW {
+		parser.advance(1)
+		returnType = parse_type(parser, default_bp)
+	}
 
 	return ast.FunctionType{
 		Parameters: parameters,
-		Return:     parse_type(parser, default_bp),
+		Return:     returnType,
 	}
 }

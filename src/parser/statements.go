@@ -313,3 +313,16 @@ func parse_throw_statement(parser *parser) ast.Statement {
 		Value: parse_expression(parser, default_bp),
 	}
 }
+
+func parse_type_declaration_statement(parser *parser) ast.Statement {
+	parser.expect(lexer.TYPE)
+	parser.advance(1)
+
+	identifier := parser.expect(lexer.IDENTIFIER).Value
+	parser.advance(1)
+
+	return ast.TypeDeclarationStatement{
+		Identifier: identifier,
+		Type:       parse_type(parser, default_bp),
+	}
+}

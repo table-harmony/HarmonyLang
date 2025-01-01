@@ -92,7 +92,7 @@ func evaluate_function_declaration_statement(statement ast.Statement, scope *cor
 		panic(err)
 	}
 
-	value := *core.NewFunctionValue(
+	valuePtr := core.NewFunctionValue(
 		expectedStatement.Parameters,
 		expectedStatement.Body,
 		core.EvaluateType(expectedStatement.ReturnType),
@@ -101,7 +101,7 @@ func evaluate_function_declaration_statement(statement ast.Statement, scope *cor
 
 	ref := core.NewFunctionReference(
 		expectedStatement.Identifier,
-		value,
+		*valuePtr,
 	)
 
 	err = scope.Declare(ref)
@@ -162,4 +162,8 @@ func evaluate_throw_statement(statement ast.Statement, scope *core.Scope) {
 
 	value := evaluate_expression(expectedStatement.Value, scope)
 	panic(value)
+}
+
+func evaluate_type_declaration_statement(statement ast.Statement, scope *core.Scope) {
+	panic("not implemented evaluate type declaration statement")
 }

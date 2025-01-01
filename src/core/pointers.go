@@ -19,7 +19,6 @@ func (p PointerType) Equals(other Type) bool {
 	return p.valueType.Equals(otherPtr.valueType)
 }
 
-//TODO: implement default value for pointers
 func (p PointerType) DefaultValue() Value {
 	return Nil{}
 }

@@ -89,3 +89,10 @@ type ThrowStatement struct {
 }
 
 func (ThrowStatement) statement() {}
+
+type TypeDeclarationStatement struct {
+	Identifier string
+	Type       Type
+}
+
+func (TypeDeclarationStatement) statement() {}

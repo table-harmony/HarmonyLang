@@ -77,3 +77,12 @@ const x = try {
 } catch {
   1 + 1
 }
+
+let myFunction: fn(a: number) -> any = nil
+
+myFunction = fn(a: number) -> number {
+  return 1
+}
+
+let z = myFunction(10)
+

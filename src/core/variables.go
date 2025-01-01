@@ -1,6 +1,8 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type VariableReference struct {
 	identifier   string
@@ -25,7 +27,7 @@ func NewVariableReference(identifier string, isConstant bool, value Value, expli
 		explicitType,
 	}
 
-	if !value.Type().Equals(explicitType) && !explicitType.Equals(PrimitiveType{AnyType}) {
+	if !explicitType.Equals(value.Type()) && !explicitType.Equals(PrimitiveType{AnyType}) {
 		panic(fmt.Sprintf("variable '%s' expected type '%s' but got '%s'",
 			variable.identifier, explicitType.String(), value.Type().String()))
 	}

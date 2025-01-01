@@ -18,9 +18,9 @@ type Reference interface {
 	Load() Value       // Load retrieves the current value from the storage location
 	Store(Value) error // Store updates the value at the storage location
 	Address() Value    // Address returns a pointer to this reference
-
 }
 
+// Type represents a runtime type
 type Type interface {
 	String() string      // String provides a string representation for debugging/REPL
 	Equals(Type) bool    // Equals checks if two types are equal

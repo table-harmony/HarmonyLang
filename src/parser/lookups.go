@@ -105,6 +105,7 @@ func create_token_lookups() {
 	register_nud(lexer.NOT, unary, parse_prefix_expression)
 	register_nud(lexer.AMPERSAND, unary, parse_prefix_expression)
 	register_nud(lexer.STAR, unary, parse_prefix_expression)
+	register_nud(lexer.TYPEOF, unary, parse_prefix_expression)
 
 	// Ternary
 	register_led(lexer.QUESTION, ternary, parse_ternary_expression)
@@ -125,6 +126,7 @@ func create_token_lookups() {
 	register_nud(lexer.TRY, default_bp, parse_try_catch_expression)
 
 	// Statements
+	register_statement(lexer.TYPE, parse_type_declaration_statement)
 	register_statement(lexer.IMPORT, parse_import_statement)
 	register_statement(lexer.LET, parse_multi_variable_declaration_statement)
 	register_statement(lexer.CONST, parse_multi_variable_declaration_statement)

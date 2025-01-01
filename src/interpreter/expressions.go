@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/core"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
@@ -84,28 +83,31 @@ func evaluate_prefix_expression(expression ast.Expression, scope *core.Scope) co
 
 	switch expectedExpression.Operator.Kind {
 	case lexer.NOT:
-		right, err := core.ExpectValue[core.Boolean](right)
+		rightResult, err := core.ExpectValue[core.Boolean](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
 				lexer.NOT.String(), right.Type().String()))
 		}
-		return core.NewBoolean(!right.Value())
+		return core.NewBoolean(!rightResult.Value())
 
 	case lexer.DASH:
-		right, err := core.ExpectValue[core.Number](right)
+		rightResult, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
 				lexer.DASH.String(), right.Type().String()))
 		}
-		return core.NewNumber(-right.Value())
+		return core.NewNumber(-rightResult.Value())
 
 	case lexer.PLUS:
-		right, err := core.ExpectValue[core.Number](right)
+		rightResult, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic(fmt.Sprintf("Invalid operation %v with type %v",
 				lexer.PLUS.String(), right.Type().String()))
 		}
-		return core.NewNumber(right.Value())
+		return core.NewNumber(rightResult.Value())
+
+	case lexer.TYPEOF:
+		return core.NewString(right.Type().String()) //TODO: should return a type not a string of the type
 
 	default:
 		panic(fmt.Sprintf("Invalid operation %v with type %v",
@@ -342,19 +344,17 @@ func evaluate_call_expression(expression ast.Expression, scope *core.Scope) (res
 	default:
 		panic("invalid call target")
 	}
-	litter.Dump(function)
 
 	params := make([]core.Value, 0)
 	for _, param := range expectedExpression.Params {
 		params = append(params, evaluate_expression(param, scope))
 	}
-	litter.Dump("s123123ss")
 
 	functionScope, err := function.CreateScope(params)
 	if err != nil {
 		panic(err)
 	}
-	litter.Dump("sss")
+
 	for _, statement := range function.Body() {
 		evaluate_statement(statement, functionScope)
 	}

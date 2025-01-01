@@ -92,6 +92,8 @@ const (
 	TRY
 	CATCH
 	THROW
+	TYPEOF
+	TYPE
 )
 
 var reserved_keywords map[string]TokenKind = map[string]TokenKind{
@@ -125,6 +127,8 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"try":       TRY,
 	"catch":     CATCH,
 	"throw":     THROW,
+	"typeof":    TYPEOF,
+	"type":      TYPE,
 }
 
 type Token struct {
@@ -302,6 +306,10 @@ func (kind TokenKind) String() string {
 		return "catch"
 	case THROW:
 		return "throw"
+	case TYPEOF:
+		return "typeof"
+	case TYPE:
+		return "type"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

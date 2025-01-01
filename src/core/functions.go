@@ -30,25 +30,34 @@ func (f FunctionType) String() string {
 	return fmt.Sprintf("fn(%s) -> %s", strings.Join(params, ", "), f.returnType.String())
 }
 func (f FunctionType) Equals(other Type) bool {
+	if other == nil {
+		return true
+	}
+	if primitive, ok := other.(PrimitiveType); ok {
+		return primitive.kind == NilType
+	}
+
 	otherFn, ok := other.(FunctionType)
 	if !ok {
 		return false
 	}
+
 	if len(f.parameters) != len(otherFn.parameters) {
 		return false
 	}
-	if !f.returnType.Equals(otherFn.returnType) {
-		return false
-	}
+
 	for i := range f.parameters {
 		if !f.parameters[i].valueType.Equals(otherFn.parameters[i].valueType) {
 			return false
 		}
 	}
-	return true
-}
 
-// TODO: implementation for default values for functions
+	if _, ok := f.returnType.(PrimitiveType); ok && f.returnType.(PrimitiveType).kind == AnyType {
+		return true
+	}
+
+	return otherFn.returnType.Equals(f.returnType)
+}
 func (f FunctionType) DefaultValue() Value {
 	return Nil{}
 }
@@ -98,7 +107,19 @@ func (f FunctionValue) Clone() Value {
 		closure:    f.closure,
 	}
 }
-func (f FunctionValue) String() string { return "function" }
+func (f FunctionValue) String() string {
+	str := "fn("
+
+	for i, param := range f.parameters {
+		if i > 0 {
+			str += ", "
+		}
+		str += param.Name + ": " + EvaluateType(param.Type).String()
+	}
+
+	str += ") -> " + f.returnType.String()
+	return str
+}
 func (f FunctionValue) CreateScope(params []Value) (*Scope, error) {
 	functionScope := NewScope(f.closure)
 
@@ -140,7 +161,7 @@ func NewFunctionReference(identifier string, value FunctionValue) *FunctionRefer
 func (f *FunctionReference) Type() Type   { return f.value.Type() }
 func (f *FunctionReference) Clone() Value { return f.value.Clone() }
 func (f *FunctionReference) String() string {
-	return fmt.Sprintf("type: function, identifier: %s", f.identifier)
+	return fmt.Sprintf("type: function, value: %s", f.value.String())
 }
 
 // FunctionReference implements the Reference interface

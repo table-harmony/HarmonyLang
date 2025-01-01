@@ -1,9 +1,4 @@
-let a: fn(x: number) -> number = fn(a: number) -> number { return a }
+type myType number
 
-let b = a(1)
-
-fn x(a: number) {
-  return a + 20
-}
-
-const z = x(2)
+let z: myType = "1212"
+const x = typeof(z)
