@@ -116,40 +116,51 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 		panic(err)
 	}
 
-	var ref Reference
+	value := evaluate_expression(expectedStatement.Value, scope)
+
 	switch assigne := expectedStatement.Assigne.(type) {
 	case ast.SymbolExpression:
-		ref, err = scope.Resolve(assigne.Value)
+		ref, err := scope.Resolve(assigne.Value)
 		if err != nil {
 			panic(fmt.Sprintf("cannot assign to undefined variable %s", assigne.Value))
+		}
+		if err := ref.Store(value); err != nil {
+			panic(err)
 		}
 
 	case ast.PrefixExpression:
 		if assigne.Operator.Kind != lexer.STAR {
 			panic("invalid assignment target")
 		}
-
-		value := evaluate_expression(assigne.Right, scope)
-		ptr, err := ExpectValue[*Pointer](value)
+		ptrValue := evaluate_expression(assigne.Right, scope)
+		ptr, err := ExpectValue[*Pointer](ptrValue)
 		if err != nil {
 			panic("cannot dereference non-pointer type")
 		}
-		ref = ptr.Deref()
+		if err := ptr.Deref().Store(value); err != nil {
+			panic(err)
+		}
 
 	case ast.ComputedMemberExpression:
-		panic("TODO: computed member expression in assignment statement evaluation")
+		owner := evaluate_expression(assigne.Owner, scope)
+		property := evaluate_expression(assigne.Property, scope)
+
+		switch owner := owner.(type) {
+		case *Array:
+			owner.Set(property, value)
+
+		case *Map:
+			owner.Set(property, value)
+
+		default:
+			panic(fmt.Sprintf("cannot index into value of type %T", owner))
+		}
 
 	case ast.MemberExpression:
 		panic("TODO: member expression in assignment statement evaluation")
 
 	default:
 		panic("invalid assignment target")
-	}
-
-	value := evaluate_expression(expectedStatement.Value, scope)
-
-	if err := ref.Store(value); err != nil {
-		panic(err)
 	}
 }
 

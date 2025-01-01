@@ -7,6 +7,10 @@ import (
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
+type Function interface {
+	Call(args ...Value) (Value, error)
+}
+
 type FunctionType struct {
 	parameters []ParameterType
 	returnType Type
@@ -120,17 +124,31 @@ func (f FunctionValue) String() string {
 	str += ") -> " + f.returnType.String()
 	return str
 }
-func (f FunctionValue) CreateScope(params []Value) (*Scope, error) {
+func (f FunctionValue) Call(args ...Value) (result Value, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch e := r.(type) {
+			case ReturnError:
+				result = e.Value()
+				err = nil
+			case error:
+				err = e
+			default:
+				panic(e)
+			}
+		}
+	}()
+
 	functionScope := NewScope(f.closure)
 
-	if len(params) != len(f.parameters) {
+	if len(args) != len(f.parameters) {
 		return nil, fmt.Errorf("expected %d arguments but got %d",
-			len(f.parameters), len(params))
+			len(f.parameters), len(args))
 	}
 
 	for i, param := range f.parameters {
 		paramType := EvaluateType(param.Type, f.closure)
-		paramValue := params[i]
+		paramValue := args[i]
 
 		if paramValue.Type().Equals(paramType) && paramType.Equals(PrimitiveType{AnyType}) {
 			return nil, fmt.Errorf("parameter '%s' expected type '%s' but got '%s'",
@@ -141,9 +159,12 @@ func (f FunctionValue) CreateScope(params []Value) (*Scope, error) {
 		functionScope.Declare(paramRef)
 	}
 
-	return functionScope, nil
+	for _, statement := range f.body {
+		evaluate_statement(statement, functionScope)
+	}
+
+	return NewNil(), nil
 }
-func (f FunctionValue) Body() []ast.Statement { return f.body }
 
 type FunctionReference struct {
 	identifier string
@@ -185,4 +206,96 @@ func (f *FunctionReference) Store(v Value) error {
 }
 func (f *FunctionReference) Address() Value {
 	return NewPointer(f)
+}
+
+// NativeFuncType represents the type signature for native Go functions that can be called
+type NativeFuncType func(args ...Value) Value
+
+type NativeFunctionType struct {
+	paramTypes []Type
+	returnType Type
+}
+
+// NativeFunctionType implements the Type interface
+func (f NativeFunctionType) String() string {
+	params := make([]string, len(f.paramTypes))
+	for i, paramType := range f.paramTypes {
+		params[i] = paramType.String()
+	}
+	return fmt.Sprintf("native_fn(%s) -> %s", params, f.returnType.String())
+}
+func (f NativeFunctionType) DefaultValue() Value {
+	return NewNil()
+}
+func (f NativeFunctionType) Equals(other Type) bool {
+	if other == nil {
+		return true
+	}
+	if primitive, ok := other.(PrimitiveType); ok {
+		return primitive.kind == NilType
+	}
+
+	otherFn, ok := other.(NativeFunctionType)
+	if !ok {
+		return false
+	}
+
+	if len(f.paramTypes) != len(otherFn.paramTypes) {
+		return false
+	}
+
+	for i := range f.paramTypes {
+		if !f.paramTypes[i].Equals(otherFn.paramTypes[i]) {
+			return false
+		}
+	}
+
+	return f.returnType.Equals(otherFn.returnType)
+}
+
+type NativeFunction struct {
+	value      NativeFuncType
+	paramTypes []Type
+	returnType Type
+}
+
+func NewNativeFunction(fn NativeFuncType, paramTypes []Type, returnType Type) *NativeFunction {
+	return &NativeFunction{
+		value:      fn,
+		paramTypes: paramTypes,
+		returnType: returnType,
+	}
+}
+
+// NativeFunction implements the Value interface
+func (n NativeFunction) Type() Type {
+	return NativeFunctionType{
+		paramTypes: n.paramTypes,
+		returnType: n.returnType,
+	}
+}
+func (n NativeFunction) Clone() Value {
+	return NewNativeFunction(n.value, n.paramTypes, n.returnType)
+}
+func (n NativeFunction) String() string {
+	return fmt.Sprintf("native_fn(%v) -> %v", n.paramTypes, n.returnType)
+}
+func (n NativeFunction) Call(args ...Value) (Value, error) {
+	if len(args) != len(n.paramTypes) {
+		return NewNil(), fmt.Errorf("expected %d arguments but got %d", len(n.paramTypes), len(args))
+	}
+
+	for i, arg := range args {
+		if !n.paramTypes[i].Equals(arg.Type()) {
+			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], arg.Type())
+		}
+	}
+
+	result := n.value(args...)
+
+	if !n.returnType.Equals(result.Type()) {
+		return NewNil(), fmt.Errorf("return value: expected %v but got %v", n.returnType, result.Type())
+	}
+
+	return result, nil
 }

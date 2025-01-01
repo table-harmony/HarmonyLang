@@ -282,23 +282,12 @@ func evaluate_switch_expression(expression ast.Expression, scope *Scope) Value {
 }
 
 func evaluate_call_expression(expression ast.Expression, scope *Scope) (result Value) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch err := r.(type) {
-			case ReturnError:
-				result = err.Value()
-			default:
-				panic(r)
-			}
-		}
-	}()
-
 	expectedExpression, err := ast.ExpectExpression[ast.CallExpression](expression)
 	if err != nil {
 		panic(err)
 	}
 
-	var function FunctionValue
+	var function Function
 	switch caller := expectedExpression.Caller.(type) {
 	case ast.SymbolExpression:
 		ref, err := scope.Resolve(caller.Value)
@@ -328,20 +317,11 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 			panic("cannot call non-function values")
 		}
 
-	case ast.FunctionDeclarationExpression:
-		function, err = ExpectValue[FunctionValue](evaluate_expression(caller, scope))
-		if err != nil {
+	default:
+		function = evaluate_expression(caller, scope).(Function)
+		if false {
 			panic("cannot call non-function values")
 		}
-
-	case ast.ComputedMemberExpression:
-		panic("TODO: computed member expression in call expression evaluation")
-
-	case ast.MemberExpression:
-		panic("TODO: member expression in call expression evaluation")
-
-	default:
-		panic("invalid call target")
 	}
 
 	params := make([]Value, 0)
@@ -349,16 +329,12 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 		params = append(params, evaluate_expression(param, scope))
 	}
 
-	functionScope, err := function.CreateScope(params)
+	result, err = function.Call(params...)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, statement := range function.Body() {
-		evaluate_statement(statement, functionScope)
-	}
-
-	return NewNil()
+	return result
 }
 
 func evaluate_function_declaration_expression(expression ast.Expression, scope *Scope) Value {
@@ -429,4 +405,48 @@ func evaluate_map_instantiation_expression(expression ast.Expression, scope *Sco
 	}
 
 	return NewMap(entries, keyType, valueType)
+}
+
+func evaluate_computed_member_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.ComputedMemberExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	owner := evaluate_expression(expectedExpression.Owner, scope)
+	property := evaluate_expression(expectedExpression.Property, scope)
+
+	switch owner := owner.(type) {
+	case *Array:
+		return owner.Get(property)
+	case *Map:
+		return owner.Get(property)
+	default:
+		panic("not implemened yet")
+	}
+}
+
+func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.MemberExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	ownerValue := evaluate_expression(expectedExpression.Owner, scope)
+
+	switch owner := ownerValue.(type) {
+	case *Map:
+		property, ok := expectedExpression.Property.(ast.SymbolExpression)
+		if !ok {
+			panic("Map method must be a symbol")
+		}
+
+		if method, exists := owner.methods[property.Value]; exists {
+			return method
+		}
+
+		panic(fmt.Sprintf("Unknown map method: %s", property.Value))
+	}
+
+	panic(fmt.Sprintf("Member expression not implemented for type: %T", ownerValue))
 }

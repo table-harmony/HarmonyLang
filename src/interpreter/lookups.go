@@ -43,6 +43,8 @@ func create_lookups() {
 	register_expression_handler[ast.TernaryExpression](evaluate_ternary_expression)
 	register_expression_handler[ast.CallExpression](evaluate_call_expression)
 	register_expression_handler[ast.FunctionDeclarationExpression](evaluate_function_declaration_expression)
+	register_expression_handler[ast.ComputedMemberExpression](evaluate_computed_member_expression)
+	register_expression_handler[ast.MemberExpression](evaluate_member_expression)
 
 	// Block expressions
 	register_expression_handler[ast.BlockExpression](evaluate_block_expression)

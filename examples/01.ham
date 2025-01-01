@@ -2,12 +2,23 @@
 //let nums = []number{1, 2, 3}
 
 // Array with type and size
-//const nums = [5]number{1, 2, 3}
-//let x: [1]number = nil;
-//
-//// Map
-//let dict = map[string -> number]{
-//    "one" -> 1,
-//    "two" -> 2,
-//}
+const nums: [3]number = [3]number{1, 2, 3}
 
+// Map
+const dict = map[string -> number]{
+  "one" -> 1,
+  "two" -> 2,
+}
+
+const x = dict.get("two")
+dict.set("y", 3)
+const z = dict.get("y")
+dict.pop("one")
+
+// dict.get("one")
+// dict.keys() --> list of all keys
+// dict.values() --> list of all values
+// dict.items() --> pairs of key, value
+// "key" in dict  --> does key exist in dict
+// dict.pop("ss")
+// 
