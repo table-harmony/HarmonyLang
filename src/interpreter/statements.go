@@ -5,15 +5,16 @@ import (
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/core"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
-func (interpreter *interpreter) evalute_current_statement(scope *Scope) {
+func (interpreter *interpreter) evalute_current_statement(scope *core.Scope) {
 	statement := interpreter.current_statement()
 	evaluate_statement(statement, scope)
 }
 
-func evaluate_statement(statement ast.Statement, scope *Scope) {
+func evaluate_statement(statement ast.Statement, scope *core.Scope) {
 	statementType := reflect.TypeOf(statement)
 
 	if handler, exists := statement_lookup[statementType]; exists {
@@ -23,7 +24,7 @@ func evaluate_statement(statement ast.Statement, scope *Scope) {
 	}
 }
 
-func evaluate_expression_statement(statement ast.Statement, scope *Scope) {
+func evaluate_expression_statement(statement ast.Statement, scope *core.Scope) {
 	expectedStatement, err := ast.ExpectStatement[ast.ExpressionStatement](statement)
 	if err != nil {
 		panic(err)
@@ -32,28 +33,28 @@ func evaluate_expression_statement(statement ast.Statement, scope *Scope) {
 	evaluate_expression(expectedStatement.Expression, scope)
 }
 
-func evaluate_variable_declaration_statement(statement ast.Statement, scope *Scope) {
+func evaluate_variable_declaration_statement(statement ast.Statement, scope *core.Scope) {
 	expectedStatement, err := ast.ExpectStatement[ast.VariableDeclarationStatement](statement)
 
 	if err != nil {
 		panic(err)
 	}
 
-	variable := VariableReference{
-		identifier:   expectedStatement.Identifier,
-		isConstant:   expectedStatement.IsConstant,
-		value:        evaluate_expression(expectedStatement.Value, scope),
-		explicitType: evaluate_type(expectedStatement.ExplicitType),
-	}
+	variable := core.NewVariableReference(
+		expectedStatement.Identifier,
+		expectedStatement.IsConstant,
+		evaluate_expression(expectedStatement.Value, scope),
+		core.EvaluateType(expectedStatement.ExplicitType),
+	)
 
-	err = scope.Declare(&variable)
+	err = scope.Declare(variable)
 
 	if err != nil {
 		panic(err)
 	}
 }
 
-func evaluate_multi_variable_declaration_statement(statement ast.Statement, scope *Scope) {
+func evaluate_multi_variable_declaration_statement(statement ast.Statement, scope *core.Scope) {
 	expectedStatement, err := ast.ExpectStatement[ast.MultiVariableDeclarationStatement](statement)
 	if err != nil {
 		panic(err)
@@ -64,57 +65,59 @@ func evaluate_multi_variable_declaration_statement(statement ast.Statement, scop
 	}
 }
 
-func evaluate_continue_statement(statement ast.Statement, scope *Scope) {
-	panic(ContinueError{})
+func evaluate_continue_statement(statement ast.Statement, scope *core.Scope) {
+	panic(core.ContinueError{})
 }
 
-func evaluate_break_statement(statement ast.Statement, scope *Scope) {
-	panic(BreakError{})
+func evaluate_break_statement(statement ast.Statement, scope *core.Scope) {
+	panic(core.BreakError{})
 }
 
-func evaluate_return_statement(statement ast.Statement, scope *Scope) {
+func evaluate_return_statement(statement ast.Statement, scope *core.Scope) {
 	expectedStatement, err := ast.ExpectStatement[ast.ReturnStatement](statement)
 	if err != nil {
 		panic(err)
 	}
 
-	panic(ReturnError{evaluate_expression(expectedStatement.Value, scope)})
+	panic(core.NewReturnError(evaluate_expression(expectedStatement.Value, scope)))
 }
 
 // TODO: implement
-func evaluate_for_statement(statement ast.Statement, env *Scope) {
+func evaluate_for_statement(statement ast.Statement, env *core.Scope) {
 }
 
-func evaluate_function_declaration_statement(statement ast.Statement, scope *Scope) {
+func evaluate_function_declaration_statement(statement ast.Statement, scope *core.Scope) {
 	expectedStatement, err := ast.ExpectStatement[ast.FunctionDeclarationStatment](statement)
 	if err != nil {
 		panic(err)
 	}
 
-	function := FunctionReference{
-		identifier: expectedStatement.Identifier,
-		value: FunctionValue{
-			parameters: expectedStatement.Parameters,
-			body:       expectedStatement.Body,
-			returnType: evaluate_type(expectedStatement.ReturnType),
-			closure:    scope,
-		},
-	}
+	value := *core.NewFunctionValue(
+		expectedStatement.Parameters,
+		expectedStatement.Body,
+		core.EvaluateType(expectedStatement.ReturnType),
+		scope,
+	)
 
-	err = scope.Declare(&function)
+	ref := core.NewFunctionReference(
+		expectedStatement.Identifier,
+		value,
+	)
+
+	err = scope.Declare(ref)
 
 	if err != nil {
 		panic(err)
 	}
 }
 
-func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
+func evaluate_assignment_statement(statement ast.Statement, scope *core.Scope) {
 	expectedStatement, err := ast.ExpectStatement[ast.AssignmentStatement](statement)
 	if err != nil {
 		panic(err)
 	}
 
-	var ref Reference
+	var ref core.Reference
 	switch assigne := expectedStatement.Assigne.(type) {
 	case ast.SymbolExpression:
 		ref, err = scope.Resolve(assigne.Value)
@@ -128,7 +131,7 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 		}
 
 		value := evaluate_expression(assigne.Right, scope)
-		ptr, err := ExpectValue[*Pointer](value)
+		ptr, err := core.ExpectValue[*core.Pointer](value)
 		if err != nil {
 			panic("cannot dereference non-pointer type")
 		}
@@ -149,4 +152,14 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 	if err := ref.Store(value); err != nil {
 		panic(err)
 	}
+}
+
+func evaluate_throw_statement(statement ast.Statement, scope *core.Scope) {
+	expectedStatement, err := ast.ExpectStatement[ast.ThrowStatement](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	value := evaluate_expression(expectedStatement.Value, scope)
+	panic(value)
 }

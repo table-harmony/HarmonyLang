@@ -11,12 +11,12 @@ func default_handler(kind TokenKind, value string) regex_handler {
 		if kind == CLOSE_CURLY && len(lex.Tokens) > 0 {
 			last := lex.peek()
 			if needs_semi_colon(last) {
-				lex.push(CreateToken(SEMI_COLON, ";"))
+				lex.push(NewToken(SEMI_COLON, ";"))
 			}
 		}
 
 		lex.advance(len(value))
-		lex.push(CreateToken(kind, value))
+		lex.push(NewToken(kind, value))
 	}
 }
 
@@ -24,13 +24,13 @@ func string_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	stringLiteral := lex.remainder()[match[0]+1 : match[1]-1]
 
-	lex.push(CreateToken(STRING, stringLiteral))
+	lex.push(NewToken(STRING, stringLiteral))
 	lex.advance(len(stringLiteral) + 2)
 }
 
 func number_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
-	lex.push(CreateToken(NUMBER, match))
+	lex.push(NewToken(NUMBER, match))
 	lex.advance(len(match))
 }
 
@@ -39,9 +39,9 @@ func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 
 	// to disregrard uppercase in keywords so IF = if
 	if kind, found := reserved_keywords[strings.ToLower(match)]; found {
-		lex.push(CreateToken(kind, match))
+		lex.push(NewToken(kind, match))
 	} else {
-		lex.push(CreateToken(IDENTIFIER, match))
+		lex.push(NewToken(IDENTIFIER, match))
 	}
 
 	lex.advance(len(match))
@@ -67,7 +67,7 @@ func newline_handler(lex *lexer, regex *regexp.Regexp) {
 		last := lex.peek()
 
 		if needs_semi_colon(last) {
-			lex.push(CreateToken(SEMI_COLON, ";"))
+			lex.push(NewToken(SEMI_COLON, ";"))
 		}
 	}
 

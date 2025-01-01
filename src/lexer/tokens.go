@@ -133,19 +133,19 @@ type Token struct {
 	Line  int
 }
 
-func CreateToken(kind TokenKind, value string) Token {
+func NewToken(kind TokenKind, value string) Token {
 	return Token{
 		Kind:  kind,
 		Value: value,
 	}
 }
 
-func (token Token) ToString() string {
+func (token Token) String() string {
 	if token.IsOfKind(IDENTIFIER, NUMBER, STRING) {
-		return fmt.Sprintf("{ Kind: %s, Value: %s }", token.Kind.ToString(), token.Value)
+		return fmt.Sprintf("{ Kind: %s, Value: %s }", token.Kind.String(), token.Value)
 	}
 
-	return fmt.Sprintf("{ Kind: %s }", token.Kind.ToString())
+	return fmt.Sprintf("{ Kind: %s }", token.Kind.String())
 }
 
 func (token Token) IsOfKind(expectedTokens ...TokenKind) bool {
@@ -158,7 +158,7 @@ func (token Token) IsOfKind(expectedTokens ...TokenKind) bool {
 	return false
 }
 
-func (kind TokenKind) ToString() string {
+func (kind TokenKind) String() string {
 	switch kind {
 	case EOF:
 		return "eof"

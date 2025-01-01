@@ -1,214 +1,218 @@
 package interpreter
 
-import "fmt"
+import (
+	"fmt"
 
-func evaluate_addition(left, right Value) Value {
+	"github.com/table-harmony/HarmonyLang/src/core"
+)
+
+func evaluate_addition(left, right core.Value) core.Value {
 	switch left := left.(type) {
-	case Number:
-		right, err := ExpectValue[Number](right)
+	case core.Number:
+		right, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic("right operand must be a number")
 		}
-		return Number{left.Value() + right.Value()}
-	case String:
-		right, err := ExpectValue[String](right)
+		return core.NewNumber(left.Value() + right.Value())
+	case core.String:
+		right, err := core.ExpectValue[core.String](right)
 		if err != nil {
 			panic("right operand must be a string")
 		}
-		return String{left.Value() + right.Value()}
+		return core.NewString(left.Value() + right.Value())
 	default:
 		panic(fmt.Sprintf("cannot add values of type %v and %v", left.Type(), right.Type()))
 	}
 }
 
-func evaluate_subtraction(left, right Value) Value {
-	leftNum, err := ExpectValue[Number](left)
+func evaluate_subtraction(left, right core.Value) core.Value {
+	leftNum, err := core.ExpectValue[core.Number](left)
 	if err != nil {
 		panic("left operand must be a number")
 	}
-	rightNum, err := ExpectValue[Number](right)
+	rightNum, err := core.ExpectValue[core.Number](right)
 	if err != nil {
 		panic("right operand must be a number")
 	}
-	return Number{leftNum.Value() - rightNum.Value()}
+	return core.NewNumber(leftNum.Value() - rightNum.Value())
 }
 
-func evaluate_multiplication(left, right Value) Value {
-	leftNum, err := ExpectValue[Number](left)
+func evaluate_multiplication(left, right core.Value) core.Value {
+	leftNum, err := core.ExpectValue[core.Number](left)
 	if err != nil {
 		panic("left operand must be a number")
 	}
-	rightNum, err := ExpectValue[Number](right)
+	rightNum, err := core.ExpectValue[core.Number](right)
 	if err != nil {
 		panic("right operand must be a number")
 	}
-	return Number{leftNum.Value() * rightNum.Value()}
+	return core.NewNumber(leftNum.Value() * rightNum.Value())
 }
 
-func evaluate_division(left, right Value) Value {
-	leftNum, err := ExpectValue[Number](left)
+func evaluate_division(left, right core.Value) core.Value {
+	leftNum, err := core.ExpectValue[core.Number](left)
 	if err != nil {
 		panic("left operand must be a number")
 	}
-	rightNum, err := ExpectValue[Number](right)
+	rightNum, err := core.ExpectValue[core.Number](right)
 	if err != nil {
 		panic("right operand must be a number")
 	}
 	if rightNum.Value() == 0 {
 		panic("division by zero")
 	}
-	return Number{leftNum.Value() / rightNum.Value()}
+	return core.NewNumber(leftNum.Value() / rightNum.Value())
 }
 
-func evaluate_modulo(left, right Value) Value {
-	leftNum, err := ExpectValue[Number](left)
+func evaluate_modulo(left, right core.Value) core.Value {
+	leftNum, err := core.ExpectValue[core.Number](left)
 	if err != nil {
 		panic("left operand must be a number")
 	}
-	rightNum, err := ExpectValue[Number](right)
+	rightNum, err := core.ExpectValue[core.Number](right)
 	if err != nil {
 		panic("right operand must be a number")
 	}
 	if rightNum.Value() == 0 {
 		panic("modulo by zero")
 	}
-	return Number{float64(int(leftNum.Value()) % int(rightNum.Value()))}
+	return core.NewNumber(float64(int(leftNum.Value()) % int(rightNum.Value())))
 }
 
-func evaluate_less_than(left, right Value) Value {
+func evaluate_less_than(left, right core.Value) core.Value {
 	switch left := left.(type) {
-	case Number:
-		right, err := ExpectValue[Number](right)
+	case core.Number:
+		right, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic("right operand must be a number")
 		}
-		return Boolean{left.Value() < right.Value()}
-	case String:
-		right, err := ExpectValue[String](right)
+		return core.NewBoolean(left.Value() < right.Value())
+	case core.String:
+		right, err := core.ExpectValue[core.String](right)
 		if err != nil {
 			panic("right operand must be a string")
 		}
-		return Boolean{left.Value() < right.Value()}
+		return core.NewBoolean(left.Value() < right.Value())
 	default:
 		panic(fmt.Sprintf("cannot compare values of type %v", left.Type()))
 	}
 }
 
-func evaluate_less_equals(left, right Value) Value {
+func evaluate_less_equals(left, right core.Value) core.Value {
 	switch left := left.(type) {
-	case Number:
-		right, err := ExpectValue[Number](right)
+	case core.Number:
+		right, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic("right operand must be a number")
 		}
-		return Boolean{left.Value() <= right.Value()}
-	case String:
-		right, err := ExpectValue[String](right)
+		return core.NewBoolean(left.Value() <= right.Value())
+	case core.String:
+		right, err := core.ExpectValue[core.String](right)
 		if err != nil {
 			panic("right operand must be a string")
 		}
-		return Boolean{left.Value() <= right.Value()}
+		return core.NewBoolean(left.Value() <= right.Value())
 	default:
 		panic(fmt.Sprintf("cannot compare values of type %v", left.Type()))
 	}
 }
 
-func evaluate_greater_than(left, right Value) Value {
+func evaluate_greater_than(left, right core.Value) core.Value {
 	switch left := left.(type) {
-	case Number:
-		right, err := ExpectValue[Number](right)
+	case core.Number:
+		right, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic("right operand must be a number")
 		}
-		return Boolean{left.Value() > right.Value()}
-	case String:
-		right, err := ExpectValue[String](right)
+		return core.NewBoolean(left.Value() > right.Value())
+	case core.String:
+		right, err := core.ExpectValue[core.String](right)
 		if err != nil {
 			panic("right operand must be a string")
 		}
-		return Boolean{left.Value() > right.Value()}
+		return core.NewBoolean(left.Value() > right.Value())
 	default:
 		panic(fmt.Sprintf("cannot compare values of type %v", left.Type()))
 	}
 }
 
-func evaluate_greater_equals(left, right Value) Value {
+func evaluate_greater_equals(left, right core.Value) core.Value {
 	switch left := left.(type) {
-	case Number:
-		right, err := ExpectValue[Number](right)
+	case core.Number:
+		right, err := core.ExpectValue[core.Number](right)
 		if err != nil {
 			panic("right operand must be a number")
 		}
-		return Boolean{left.Value() >= right.Value()}
-	case String:
-		right, err := ExpectValue[String](right)
+		return core.NewBoolean(left.Value() >= right.Value())
+	case core.String:
+		right, err := core.ExpectValue[core.String](right)
 		if err != nil {
 			panic("right operand must be a string")
 		}
-		return Boolean{left.Value() >= right.Value()}
+		return core.NewBoolean(left.Value() >= right.Value())
 	default:
 		panic(fmt.Sprintf("cannot compare values of type %v", left.Type()))
 	}
 }
 
-func evaluate_equals(left, right Value) Value {
+func evaluate_equals(left, right core.Value) core.Value {
 	if left.Type() != right.Type() {
-		return Boolean{false}
+		return core.NewBoolean(false)
 	}
 
 	switch left := left.(type) {
-	case Number:
-		right, _ := ExpectValue[Number](right)
-		return Boolean{left.Value() == right.Value()}
-	case String:
-		right, _ := ExpectValue[String](right)
-		return Boolean{left.Value() == right.Value()}
-	case Boolean:
-		right, _ := ExpectValue[Boolean](right)
-		return Boolean{left.Value() == right.Value()}
-	case Nil:
-		return Boolean{true} // nil equals nil
+	case core.Number:
+		right, _ := core.ExpectValue[core.Number](right)
+		return core.NewBoolean(left.Value() == right.Value())
+	case core.String:
+		right, _ := core.ExpectValue[core.String](right)
+		return core.NewBoolean(left.Value() == right.Value())
+	case core.Boolean:
+		right, _ := core.ExpectValue[core.Boolean](right)
+		return core.NewBoolean(left.Value() == right.Value())
+	case core.Nil:
+		return core.NewBoolean(true) // nil equals nil
 	default:
 		panic(fmt.Sprintf("cannot compare values of type %v", left.Type()))
 	}
 }
 
-func evaluate_not_equals(left, right Value) Value {
+func evaluate_not_equals(left, right core.Value) core.Value {
 	equals := evaluate_equals(left, right)
-	boolVal, _ := ExpectValue[Boolean](equals)
-	return Boolean{!boolVal.Value()}
+	boolVal, _ := core.ExpectValue[core.Boolean](equals)
+	return core.NewBoolean(!boolVal.Value())
 }
 
-func evaluate_logical_or(left, right Value) Value {
-	leftBool, err := ExpectValue[Boolean](left)
+func evaluate_logical_or(left, right core.Value) core.Value {
+	leftBool, err := core.ExpectValue[core.Boolean](left)
 	if err != nil {
 		panic("left operand must be a boolean")
 	}
 
 	if leftBool.Value() {
-		return Boolean{true}
+		return core.NewBoolean(true)
 	}
 
-	rightBool, err := ExpectValue[Boolean](right)
+	rightBool, err := core.ExpectValue[core.Boolean](right)
 	if err != nil {
 		panic("right operand must be a boolean")
 	}
-	return Boolean{rightBool.Value()}
+	return core.NewBoolean(rightBool.Value())
 }
 
-func evaluate_logical_and(left, right Value) Value {
-	leftBool, err := ExpectValue[Boolean](left)
+func evaluate_logical_and(left, right core.Value) core.Value {
+	leftBool, err := core.ExpectValue[core.Boolean](left)
 	if err != nil {
 		panic("left operand must be a boolean")
 	}
 
 	if !leftBool.Value() {
-		return Boolean{false}
+		return core.NewBoolean(false)
 	}
 
-	rightBool, err := ExpectValue[Boolean](right)
+	rightBool, err := core.ExpectValue[core.Boolean](right)
 	if err != nil {
 		panic("right operand must be a boolean")
 	}
-	return Boolean{rightBool.Value()}
+	return core.NewBoolean(rightBool.Value())
 }

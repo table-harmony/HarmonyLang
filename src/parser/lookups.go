@@ -135,4 +135,5 @@ func create_token_lookups() {
 	register_statement(lexer.CONTINUE, parse_loop_control_statement)
 	register_statement(lexer.BREAK, parse_loop_control_statement)
 	register_statement(lexer.RETURN, parse_return_statement)
+	register_statement(lexer.THROW, parse_throw_statement)
 }

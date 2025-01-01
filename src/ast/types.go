@@ -40,3 +40,10 @@ type MapType struct {
 }
 
 func (MapType) _type() {}
+
+type FunctionType struct {
+	Parameters []Parameter
+	Return     Type
+}
+
+func (FunctionType) _type() {}

@@ -1,4 +1,4 @@
-package interpreter
+package core
 
 import "fmt"
 
@@ -40,4 +40,12 @@ func (scope *Scope) Resolve(identifier string) (Reference, error) {
 		return scope.parent.Resolve(identifier)
 	}
 	return nil, fmt.Errorf("undefined: %s", identifier)
+}
+
+func (scope *Scope) String() string {
+	str := ""
+	for identifier, ref := range scope.storage {
+		str += fmt.Sprintf("%s: { %s } \n", identifier, ref.String())
+	}
+	return str
 }

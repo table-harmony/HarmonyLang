@@ -53,3 +53,27 @@ for let i = 0; i < 10; i++ {
     bar = i;
   }
 }
+
+const x = fn(a: number) {
+  return fn(b: number) { return a + b }
+}
+
+let add2 = x(2)
+let a = add2(10)
+
+fn recursive(a) {
+  if a == 0 {
+    return 0
+  }  
+
+  return recursive(a - 1) + a
+}
+
+a = recursive(10)
+
+
+const x = try {
+  1 / 0
+} catch {
+  1 + 1
+}

@@ -31,6 +31,9 @@ func create_type_token_lookups() {
 	// Data types
 	type_nud(lexer.MAP, primary, parse_map_type)
 	type_led(lexer.OPEN_BRACKET, member, parse_array_type_suffix)
+
+	// Function types
+	type_nud(lexer.FN, primary, parse_function_type)
 }
 
 func parse_type(parser *parser, bp binding_power) ast.Type {
@@ -38,7 +41,7 @@ func parse_type(parser *parser, bp binding_power) ast.Type {
 	nud_handler, exists := type_nud_lookup[token.Kind]
 
 	if !exists {
-		panic(fmt.Sprintf("type: NUD Handler expected for token %s\n", token.Kind.ToString()))
+		panic(fmt.Sprintf("type: NUD Handler expected for token %s\n", token.Kind.String()))
 	}
 
 	left := nud_handler(parser)
@@ -48,7 +51,7 @@ func parse_type(parser *parser, bp binding_power) ast.Type {
 		led_handler, exists := type_led_lookup[token.Kind]
 
 		if !exists {
-			panic(fmt.Sprintf("type: LED Handler expected for token %s\n", token.Kind.ToString()))
+			panic(fmt.Sprintf("type: LED Handler expected for token %s\n", token.Kind.String()))
 		}
 
 		left = led_handler(parser, left, type_bp_lookup[token.Kind])
@@ -117,5 +120,47 @@ func parse_map_type(parser *parser) ast.Type {
 	return ast.MapType{
 		Key:   keyType,
 		Value: valueType,
+	}
+}
+
+func parse_function_type(parser *parser) ast.Type {
+	parser.expect(lexer.FN)
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_PAREN)
+	parser.advance(1)
+
+	var parameters []ast.Parameter
+	for parser.current_token().Kind != lexer.CLOSE_PAREN {
+		paramIdentifier := parser.expect(lexer.IDENTIFIER).Value
+		parser.advance(1)
+
+		var paramType ast.Type
+		if parser.current_token().Kind == lexer.COLON {
+			parser.expect(lexer.COLON)
+			parser.advance(1)
+
+			paramType = parse_type(parser, default_bp)
+		}
+
+		parameters = append(parameters, ast.Parameter{
+			Name: paramIdentifier,
+			Type: paramType,
+		})
+
+		if parser.current_token().Kind == lexer.COMMA {
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_PAREN)
+	parser.advance(1)
+
+	parser.expect(lexer.ARROW)
+	parser.advance(1)
+
+	return ast.FunctionType{
+		Parameters: parameters,
+		Return:     parse_type(parser, default_bp),
 	}
 }

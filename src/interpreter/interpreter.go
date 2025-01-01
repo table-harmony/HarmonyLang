@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/core"
 )
 
 type interpreter struct {
@@ -13,16 +14,14 @@ type interpreter struct {
 
 func Interpret(ast []ast.Statement) {
 	interpreter := create_interpreter(ast)
-	scope := NewScope(nil)
+	scope := core.NewScope(nil)
 
 	for !interpreter.is_empty() {
 		interpreter.evalute_current_statement(scope)
 		interpreter.advance(1)
 	}
 
-	for identifier, ref := range scope.storage {
-		fmt.Printf("%s: { %s } \n", identifier, ref.String())
-	}
+	fmt.Println(scope.String())
 }
 
 func create_interpreter(ast []ast.Statement) *interpreter {

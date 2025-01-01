@@ -13,7 +13,7 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 	nud_handler, exists := nud_lookup[token.Kind]
 
 	if !exists {
-		panic(fmt.Sprintf("NUD Handler expected for token %s\n", token.Kind.ToString()))
+		panic(fmt.Sprintf("NUD Handler expected for token %s\n", token.Kind.String()))
 	}
 
 	left := nud_handler(parser)
@@ -21,7 +21,7 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 	for binding_power_lookup[token.Kind] > bp {
 		led_handler, exists := led_lookup[token.Kind]
 		if !exists {
-			panic(fmt.Sprintf("LED Handler expected for token %s\n", token.Kind.ToString()))
+			panic(fmt.Sprintf("LED Handler expected for token %s\n", token.Kind.String()))
 		}
 
 		left = led_handler(parser, left, binding_power_lookup[token.Kind])
@@ -52,34 +52,24 @@ func parse_primary_expression(parser *parser) ast.Expression {
 	case lexer.NIL:
 		return ast.NilExpression{}
 	case lexer.TRUE:
-		return ast.BooleanExpression{
-			Value: true,
-		}
+		return ast.BooleanExpression{Value: true}
 	case lexer.FALSE:
-		return ast.BooleanExpression{
-			Value: false,
-		}
+		return ast.BooleanExpression{Value: false}
 	case lexer.NUMBER:
 		number, err := strconv.ParseFloat(token.Value, 64)
-
 		if err != nil {
-			panic(fmt.Sprintf("Cannot parse token '%s' to float", token.ToString()))
+			panic(fmt.Sprintf("Cannot parse token '%s' to float", token.String()))
 		}
 
-		return ast.NumberExpression{
-			Value: number,
-		}
+		return ast.NumberExpression{Value: number}
 	case lexer.STRING:
-		return ast.StringExpression{
-			Value: token.Value,
-		}
+		return ast.StringExpression{Value: token.Value}
 	case lexer.IDENTIFIER:
-		return ast.SymbolExpression{
-			Value: token.Value,
-		}
+		return ast.SymbolExpression{Value: token.Value}
 	default:
-		panic(fmt.Sprintf("Cannot create primary_expression from %s\n", token.Kind.ToString()))
+		panic(fmt.Sprintf("Cannot create primary_expression from %s\n", token.Kind.String()))
 	}
+
 }
 
 func parse_grouping_expression(parser *parser) ast.Expression {
@@ -204,14 +194,6 @@ func parse_if_expression(parser *parser) ast.Expression {
 
 	condition := parse_expression(parser, assignment)
 	consequent := parse_block_expression(parser).(ast.BlockExpression)
-
-	// auto semi colon insertion insert semi colon after the end curly so skip it then check for else
-	//	pos := parser.pos
-	//	for parser.tokens[pos].Kind == lexer.SEMI_COLON {
-	//		//parser.advance(1)
-	//		pos++
-	//	}
-	//TODO: decide whether i want like go no seperation between if and else
 
 	var alternate ast.Expression
 	if parser.current_token().Kind == lexer.ELSE {
@@ -389,12 +371,6 @@ func parse_try_catch_expression(parser *parser) ast.Expression {
 	parser.advance(1)
 
 	tryBlock := parse_block_expression(parser)
-
-	// auto semi colon insertion insert semi colon after the end curly so skip it then check for else
-	//	for parser.current_token().Kind == lexer.SEMI_COLON {
-	//		parser.advance(1)
-	//	}
-	//TODO: similar to evaluate if problem with semi colons
 
 	parser.expect(lexer.CATCH)
 	parser.advance(1)

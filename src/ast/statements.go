@@ -83,3 +83,9 @@ type SwitchCaseStatement struct {
 }
 
 func (SwitchCaseStatement) statement() {}
+
+type ThrowStatement struct {
+	Value Expression
+}
+
+func (ThrowStatement) statement() {}

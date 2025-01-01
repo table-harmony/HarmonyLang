@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/core"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 	"github.com/table-harmony/HarmonyLang/src/parser"
 )
 
 type REPL struct {
-	scope  *Scope
+	scope  *core.Scope
 	reader *bufio.Reader
 }
 
@@ -50,12 +51,12 @@ func create_repl() REPL {
 	create_lookups()
 
 	return REPL{
-		scope:  NewScope(nil),
+		scope:  core.NewScope(nil),
 		reader: bufio.NewReader(os.Stdin),
 	}
 }
 
-func (repl *REPL) evaluate(input string) Value {
+func (repl *REPL) evaluate(input string) core.Value {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Error: %v\n", r)
@@ -65,7 +66,7 @@ func (repl *REPL) evaluate(input string) Value {
 	tokens := lexer.Tokenize(input)
 	ast := parser.Parse(tokens)
 
-	var lastResult Value
+	var lastResult core.Value
 	for _, statement := range ast {
 		lastResult = repl.evaluate_statement(statement)
 	}
@@ -73,7 +74,7 @@ func (repl *REPL) evaluate(input string) Value {
 	return lastResult
 }
 
-func (repl *REPL) evaluate_statement(statement ast.Statement) Value {
+func (repl *REPL) evaluate_statement(statement ast.Statement) core.Value {
 	switch statement := statement.(type) {
 	case ast.ExpressionStatement:
 		return evaluate_expression(statement.Expression, repl.scope)
@@ -83,19 +84,19 @@ func (repl *REPL) evaluate_statement(statement ast.Statement) Value {
 	}
 }
 
-func print_value(value Value) {
+func print_value(value core.Value) {
 	switch v := value.(type) {
-	case Number:
+	case core.Number:
 		if v.Value() == float64(int(v.Value())) {
 			fmt.Printf("%d\n", int(v.Value()))
 		} else {
-			fmt.Printf("%g\n", v.Value)
+			fmt.Printf("%g\n", v.Value())
 		}
-	case String:
-		fmt.Printf("%q\n", v.Value)
-	case Boolean:
-		fmt.Printf("%t\n", v.Value)
-	case Reference:
+	case core.String:
+		fmt.Printf("%q\n", v.Value())
+	case core.Boolean:
+		fmt.Printf("%t\n", v.Value())
+	case core.Reference:
 		print_value(v.Load())
 	default:
 		fmt.Printf("%v\n", value)

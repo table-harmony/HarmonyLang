@@ -66,19 +66,19 @@ func parse_assignment_statement(parser *parser, left ast.Expression) ast.Stateme
 
 	switch operator.Kind {
 	case lexer.PLUS_PLUS:
-		valueExpression.Operator = lexer.CreateToken(lexer.PLUS, "++")
+		valueExpression.Operator = lexer.NewToken(lexer.PLUS, "++")
 		valueExpression.Right = ast.NumberExpression{Value: 1}
 	case lexer.MINUS_MINUS:
-		valueExpression.Operator = lexer.CreateToken(lexer.DASH, "--")
+		valueExpression.Operator = lexer.NewToken(lexer.DASH, "--")
 		valueExpression.Right = ast.NumberExpression{Value: 1}
 	case lexer.NULLISH_ASSIGNMENT, lexer.ASSIGNMENT:
 		return ast.AssignmentStatement{
 			Assigne:  left,
 			Value:    parse_expression(parser, default_bp),
-			Operator: lexer.CreateToken(getBinaryOperator(), ""),
+			Operator: lexer.NewToken(getBinaryOperator(), ""),
 		}
 	default:
-		valueExpression.Operator = lexer.CreateToken(getBinaryOperator(), "")
+		valueExpression.Operator = lexer.NewToken(getBinaryOperator(), "")
 		valueExpression.Right = parse_expression(parser, default_bp)
 	}
 
@@ -213,7 +213,7 @@ func parse_loop_control_statement(parser *parser) ast.Statement {
 	case lexer.BREAK:
 		return ast.BreakStatement{}
 	default:
-		panic(fmt.Sprintf("Cannot parse from token '%s' kind to loop_control_statement", token.ToString()))
+		panic(fmt.Sprintf("Cannot parse from token '%s' kind to loop_control_statement", token.String()))
 	}
 }
 
@@ -302,5 +302,14 @@ func parse_return_statement(parser *parser) ast.Statement {
 
 	return ast.ReturnStatement{
 		Value: value,
+	}
+}
+
+func parse_throw_statement(parser *parser) ast.Statement {
+	parser.expect(lexer.THROW)
+	parser.advance(1)
+
+	return ast.ThrowStatement{
+		Value: parse_expression(parser, default_bp),
 	}
 }

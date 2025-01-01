@@ -23,6 +23,6 @@ func Tokenize(source string) []Token {
 		}
 	}
 
-	lexer.push(CreateToken(EOF, "EOF"))
+	lexer.push(NewToken(EOF, "EOF"))
 	return lexer.Tokens
 }
