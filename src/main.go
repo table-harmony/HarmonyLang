@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/table-harmony/HarmonyLang/src/interpreter"
+	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 	"github.com/table-harmony/HarmonyLang/src/parser"
 )
@@ -23,7 +23,8 @@ func run(path string) {
 
 	tokens := lexer.Tokenize(source)
 	ast := parser.Parse(tokens)
-	interpreter.Interpret(ast)
+	litter.Dump(ast)
+	//interpreter.Interpret(ast)
 }
 
 func read_file(path string) string {

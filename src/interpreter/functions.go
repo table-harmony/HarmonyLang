@@ -2,8 +2,8 @@ package interpreter
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
@@ -23,15 +23,17 @@ type ParameterType struct {
 
 // FunctionType implements the Type interface
 func (f FunctionType) String() string {
-	params := make([]string, len(f.parameters))
+	str := "fn("
+
 	for i, param := range f.parameters {
-		if param.identifier != "" {
-			params[i] = fmt.Sprintf("%s: %s", param.identifier, param.valueType.String())
-		} else {
-			params[i] = param.valueType.String()
+		if i > 0 {
+			str += ", "
 		}
+		str += param.identifier + ": " + param.valueType.String()
 	}
-	return fmt.Sprintf("fn(%s) -> %s", strings.Join(params, ", "), f.returnType.String())
+
+	str += ") -> " + f.returnType.String()
+	return str
 }
 func (f FunctionType) Equals(other Type) bool {
 	if other == nil {
@@ -63,7 +65,7 @@ func (f FunctionType) Equals(other Type) bool {
 	return otherFn.returnType.Equals(f.returnType)
 }
 func (f FunctionType) DefaultValue() Value {
-	return Nil{}
+	return NewNil()
 }
 
 type FunctionValue struct {
@@ -179,11 +181,9 @@ func NewFunctionReference(identifier string, value FunctionValue) *FunctionRefer
 }
 
 // FunctionReference implements the Value interface
-func (f *FunctionReference) Type() Type   { return f.value.Type() }
-func (f *FunctionReference) Clone() Value { return f.value.Clone() }
-func (f *FunctionReference) String() string {
-	return fmt.Sprintf("type: function, value: %s", f.value.String())
-}
+func (f *FunctionReference) Type() Type     { return f.value.Type() }
+func (f *FunctionReference) Clone() Value   { return f.value.Clone() }
+func (f *FunctionReference) String() string { return f.value.String() }
 
 // FunctionReference implements the Reference interface
 func (f *FunctionReference) Load() Value { return f.value }
@@ -208,8 +208,8 @@ func (f *FunctionReference) Address() Value {
 	return NewPointer(f)
 }
 
-// NativeFuncType represents the type signature for native Go functions that can be called
-type NativeFuncType func(args ...Value) Value
+// NativeFunction represents the type signature for native Go functions that can be called
+type NativeFunction func(args ...Value) Value
 
 type NativeFunctionType struct {
 	paramTypes []Type
@@ -218,11 +218,7 @@ type NativeFunctionType struct {
 
 // NativeFunctionType implements the Type interface
 func (f NativeFunctionType) String() string {
-	params := make([]string, len(f.paramTypes))
-	for i, paramType := range f.paramTypes {
-		params[i] = paramType.String()
-	}
-	return fmt.Sprintf("native_fn(%s) -> %s", params, f.returnType.String())
+	return "native_fn"
 }
 func (f NativeFunctionType) DefaultValue() Value {
 	return NewNil()
@@ -232,7 +228,7 @@ func (f NativeFunctionType) Equals(other Type) bool {
 		return true
 	}
 	if primitive, ok := other.(PrimitiveType); ok {
-		return primitive.kind == NilType
+		return primitive.kind == NilType || primitive.kind == AnyType
 	}
 
 	otherFn, ok := other.(NativeFunctionType)
@@ -253,14 +249,14 @@ func (f NativeFunctionType) Equals(other Type) bool {
 	return f.returnType.Equals(otherFn.returnType)
 }
 
-type NativeFunction struct {
-	value      NativeFuncType
+type NativeFunctionValue struct {
+	value      NativeFunction
 	paramTypes []Type
 	returnType Type
 }
 
-func NewNativeFunction(fn NativeFuncType, paramTypes []Type, returnType Type) *NativeFunction {
-	return &NativeFunction{
+func NewNativeFunction(fn NativeFunction, paramTypes []Type, returnType Type) *NativeFunctionValue {
+	return &NativeFunctionValue{
 		value:      fn,
 		paramTypes: paramTypes,
 		returnType: returnType,
@@ -268,24 +264,24 @@ func NewNativeFunction(fn NativeFuncType, paramTypes []Type, returnType Type) *N
 }
 
 // NativeFunction implements the Value interface
-func (n NativeFunction) Type() Type {
+func (n NativeFunctionValue) Type() Type {
 	return NativeFunctionType{
 		paramTypes: n.paramTypes,
 		returnType: n.returnType,
 	}
 }
-func (n NativeFunction) Clone() Value {
+func (n NativeFunctionValue) Clone() Value {
 	return NewNativeFunction(n.value, n.paramTypes, n.returnType)
 }
-func (n NativeFunction) String() string {
+func (n NativeFunctionValue) String() string {
 	return fmt.Sprintf("native_fn(%v) -> %v", n.paramTypes, n.returnType)
 }
-func (n NativeFunction) Call(args ...Value) (Value, error) {
+func (n NativeFunctionValue) Call(args ...Value) (Value, error) {
 	if len(args) != len(n.paramTypes) {
 		return NewNil(), fmt.Errorf("expected %d arguments but got %d", len(n.paramTypes), len(args))
 	}
-
 	for i, arg := range args {
+		litter.Dump(arg.Type(), n.paramTypes[i])
 		if !n.paramTypes[i].Equals(arg.Type()) {
 			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], arg.Type())
 		}

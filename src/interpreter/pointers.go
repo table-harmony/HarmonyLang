@@ -47,7 +47,7 @@ func (p *Pointer) String() string {
 	if p.target == nil {
 		return "nil"
 	}
-	return fmt.Sprintf("&{ %v }", p.target.String())
+	return fmt.Sprintf("&%v", p.target.String())
 }
 
 // Deref returns the reference pointed to by the pointer

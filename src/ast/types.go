@@ -21,6 +21,11 @@ type NumberType struct {
 
 func (NumberType) _type() {}
 
+type NilType struct {
+}
+
+func (NilType) _type() {}
+
 type ArrayType struct {
 	Size       Expression
 	Underlying Type

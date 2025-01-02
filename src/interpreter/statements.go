@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -48,7 +47,6 @@ func evaluate_variable_declaration_statement(statement ast.Statement, scope *Sco
 	)
 
 	err = scope.Declare(variable)
-
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +116,9 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 	}
 
 	value := evaluate_expression(expectedStatement.Value, scope)
-
+	if arrayValue, ok := value.(Array); ok {
+		value = arrayValue.Clone()
+	}
 	switch assigne := expectedStatement.Assigne.(type) {
 	case ast.SymbolExpression:
 		ref, err := scope.Resolve(assigne.Value)
@@ -143,17 +143,22 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 		}
 
 	case ast.ComputedMemberExpression:
-		owner := evaluate_expression(assigne.Owner, scope)
+		ownerValue := evaluate_expression(assigne.Owner, scope)
 		property := evaluate_expression(assigne.Property, scope)
-		litter.Dump(owner, owner.String())
+		if ref, ok := ownerValue.(Reference); ok {
+			ownerValue = ref.Load()
+		}
+		if ref, ok := property.(Reference); ok {
+			property = ref.Load()
+		}
 
-		switch owner := owner.(type) {
+		switch owner := ownerValue.(type) {
 		case Array:
 			owner.Set(property, value)
-
-		case *Map:
+		case Map:
 			owner.Set(property, value)
-
+		case Slice:
+			owner.Set(property, value)
 		default:
 			panic(fmt.Sprintf("cannot index into value of type %T", owner))
 		}

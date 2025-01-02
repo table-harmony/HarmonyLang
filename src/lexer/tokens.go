@@ -76,7 +76,6 @@ const (
 	INTERFACE
 	IF
 	ELSE
-	FOREACH
 	WHILE
 	FOR
 	EXPORT
@@ -109,7 +108,6 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"function":  FN,
 	"if":        IF,
 	"else":      ELSE,
-	"foreach":   FOREACH,
 	"while":     WHILE,
 	"for":       FOR,
 	"export":    EXPORT,
@@ -266,8 +264,6 @@ func (kind TokenKind) String() string {
 		return "if"
 	case ELSE:
 		return "else"
-	case FOREACH:
-		return "foreach"
 	case FOR:
 		return "for"
 	case WHILE:

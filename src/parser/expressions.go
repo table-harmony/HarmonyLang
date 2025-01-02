@@ -11,7 +11,6 @@ import (
 func parse_expression(parser *parser, bp binding_power) ast.Expression {
 	token := parser.current_token()
 	nud_handler, exists := nud_lookup[token.Kind]
-
 	if !exists {
 		panic(fmt.Sprintf("NUD Handler expected for token %s\n", token.Kind.String()))
 	}
@@ -119,7 +118,6 @@ func parse_call_expression(parser *parser, left ast.Expression, bp binding_power
 
 	parser.expect(lexer.OPEN_PAREN)
 	parser.advance(1)
-
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_PAREN {
 		param := parse_expression(parser, default_bp)
 		params = append(params, param)
@@ -144,7 +142,6 @@ func parse_member_expression(parser *parser, left ast.Expression, bp binding_pow
 	parser.advance(1)
 
 	property, err := ast.ExpectExpression[ast.SymbolExpression](parse_primary_expression(parser))
-
 	if err != nil {
 		panic(err)
 	}

@@ -22,7 +22,7 @@ func NewVariableReference(identifier string, isConstant bool, value Value, expli
 	variable := VariableReference{
 		identifier,
 		isConstant,
-		value,
+		value.Clone(),
 		explicitType,
 	}
 

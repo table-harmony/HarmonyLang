@@ -54,7 +54,7 @@ func (a ArrayType) Equals(other Type) bool {
 type Array struct {
 	elements []Value
 	_type    ArrayType
-	methods  map[string]NativeFunction
+	methods  map[string]NativeFunctionValue
 }
 
 func NewEmptyArray(size Value, elementType Type) Array {
@@ -69,7 +69,7 @@ func NewEmptyArray(size Value, elementType Type) Array {
 	arr := Array{
 		elements: elements,
 		_type:    _type,
-		methods:  make(map[string]NativeFunction),
+		methods:  make(map[string]NativeFunctionValue),
 	}
 	arr.init_methods()
 	return arr
@@ -95,20 +95,20 @@ func NewArray(elements []Value, size Value, elementType Type) Array {
 	arr := Array{
 		elements: elements,
 		_type:    _type,
-		methods:  make(map[string]NativeFunction),
+		methods:  make(map[string]NativeFunctionValue),
 	}
 	arr.init_methods()
 	return arr
 }
 
-func (a Array) init_methods() {
+func (a *Array) init_methods() {
 	lengthFunc := func(args ...Value) Value {
 		if len(args) != 0 {
 			panic("Length method expects no arguments")
 		}
 		return NewNumber(float64(len(a.elements)))
 	}
-	a.methods["length"] = *NewNativeFunction(
+	a.methods["len"] = *NewNativeFunction(
 		lengthFunc,
 		[]Type{},
 		PrimitiveType{NumberType},
@@ -143,7 +143,9 @@ func (a Array) init_methods() {
 // Array implements the Value interface
 func (a Array) Type() Type { return a._type }
 func (a Array) Clone() Value {
-	return NewArray(make([]Value, 0), NewNumber(float64(a._type.size)), a._type.elementType)
+	newElements := make([]Value, len(a.elements))
+	copy(newElements, a.elements)
+	return NewArray(newElements, NewNumber(float64(a._type.size)), a._type.elementType)
 }
 func (a Array) String() string {
 	str := a._type.String() + "["
@@ -159,7 +161,7 @@ func (a Array) String() string {
 }
 
 // Array specific methods
-func (a Array) Get(property Value) Value {
+func (a *Array) Get(property Value) Value {
 	position, ok := property.(Number)
 	if !ok {
 		panic(fmt.Sprintf("expected index to be a number, but got %T", property))
@@ -180,7 +182,7 @@ func (a Array) Get(property Value) Value {
 
 	return a.elements[index]
 }
-func (a Array) Set(property Value, newValue Value) {
+func (a *Array) Set(property Value, newValue Value) {
 	index, ok := property.(Number)
 	if !ok {
 		panic(fmt.Sprintf("expected index to be a number, but got %T", property))
@@ -251,12 +253,12 @@ type MapEntry struct {
 }
 
 type Map struct {
-	entries []MapEntry
+	entries *[]MapEntry
 	_type   MapType
-	methods map[string]NativeFunction
+	methods map[string]NativeFunctionValue
 }
 
-func NewMap(entries []MapEntry, keyType Type, valueType Type) *Map {
+func NewMap(entries []MapEntry, keyType Type, valueType Type) Map {
 	_type := NewMapType(keyType, valueType)
 
 	for _, entry := range entries {
@@ -265,10 +267,10 @@ func NewMap(entries []MapEntry, keyType Type, valueType Type) *Map {
 		}
 	}
 
-	m := &Map{
-		entries: entries,
+	m := Map{
+		entries: &entries,
 		_type:   *_type,
-		methods: make(map[string]NativeFunction),
+		methods: make(map[string]NativeFunctionValue),
 	}
 	m.init_methods()
 
@@ -276,26 +278,28 @@ func NewMap(entries []MapEntry, keyType Type, valueType Type) *Map {
 }
 
 // Map implements the Value interface
-func (m *Map) Type() Type { return m._type }
-func (m *Map) Clone() Value {
-	return NewMap(m.entries, m._type.keyType, m._type.valueType)
+func (m Map) Type() Type { return m._type }
+func (m Map) Clone() Value {
+	copyEntries := make([]MapEntry, len(*m.entries))
+	copy(copyEntries, *m.entries)
+	return NewMap(copyEntries, m._type.keyType, m._type.valueType)
 }
-func (m *Map) String() string {
-	str := m._type.String() + "{"
-	for i, entry := range m.entries {
-		str += entry.key.String() + " -> " + entry.value.String()
+func (m Map) String() string {
+	str := m._type.String() + "{\n"
+	for i, entry := range *m.entries {
+		str += "  " + entry.key.String() + " -> " + entry.value.String()
 
-		if i < len(m.entries)-1 {
+		if i < len(*m.entries)-1 {
 			str += ", \n"
 		}
 	}
-	str += "}"
+	str += "\n}"
 	return str
 }
 
 // Map specific methods
 func (m *Map) Get(key Value) Value {
-	for _, entry := range m.entries {
+	for _, entry := range *(m.entries) {
 		if entry.key == key {
 			return entry.value
 		}
@@ -312,19 +316,18 @@ func (m *Map) Set(key Value, newValue Value) {
 			newValue.Type().String(), m._type.valueType.String()))
 	}
 
-	for i, entry := range m.entries {
+	for i, entry := range *m.entries {
 		if entry.key == key {
-			m.entries[i].value = newValue
+			(*m.entries)[i].value = newValue
 			return
 		}
 	}
-
-	m.entries = append(m.entries, MapEntry{key, newValue})
+	*(m.entries) = append(*m.entries, MapEntry{key, newValue})
 }
 func (m *Map) Keys() []Value {
 	keys := make([]Value, 0)
 
-	for _, entry := range m.entries {
+	for _, entry := range *(m.entries) {
 		keys = append(keys, entry.key)
 	}
 
@@ -332,13 +335,13 @@ func (m *Map) Keys() []Value {
 }
 func (m *Map) Values() []Value {
 	values := make([]Value, 0)
-	for _, entry := range m.entries {
+	for _, entry := range *(m.entries) {
 		values = append(values, entry.value)
 	}
 	return values
 }
 func (m *Map) IsExist(key Value) bool {
-	for _, entry := range m.entries {
+	for _, entry := range *(m.entries) {
 		if entry.key == key {
 			return true
 		}
@@ -348,7 +351,7 @@ func (m *Map) IsExist(key Value) bool {
 func (m *Map) Pop(key Value) Value {
 	index := -1
 
-	for i, entry := range m.entries {
+	for i, entry := range *(m.entries) {
 		if entry.key == key {
 			index = i
 			break
@@ -356,7 +359,7 @@ func (m *Map) Pop(key Value) Value {
 	}
 
 	if index != -1 {
-		m.entries = append(m.entries[:index], m.entries[index+1:]...)
+		*m.entries = append((*m.entries)[:index], (*m.entries)[index+1:]...)
 		return NewBoolean(true)
 	}
 
@@ -434,27 +437,28 @@ func (s SliceType) Equals(other Type) bool {
 }
 
 type Slice struct {
-	elements []Value
+	elements *[]Value
 	_type    SliceType
 	length   int
 	capacity int
-	methods  map[string]NativeFunction
+	methods  map[string]NativeFunctionValue
 }
 
 const INITIAL_CAPACITY = 8
 
-func NewSlice(elements []Value, elementType Type) *Slice {
+func NewSlice(elements []Value, elementType Type) Slice {
 	var capacity int
 	if elements != nil {
 		capacity = max(INITIAL_CAPACITY, len(elements)*2)
 	}
 
-	slice := &Slice{
-		elements: make([]Value, 0, capacity),
+	sliceElements := make([]Value, 0, capacity)
+	slice := Slice{
+		elements: &sliceElements,
 		_type:    *NewSliceType(elementType),
 		length:   0,
 		capacity: capacity,
-		methods:  make(map[string]NativeFunction),
+		methods:  make(map[string]NativeFunctionValue),
 	}
 
 	for _, element := range elements {
@@ -463,7 +467,7 @@ func NewSlice(elements []Value, elementType Type) *Slice {
 				elementType.String(), element.Type().String()))
 		}
 
-		slice.elements = append(slice.elements, element)
+		*(slice.elements) = append(*(slice.elements), element)
 		slice.length++
 	}
 
@@ -471,16 +475,18 @@ func NewSlice(elements []Value, elementType Type) *Slice {
 	return slice
 }
 
-func (s *Slice) Type() Type { return s._type }
-func (s *Slice) Clone() Value {
-	return NewSlice(s.elements, s._type.elementType)
+func (s Slice) Type() Type { return s._type }
+func (s Slice) Clone() Value {
+	copyElements := make([]Value, len(*s.elements))
+	copy(copyElements, *s.elements)
+	return NewSlice(copyElements, s._type.elementType)
 }
-func (s *Slice) String() string {
+func (s Slice) String() string {
 	str := s._type.String() + "["
-	for i, element := range s.elements {
+	for i, element := range *s.elements {
 		str += element.String()
 
-		if i < len(s.elements)-1 {
+		if i < len(*s.elements)-1 {
 			str += ", "
 		}
 	}
@@ -497,12 +503,12 @@ func (s *Slice) Append(value Value) {
 	if s.length == s.capacity {
 		newCap := s.capacity * 2
 		newElements := make([]Value, s.length, newCap)
-		copy(newElements, s.elements)
-		s.elements = newElements
+		copy(newElements, *s.elements)
+		s.elements = &newElements
 		s.capacity = newCap
 	}
 
-	s.elements = append(s.elements, value)
+	*(s.elements) = append(*s.elements, value)
 	s.length++
 }
 func (s *Slice) Get(property Value) Value {
@@ -517,14 +523,14 @@ func (s *Slice) Get(property Value) Value {
 
 	var index int = int(position.value)
 	if index < 0 {
-		index = len(s.elements) + index
+		index = len(*s.elements) + index
 	}
 
-	if index >= len(s.elements) {
-		panic(fmt.Sprintf("index out of range %v with length %v", index, len(s.elements)))
+	if index >= len(*s.elements) {
+		panic(fmt.Sprintf("index out of range %v with length %v", index, len(*s.elements)))
 	}
 
-	return s.elements[index]
+	return (*s.elements)[index]
 }
 func (s *Slice) Set(property Value, value Value) {
 	position, ok := property.(Number)
@@ -538,7 +544,7 @@ func (s *Slice) Set(property Value, value Value) {
 
 	var index int = int(position.value)
 	if index < 0 {
-		index = len(s.elements) + index
+		index = len(*s.elements) + index
 	}
 
 	if index >= s.length {
@@ -548,9 +554,9 @@ func (s *Slice) Set(property Value, value Value) {
 		panic(fmt.Sprintf("Cannot set %s in slice of %s",
 			value.Type().String(), s._type.elementType.String()))
 	}
-	s.elements[index] = value
+	(*s.elements)[index] = value
 }
-func (s *Slice) Slice(start Value, end Value) *Slice {
+func (s *Slice) Slice(start Value, end Value) Slice {
 	startValue, ok := start.(Number)
 	if !ok {
 		panic("Invalid start index must be a number")
@@ -580,20 +586,27 @@ func (s *Slice) Slice(start Value, end Value) *Slice {
 			startIndex, endIndex, s.length))
 	}
 
-	newSlice := &Slice{
-		elements: s.elements[startIndex:endIndex],
+	elements := (*s.elements)[startIndex:endIndex]
+	newSlice := Slice{
+		elements: &elements,
 		_type:    s._type,
 		length:   endIndex - startIndex,
 		capacity: s.capacity - startIndex,
-		methods:  make(map[string]NativeFunction),
+		methods:  make(map[string]NativeFunctionValue),
 	}
 	newSlice.init_methods()
 	return newSlice
 }
 
 func (s *Slice) init_methods() {
-	s.methods["length"] = *NewNativeFunction(
+	s.methods["len"] = *NewNativeFunction(
 		func(args ...Value) Value { return NewNumber(float64(s.length)) },
+		[]Type{},
+		PrimitiveType{NumberType},
+	)
+
+	s.methods["cap"] = *NewNativeFunction(
+		func(args ...Value) Value { return NewNumber(float64(s.capacity)) },
 		[]Type{},
 		PrimitiveType{NumberType},
 	)
@@ -642,5 +655,119 @@ func (s *Slice) init_methods() {
 		},
 		[]Type{PrimitiveType{NumberType}, PrimitiveType{NumberType}},
 		NewSliceType(s._type.elementType),
+	)
+
+	s.methods["each"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			function, ok := args[0].(FunctionValue)
+			if !ok {
+				panic("only functions are allowed as parameters for the each function")
+			}
+
+			slice := NewSlice(make([]Value, 0), function.returnType)
+
+			var isFunctionWithIndex bool = false
+			if len(function.parameters) == 2 {
+				isFunctionWithIndex = true
+
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(PrimitiveType{NumberType}) {
+					panic("First parameter type must be a number")
+				}
+
+				paramType = EvaluateType(function.parameters[1].Type, function.closure)
+				if !paramType.Equals(s._type.elementType) {
+					panic(fmt.Sprintf("Second parameter type must be %s, but got %s", s._type.elementType.String(), paramType.String()))
+				}
+			} else if len(function.parameters) == 1 {
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(s._type.elementType) {
+					panic(fmt.Sprintf("Parameter type must be %s, but got %s", s._type.elementType.String(), paramType.String()))
+				}
+			} else {
+				panic("forEach method expects exactly two arguments or one argument")
+			}
+
+			for index, element := range *s.elements {
+				var callValue Value
+				var err error
+				if isFunctionWithIndex {
+					callValue, err = function.Call(NewNumber(float64(index)), element)
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					callValue, err = function.Call(element)
+					if err != nil {
+						panic(err)
+					}
+				}
+
+				slice.Append(callValue)
+			}
+			return slice
+		},
+		[]Type{PrimitiveType{AnyType}},
+		NewSliceType(PrimitiveType{AnyType}),
+	)
+
+	s.methods["filter"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			function, ok := args[0].(FunctionValue)
+			if !ok {
+				panic("only functions are allowed as parameters for the filter function")
+			}
+
+			if !function.returnType.Equals(PrimitiveType{BooleanType}) {
+				panic("function return type must be a boolean for the filter function")
+			}
+
+			slice := NewSlice(make([]Value, 0), function.returnType)
+
+			var isFunctionWithIndex bool = false
+			if len(function.parameters) == 2 {
+				isFunctionWithIndex = true
+
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(PrimitiveType{NumberType}) {
+					panic("First parameter type must be a number")
+				}
+
+				paramType = EvaluateType(function.parameters[1].Type, function.closure)
+				if !paramType.Equals(s._type.elementType) {
+					panic(fmt.Sprintf("Second parameter type must be %s, but got %s", s._type.elementType.String(), paramType.String()))
+				}
+			} else if len(function.parameters) == 1 {
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(s._type.elementType) {
+					panic(fmt.Sprintf("Parameter type must be %s, but got %s", s._type.elementType.String(), paramType.String()))
+				}
+			} else {
+				panic("filter method expects exactly two arguments or one argument")
+			}
+
+			for index, element := range *s.elements {
+				var callValue Value
+				var err error
+				if isFunctionWithIndex {
+					callValue, err = function.Call(NewNumber(float64(index)), element)
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					callValue, err = function.Call(element)
+					if err != nil {
+						panic(err)
+					}
+				}
+
+				if booleanValue, ok := callValue.(Boolean); ok && booleanValue.value {
+					slice.Append(callValue)
+				}
+			}
+			return slice
+		},
+		[]Type{PrimitiveType{AnyType}},
+		NewSliceType(PrimitiveType{AnyType}),
 	)
 }

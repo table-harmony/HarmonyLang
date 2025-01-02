@@ -50,6 +50,9 @@ func (p PrimitiveType) String() string {
 	}
 }
 func (p PrimitiveType) Equals(other Type) bool {
+	if p.kind == AnyType {
+		return true
+	}
 	if otherPrim, ok := other.(PrimitiveType); ok {
 		return p.kind == otherPrim.kind
 	}
@@ -65,7 +68,7 @@ type Nil struct{}
 // Number implements Value interface
 func (n Number) Type() Type         { return PrimitiveType{NumberType} }
 func (n Number) Clone() Value       { return NewNumber(n.value) }
-func (n Number) String() string     { return fmt.Sprintf("type: number, value: %g", n.value) }
+func (n Number) String() string     { return fmt.Sprintf("%g", n.value) }
 func (n Number) Value() float64     { return n.value }
 func (n Number) IsInteger() bool    { return n.value == float64(int(n.value)) }
 func NewNumber(value float64) Value { return Number{value} }
@@ -73,14 +76,14 @@ func NewNumber(value float64) Value { return Number{value} }
 // Number implements Value interface
 func (s String) Type() Type        { return PrimitiveType{StringType} }
 func (s String) Clone() Value      { return NewString(s.value) }
-func (s String) String() string    { return fmt.Sprintf("type: string, value: %s", s.value) }
+func (s String) String() string    { return fmt.Sprintf("\"%s\"", s.value) }
 func (s String) Value() string     { return s.value }
 func NewString(value string) Value { return String{value} }
 
 // Boolean implements Value interface
 func (b Boolean) Type() Type      { return PrimitiveType{BooleanType} }
 func (b Boolean) Clone() Value    { return NewBoolean(b.value) }
-func (b Boolean) String() string  { return fmt.Sprintf("type: boolean, value: %t", b.value) }
+func (b Boolean) String() string  { return fmt.Sprintf("%t", b.value) }
 func (b Boolean) Value() bool     { return b.value }
 func NewBoolean(value bool) Value { return Boolean{value} }
 

@@ -134,8 +134,8 @@ func evaluate_binary_expression(expression ast.Expression, scope *Scope) Value {
 		panic(err)
 	}
 
-	left := evaluate_expression(expectedExpression.Left, scope)
 	right := evaluate_expression(expectedExpression.Right, scope)
+	left := evaluate_expression(expectedExpression.Left, scope)
 
 	switch expectedExpression.Operator.Kind {
 	case lexer.PLUS:
@@ -326,7 +326,7 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 
 	params := make([]Value, 0)
 	for _, param := range expectedExpression.Params {
-		params = append(params, evaluate_expression(param, scope))
+		params = append(params, evaluate_expression(param, scope).Clone())
 	}
 
 	result, err = function.Call(params...)
@@ -429,18 +429,25 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		panic(err)
 	}
 
-	owner := evaluate_expression(expectedExpression.Owner, scope)
-	property := evaluate_expression(expectedExpression.Property, scope)
+	ownerValue := evaluate_expression(expectedExpression.Owner, scope)
+	if ref, ok := ownerValue.(Reference); ok {
+		ownerValue = ref.Load()
+	}
 
-	switch owner := owner.(type) {
-	case *Array:
+	property := evaluate_expression(expectedExpression.Property, scope)
+	if ref, ok := property.(Reference); ok {
+		property = ref.Load()
+	}
+
+	switch owner := ownerValue.(type) {
+	case Array:
 		return owner.Get(property)
-	case *Map:
+	case Map:
 		return owner.Get(property)
 	case *Slice:
 		return owner.Get(property)
 	default:
-		panic("not implemened yet")
+		panic("not implemented yet")
 	}
 }
 
@@ -451,9 +458,12 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 	}
 
 	ownerValue := evaluate_expression(expectedExpression.Owner, scope)
+	if ref, ok := ownerValue.(Reference); ok {
+		ownerValue = ref.Load()
+	}
 
 	switch owner := ownerValue.(type) {
-	case *Array:
+	case Array:
 		property, ok := expectedExpression.Property.(ast.SymbolExpression)
 		if !ok {
 			panic("Array method must be a symbol")
@@ -464,7 +474,7 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 		panic(fmt.Sprintf("Unknown array method: %s", property.Value))
 
-	case *Slice:
+	case Slice:
 		property, ok := expectedExpression.Property.(ast.SymbolExpression)
 		if !ok {
 			panic("Slice method must be a symbol")
@@ -475,7 +485,7 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 		panic(fmt.Sprintf("Unknown slice method: %s", property.Value))
 
-	case *Map:
+	case Map:
 		property, ok := expectedExpression.Property.(ast.SymbolExpression)
 		if !ok {
 			panic("Map method must be a symbol")

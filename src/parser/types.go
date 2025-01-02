@@ -27,6 +27,7 @@ func register_type_nud(kind lexer.TokenKind, bp binding_power, handler type_nud_
 func create_type_token_lookups() {
 	// Primitive types
 	register_type_nud(lexer.IDENTIFIER, primary, parse_symbol_type)
+	register_type_nud(lexer.NIL, primary, parse_nil_type)
 
 	// Pointer
 	register_type_nud(lexer.STAR, unary, parse_pointer_type)
@@ -79,6 +80,13 @@ func parse_symbol_type(parser *parser) ast.Type {
 			Value: token.Value,
 		}
 	}
+}
+
+func parse_nil_type(parser *parser) ast.Type {
+	parser.expect(lexer.NIL)
+	parser.advance(1)
+
+	return ast.NilType{}
 }
 
 func parse_array_type(parser *parser) ast.Type {

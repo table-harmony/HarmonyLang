@@ -52,6 +52,8 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 		return PrimitiveType{NumberType}
 	case ast.BooleanType:
 		return PrimitiveType{BooleanType}
+	case ast.NilType:
+		return PrimitiveType{NilType}
 	case ast.FunctionType:
 		params := make([]ParameterType, len(t.Parameters))
 		for i, param := range t.Parameters {

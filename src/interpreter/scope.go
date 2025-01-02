@@ -45,7 +45,7 @@ func (scope *Scope) Resolve(identifier string) (Reference, error) {
 func (scope *Scope) String() string {
 	str := ""
 	for identifier, ref := range scope.storage {
-		str += fmt.Sprintf("%s: { %s } \n", identifier, ref.String())
+		str += fmt.Sprintf("%s: %s \n", identifier, ref.String())
 	}
 	return str
 }
