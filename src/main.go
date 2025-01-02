@@ -12,13 +12,13 @@ import (
 
 func main() {
 	start := time.Now()
-	interpret_file("examples/01.ham")
+	run("examples/01.ham")
 	duration := time.Since(start)
 
 	fmt.Printf("Duration: %v\n", duration)
 }
 
-func interpret_file(path string) {
+func run(path string) {
 	source := read_file(path)
 
 	tokens := lexer.Tokenize(source)

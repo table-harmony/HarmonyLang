@@ -54,7 +54,7 @@ func create_lookups() {
 
 	// Data types expressions
 	register_expression_handler[ast.ArrayInstantiationExpression](evaluate_array_instantiation_expression)
-	//register_expression_handler[ast.SliceExpression](evaluate_slice_expression)
+	register_expression_handler[ast.SliceInstantiationExpression](evaluate_slice_instantiation_expression)
 	register_expression_handler[ast.MapInstantiationExpression](evaluate_map_instantiation_expression)
 
 	// Primary expressions

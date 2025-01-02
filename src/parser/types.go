@@ -28,6 +28,9 @@ func create_type_token_lookups() {
 	// Primitive types
 	register_type_nud(lexer.IDENTIFIER, primary, parse_symbol_type)
 
+	// Pointer
+	register_type_nud(lexer.STAR, unary, parse_pointer_type)
+
 	// Data types
 	register_type_nud(lexer.MAP, primary, parse_map_type)
 	register_type_nud(lexer.OPEN_BRACKET, member, parse_array_type)
@@ -165,5 +168,14 @@ func parse_function_type(parser *parser) ast.Type {
 	return ast.FunctionType{
 		Parameters: parameters,
 		Return:     returnType,
+	}
+}
+
+func parse_pointer_type(parser *parser) ast.Type {
+	parser.expect(lexer.STAR)
+	parser.advance(1)
+
+	return ast.PointerType{
+		Target: parse_type(parser, unary),
 	}
 }

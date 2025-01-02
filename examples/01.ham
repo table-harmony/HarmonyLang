@@ -1,20 +1,40 @@
 // Slice
-//let nums = []number{1, 2, 3}
+//let nums: []number
+//nums = []number{1, 2, 3}
+//nums.append(10)
+//nums.append(10)
+//nums.set(1, 1010)
+//let nums2 = nums
+//nums2.slice(1, 3)
+//nums2.set(2, 100)
 
 // Array with type and size
-const nums: [3]number = [3]number{1, 2, 3}
 
-// Map
-const dict = map[string -> number]{
-  "one" -> 1,
-  "two" -> 2,
-}
+let arr = [3]number{1, 2, 3}
+const nums = *arr
+nums[1] = 10
+let nums2 = arr
+nums2[1] = 71
 
-const x = dict.get("two")
-dict.set("y", 3)
-const z = dict.get("y")
-dict.pop("one")
 
+//let a = nums.length()
+//let b = nums.get(1)
+//let c = nums.set(10, 1)
+//// Map
+//const dict = map[string -> number]{
+//  "one" -> 1,
+//  "two" -> 2,
+//}
+//
+//const dict2 = dict
+//dict2.set("y", 3)
+//const x = dict.get("two")
+//dict.set("y", 3)
+//const z = dict.get("y")
+//dict.pop("one")
+
+// dict1.intersect(dict2)
+// dict1.union(dict2)
 // dict.get("one")
 // dict.keys() --> list of all keys
 // dict.values() --> list of all values

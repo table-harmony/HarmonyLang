@@ -407,6 +407,22 @@ func evaluate_map_instantiation_expression(expression ast.Expression, scope *Sco
 	return NewMap(entries, keyType, valueType)
 }
 
+func evaluate_slice_instantiation_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.SliceInstantiationExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	elementType := EvaluateType(expectedExpression.ElementType, scope)
+
+	elements := make([]Value, 0)
+	for _, value := range expectedExpression.Elements {
+		elements = append(elements, evaluate_expression(value, scope))
+	}
+
+	return NewSlice(elements, elementType)
+}
+
 func evaluate_computed_member_expression(expression ast.Expression, scope *Scope) Value {
 	expectedExpression, err := ast.ExpectExpression[ast.ComputedMemberExpression](expression)
 	if err != nil {
@@ -420,6 +436,8 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 	case *Array:
 		return owner.Get(property)
 	case *Map:
+		return owner.Get(property)
+	case *Slice:
 		return owner.Get(property)
 	default:
 		panic("not implemened yet")
@@ -435,6 +453,28 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 	ownerValue := evaluate_expression(expectedExpression.Owner, scope)
 
 	switch owner := ownerValue.(type) {
+	case *Array:
+		property, ok := expectedExpression.Property.(ast.SymbolExpression)
+		if !ok {
+			panic("Array method must be a symbol")
+		}
+
+		if method, exists := owner.methods[property.Value]; exists {
+			return method
+		}
+		panic(fmt.Sprintf("Unknown array method: %s", property.Value))
+
+	case *Slice:
+		property, ok := expectedExpression.Property.(ast.SymbolExpression)
+		if !ok {
+			panic("Slice method must be a symbol")
+		}
+
+		if method, exists := owner.methods[property.Value]; exists {
+			return method
+		}
+		panic(fmt.Sprintf("Unknown slice method: %s", property.Value))
+
 	case *Map:
 		property, ok := expectedExpression.Property.(ast.SymbolExpression)
 		if !ok {

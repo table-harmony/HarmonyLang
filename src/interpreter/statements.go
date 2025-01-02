@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
@@ -144,9 +145,10 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 	case ast.ComputedMemberExpression:
 		owner := evaluate_expression(assigne.Owner, scope)
 		property := evaluate_expression(assigne.Property, scope)
+		litter.Dump(owner, owner.String())
 
 		switch owner := owner.(type) {
-		case *Array:
+		case Array:
 			owner.Set(property, value)
 
 		case *Map:

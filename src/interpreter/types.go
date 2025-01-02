@@ -67,6 +67,9 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 	case ast.ArrayType:
 		size := evaluate_expression(t.Size, scope)
 		return NewArrayType(size, EvaluateType(t.Underlying, scope))
+	case ast.PointerType:
+		value := EvaluateType(t.Target, scope)
+		return NewPointerType(value)
 	default:
 		return PrimitiveType{AnyType}
 	}

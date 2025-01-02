@@ -6,19 +6,28 @@ type PointerType struct {
 	valueType Type
 }
 
+func NewPointerType(valueType Type) *PointerType {
+	return &PointerType{valueType}
+}
+
 // PointerType implements the Type interface
 func (p PointerType) String() string {
 	return fmt.Sprintf("*%s", p.valueType.String())
 }
-
 func (p PointerType) Equals(other Type) bool {
+	if other == nil {
+		return true
+	}
+	if primitive, ok := other.(PrimitiveType); ok {
+		return primitive.kind == NilType
+	}
+
 	otherPtr, ok := other.(PointerType)
 	if !ok {
 		return false
 	}
 	return p.valueType.Equals(otherPtr.valueType)
 }
-
 func (p PointerType) DefaultValue() Value {
 	return Nil{}
 }

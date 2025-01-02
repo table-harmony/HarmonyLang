@@ -47,3 +47,9 @@ type FunctionType struct {
 }
 
 func (FunctionType) _type() {}
+
+type PointerType struct {
+	Target Type
+}
+
+func (PointerType) _type() {}

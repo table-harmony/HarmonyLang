@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type ArrayType struct {
@@ -9,7 +10,7 @@ type ArrayType struct {
 	elementType Type
 }
 
-func NewArrayType(size Value, elementType Type) *ArrayType {
+func NewArrayType(size Value, elementType Type) ArrayType {
 	validSize, ok := size.(Number)
 	if !ok {
 		panic("Array size must be a number")
@@ -24,7 +25,7 @@ func NewArrayType(size Value, elementType Type) *ArrayType {
 	}
 
 	length := int(validSize.value)
-	return &ArrayType{length, elementType}
+	return ArrayType{length, elementType}
 }
 
 // ArrayType implements the Type interface
@@ -53,9 +54,10 @@ func (a ArrayType) Equals(other Type) bool {
 type Array struct {
 	elements []Value
 	_type    ArrayType
+	methods  map[string]NativeFunction
 }
 
-func NewEmptyArray(size Value, elementType Type) *Array {
+func NewEmptyArray(size Value, elementType Type) Array {
 	_type := NewArrayType(size, elementType)
 	defaultValue := elementType.DefaultValue()
 
@@ -64,10 +66,16 @@ func NewEmptyArray(size Value, elementType Type) *Array {
 		elements = append(elements, defaultValue)
 	}
 
-	return &Array{elements, *_type}
+	arr := Array{
+		elements: elements,
+		_type:    _type,
+		methods:  make(map[string]NativeFunction),
+	}
+	arr.init_methods()
+	return arr
 }
 
-func NewArray(elements []Value, size Value, elementType Type) *Array {
+func NewArray(elements []Value, size Value, elementType Type) Array {
 	_type := NewArrayType(size, elementType)
 	if _type.size < len(elements) {
 		panic(fmt.Sprintf("Array size is less than the number of elements, expected %d", _type.size))
@@ -84,15 +92,60 @@ func NewArray(elements []Value, size Value, elementType Type) *Array {
 		}
 	}
 
-	return &Array{elements, *_type}
+	arr := Array{
+		elements: elements,
+		_type:    _type,
+		methods:  make(map[string]NativeFunction),
+	}
+	arr.init_methods()
+	return arr
+}
+
+func (a Array) init_methods() {
+	lengthFunc := func(args ...Value) Value {
+		if len(args) != 0 {
+			panic("Length method expects no arguments")
+		}
+		return NewNumber(float64(len(a.elements)))
+	}
+	a.methods["length"] = *NewNativeFunction(
+		lengthFunc,
+		[]Type{},
+		PrimitiveType{NumberType},
+	)
+
+	getFunc := func(args ...Value) Value {
+		if len(args) != 1 {
+			panic("Get method expects exactly one argument")
+		}
+		return a.Get(args[0])
+	}
+	a.methods["get"] = *NewNativeFunction(
+		getFunc,
+		[]Type{PrimitiveType{NumberType}},
+		a._type.elementType,
+	)
+
+	setFunc := func(args ...Value) Value {
+		if len(args) != 2 {
+			panic("Set method expects exactly two arguments")
+		}
+		a.Set(args[0], args[1])
+		return NewNil()
+	}
+	a.methods["set"] = *NewNativeFunction(
+		setFunc,
+		[]Type{PrimitiveType{NumberType}, a._type.elementType},
+		PrimitiveType{NilType},
+	)
 }
 
 // Array implements the Value interface
-func (a *Array) Type() Type { return a._type }
-func (a *Array) Clone() Value {
-	return NewArray(a.elements, NewNumber(float64(a._type.size)), a._type.elementType)
+func (a Array) Type() Type { return a._type }
+func (a Array) Clone() Value {
+	return NewArray(make([]Value, 0), NewNumber(float64(a._type.size)), a._type.elementType)
 }
-func (a *Array) String() string {
+func (a Array) String() string {
 	str := a._type.String() + "["
 	for i, element := range a.elements {
 		str += element.String()
@@ -106,7 +159,7 @@ func (a *Array) String() string {
 }
 
 // Array specific methods
-func (a *Array) Get(property Value) Value {
+func (a Array) Get(property Value) Value {
 	position, ok := property.(Number)
 	if !ok {
 		panic(fmt.Sprintf("expected index to be a number, but got %T", property))
@@ -121,13 +174,13 @@ func (a *Array) Get(property Value) Value {
 		index = len(a.elements) + index
 	}
 
-	if index >= len(a.elements) {
+	if index < 0 || index >= len(a.elements) {
 		panic(fmt.Sprintf("index out of range %v with length %v", index, len(a.elements)))
 	}
 
 	return a.elements[index]
 }
-func (a *Array) Set(property Value, newValue Value) {
+func (a Array) Set(property Value, newValue Value) {
 	index, ok := property.(Number)
 	if !ok {
 		panic(fmt.Sprintf("expected index to be a number, but got %T", property))
@@ -141,7 +194,7 @@ func (a *Array) Set(property Value, newValue Value) {
 		arrayIndex = len(a.elements) + arrayIndex
 	}
 
-	if arrayIndex >= len(a.elements) {
+	if arrayIndex >= len(a.elements) || arrayIndex < 0 {
 		panic(fmt.Sprintf("index out of range %v with length %v", arrayIndex, len(a.elements)))
 	}
 
@@ -351,5 +404,243 @@ func (m *Map) init_methods() {
 		popFunc,
 		[]Type{m._type.keyType},
 		PrimitiveType{BooleanType},
+	)
+}
+
+type SliceType struct {
+	elementType Type
+}
+
+func NewSliceType(elementType Type) *SliceType {
+	return &SliceType{elementType}
+}
+
+// SliceType implements the Type interface
+func (s SliceType) String() string      { return fmt.Sprintf("[]%s", s.elementType) }
+func (s SliceType) DefaultValue() Value { return NewSlice(nil, s.elementType) }
+func (s SliceType) Equals(other Type) bool {
+	if other == nil {
+		return true
+	}
+	if primitive, ok := other.(PrimitiveType); ok {
+		return primitive.kind == NilType
+	}
+
+	otherSlice, ok := other.(SliceType)
+	if !ok {
+		return false
+	}
+	return s.elementType.Equals(otherSlice.elementType)
+}
+
+type Slice struct {
+	elements []Value
+	_type    SliceType
+	length   int
+	capacity int
+	methods  map[string]NativeFunction
+}
+
+const INITIAL_CAPACITY = 8
+
+func NewSlice(elements []Value, elementType Type) *Slice {
+	var capacity int
+	if elements != nil {
+		capacity = max(INITIAL_CAPACITY, len(elements)*2)
+	}
+
+	slice := &Slice{
+		elements: make([]Value, 0, capacity),
+		_type:    *NewSliceType(elementType),
+		length:   0,
+		capacity: capacity,
+		methods:  make(map[string]NativeFunction),
+	}
+
+	for _, element := range elements {
+		if !elementType.Equals(element.Type()) {
+			panic(fmt.Sprintf("Slice element type mismatch: expected %s, got %s",
+				elementType.String(), element.Type().String()))
+		}
+
+		slice.elements = append(slice.elements, element)
+		slice.length++
+	}
+
+	slice.init_methods()
+	return slice
+}
+
+func (s *Slice) Type() Type { return s._type }
+func (s *Slice) Clone() Value {
+	return NewSlice(s.elements, s._type.elementType)
+}
+func (s *Slice) String() string {
+	str := s._type.String() + "["
+	for i, element := range s.elements {
+		str += element.String()
+
+		if i < len(s.elements)-1 {
+			str += ", "
+		}
+	}
+	str += "] { len: " + strconv.Itoa(s.length) + ", cap: " + strconv.Itoa(s.capacity) + " }"
+	return str
+}
+
+func (s *Slice) Append(value Value) {
+	if !s._type.elementType.Equals(value.Type()) {
+		panic(fmt.Sprintf("Cannot append %s to slice of %s",
+			value.Type().String(), s._type.elementType.String()))
+	}
+
+	if s.length == s.capacity {
+		newCap := s.capacity * 2
+		newElements := make([]Value, s.length, newCap)
+		copy(newElements, s.elements)
+		s.elements = newElements
+		s.capacity = newCap
+	}
+
+	s.elements = append(s.elements, value)
+	s.length++
+}
+func (s *Slice) Get(property Value) Value {
+	position, ok := property.(Number)
+	if !ok {
+		panic(fmt.Sprintf("expected index to be a number, but got %T", property))
+	}
+
+	if !position.IsInteger() {
+		panic(fmt.Sprintf("expected index to be an integer, but got %v", property))
+	}
+
+	var index int = int(position.value)
+	if index < 0 {
+		index = len(s.elements) + index
+	}
+
+	if index >= len(s.elements) {
+		panic(fmt.Sprintf("index out of range %v with length %v", index, len(s.elements)))
+	}
+
+	return s.elements[index]
+}
+func (s *Slice) Set(property Value, value Value) {
+	position, ok := property.(Number)
+	if !ok {
+		panic(fmt.Sprintf("expected index to be a number, but got %T", property))
+	}
+
+	if !position.IsInteger() {
+		panic(fmt.Sprintf("expected index to be an integer, but got %v", property))
+	}
+
+	var index int = int(position.value)
+	if index < 0 {
+		index = len(s.elements) + index
+	}
+
+	if index >= s.length {
+		panic(fmt.Sprintf("Index out of range [%d] with length %d", index, s.length))
+	}
+	if !s._type.elementType.Equals(value.Type()) {
+		panic(fmt.Sprintf("Cannot set %s in slice of %s",
+			value.Type().String(), s._type.elementType.String()))
+	}
+	s.elements[index] = value
+}
+func (s *Slice) Slice(start Value, end Value) *Slice {
+	startValue, ok := start.(Number)
+	if !ok {
+		panic("Invalid start index must be a number")
+	}
+
+	endValue, ok := end.(Number)
+	if !ok {
+		panic("Invalid end index must be a number")
+	}
+
+	if !startValue.IsInteger() || !endValue.IsInteger() {
+		panic("Invalid indices must be integers")
+	}
+
+	startIndex := int(startValue.value)
+	endIndex := int(endValue.value)
+
+	if startIndex < 0 {
+		startIndex = s.length + startIndex
+	}
+	if endIndex < 0 {
+		endIndex = s.length + endIndex
+	}
+
+	if startIndex < 0 || endIndex > s.length || startIndex > endIndex {
+		panic(fmt.Sprintf("Invalid slice indices [%d:%d] with length %d",
+			startIndex, endIndex, s.length))
+	}
+
+	newSlice := &Slice{
+		elements: s.elements[startIndex:endIndex],
+		_type:    s._type,
+		length:   endIndex - startIndex,
+		capacity: s.capacity - startIndex,
+		methods:  make(map[string]NativeFunction),
+	}
+	newSlice.init_methods()
+	return newSlice
+}
+
+func (s *Slice) init_methods() {
+	s.methods["length"] = *NewNativeFunction(
+		func(args ...Value) Value { return NewNumber(float64(s.length)) },
+		[]Type{},
+		PrimitiveType{NumberType},
+	)
+
+	s.methods["append"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("Append method expects exactly one argument")
+			}
+			s.Append(args[0])
+			return NewNil()
+		},
+		[]Type{s._type.elementType},
+		PrimitiveType{NilType},
+	)
+
+	s.methods["get"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("Get method expects exactly one argument")
+			}
+			return s.Get(args[0])
+		},
+		[]Type{PrimitiveType{NumberType}},
+		s._type.elementType,
+	)
+
+	s.methods["set"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 2 {
+				panic("Set method expects exactly two arguments")
+			}
+			s.Set(args[0], args[1])
+			return NewNil()
+		},
+		[]Type{PrimitiveType{NumberType}, PrimitiveType{NumberType}},
+		PrimitiveType{NilType},
+	)
+
+	s.methods["slice"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 2 {
+				panic("Slice method expects exactly two arguments")
+			}
+			return s.Slice(args[0], args[1])
+		},
+		[]Type{PrimitiveType{NumberType}, PrimitiveType{NumberType}},
+		NewSliceType(s._type.elementType),
 	)
 }
