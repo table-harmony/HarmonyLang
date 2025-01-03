@@ -3,7 +3,6 @@ package interpreter
 import (
 	"fmt"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
@@ -281,7 +280,6 @@ func (n NativeFunctionValue) Call(args ...Value) (Value, error) {
 		return NewNil(), fmt.Errorf("expected %d arguments but got %d", len(n.paramTypes), len(args))
 	}
 	for i, arg := range args {
-		litter.Dump(arg.Type(), n.paramTypes[i])
 		if !n.paramTypes[i].Equals(arg.Type()) {
 			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], arg.Type())
 		}

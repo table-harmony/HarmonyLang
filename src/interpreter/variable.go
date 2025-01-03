@@ -19,10 +19,11 @@ func NewVariableReference(identifier string, isConstant bool, value Value, expli
 		value = explicitType.DefaultValue()
 	}
 
+	value = value.Clone()
 	variable := VariableReference{
 		identifier,
 		isConstant,
-		value.Clone(),
+		value,
 		explicitType,
 	}
 

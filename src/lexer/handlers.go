@@ -7,14 +7,6 @@ import (
 
 func default_handler(kind TokenKind, value string) regex_handler {
 	return func(lex *lexer, _ *regexp.Regexp) {
-		// semi colon before close curly
-		if kind == CLOSE_CURLY && len(lex.Tokens) > 0 {
-			last := lex.peek()
-			if needs_semi_colon(last) {
-				lex.push(NewToken(SEMI_COLON, ";"))
-			}
-		}
-
 		lex.advance(len(value))
 		lex.push(NewToken(kind, value))
 	}
@@ -62,15 +54,6 @@ func comment_handler(lex *lexer, regex *regexp.Regexp) {
 
 func newline_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
-
-	if len(lex.Tokens) > 0 {
-		last := lex.peek()
-
-		if needs_semi_colon(last) {
-			lex.push(NewToken(SEMI_COLON, ";"))
-		}
-	}
-
 	lex.line++
 	lex.advance(len(match))
 }

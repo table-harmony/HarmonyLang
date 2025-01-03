@@ -138,6 +138,17 @@ func (a *Array) init_methods() {
 		[]Type{PrimitiveType{NumberType}, a._type.elementType},
 		PrimitiveType{NilType},
 	)
+
+	a.methods["slice"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 2 {
+				panic("Slice method expects exactly two arguments")
+			}
+			return a.Slice(args[0], args[1])
+		},
+		[]Type{PrimitiveType{NumberType}, PrimitiveType{NumberType}},
+		NewSliceType(a._type.elementType),
+	)
 }
 
 // Array implements the Value interface
@@ -207,6 +218,47 @@ func (a *Array) Set(property Value, newValue Value) {
 
 	a.elements[arrayIndex] = newValue
 }
+func (a *Array) Slice(start Value, end Value) Slice {
+	startValue, ok := start.(Number)
+	if !ok {
+		panic("Invalid start index must be a number")
+	}
+
+	endValue, ok := end.(Number)
+	if !ok {
+		panic("Invalid end index must be a number")
+	}
+
+	if !startValue.IsInteger() || !endValue.IsInteger() {
+		panic("Invalid indices must be integers")
+	}
+
+	startIndex := int(startValue.value)
+	endIndex := int(endValue.value)
+
+	if startIndex < 0 {
+		startIndex = a._type.size + startIndex
+	}
+	if endIndex < 0 {
+		endIndex = a._type.size + endIndex
+	}
+
+	if startIndex < 0 || endIndex > a._type.size || startIndex > endIndex {
+		panic(fmt.Sprintf("Invalid array indices [%d:%d] with length %d",
+			startIndex, endIndex, a._type.size))
+	}
+
+	elements := a.elements[startIndex:endIndex]
+	newSlice := Slice{
+		elements: &elements,
+		_type:    *NewSliceType(a._type.elementType),
+		length:   endIndex - startIndex,
+		capacity: a._type.size - startIndex,
+		methods:  make(map[string]NativeFunctionValue),
+	}
+	newSlice.init_methods()
+	return newSlice
+}
 
 type MapType struct {
 	keyType   Type
@@ -240,7 +292,7 @@ func (m MapType) Equals(other Type) bool {
 		return false
 	}
 
-	if !m.keyType.Equals(otherMap.keyType) || !m.valueType.Equals(otherMap.keyType) {
+	if !m.keyType.Equals(otherMap.keyType) || !m.valueType.Equals(otherMap.valueType) {
 		return false
 	}
 
@@ -365,6 +417,48 @@ func (m *Map) Pop(key Value) Value {
 
 	return NewBoolean(false)
 }
+func (m *Map) Intersect(other Value) Value {
+	otherMap, ok := other.(Map)
+	if !ok {
+		panic("Intersect method expects a map as the argument")
+	}
+
+	if !m._type.Equals(otherMap._type) {
+		panic(fmt.Sprintf("Map types mismatch: expected map of type %s, but got %s", m._type.String(), otherMap._type.String()))
+	}
+
+	newMap := NewMap(make([]MapEntry, 0), m._type.keyType, m._type.valueType)
+	for _, entry := range *m.entries {
+		if otherMap.IsExist(entry.key) {
+			*(newMap.entries) = append(*newMap.entries, MapEntry{entry.key.Clone(), entry.value.Clone()})
+		}
+	}
+
+	return newMap
+}
+func (m *Map) Union(other Value) Value {
+	otherMap, ok := other.(Map)
+	if !ok {
+		panic("Union method expects a map as the argument")
+	}
+
+	if !m._type.Equals(otherMap._type) {
+		panic(fmt.Sprintf("Map types mismatch: expected map of type %s, but got %s", m._type.String(), otherMap._type.String()))
+	}
+
+	newMap := NewMap(make([]MapEntry, 0), m._type.keyType, m._type.valueType)
+	for _, entry := range *m.entries {
+		*(newMap.entries) = append(*newMap.entries, MapEntry{entry.key.Clone(), entry.value.Clone()})
+	}
+
+	for _, entry := range *otherMap.entries {
+		if !newMap.IsExist(entry.key) {
+			*(newMap.entries) = append(*newMap.entries, MapEntry{entry.key.Clone(), entry.value.Clone()})
+		}
+	}
+
+	return newMap
+}
 
 func (m *Map) init_methods() {
 	getFunc := func(args ...Value) Value {
@@ -407,6 +501,50 @@ func (m *Map) init_methods() {
 		popFunc,
 		[]Type{m._type.keyType},
 		PrimitiveType{BooleanType},
+	)
+
+	m.methods["exists"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("exists methods accepts only one argument for key")
+			}
+			return NewBoolean(m.IsExist(args[0]))
+		},
+		[]Type{m._type.keyType},
+		PrimitiveType{BooleanType},
+	)
+
+	m.methods["exists"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("Exists method expects exactly 1 argument")
+			}
+			return NewBoolean(m.IsExist(args[0]))
+		},
+		[]Type{m._type.keyType},
+		PrimitiveType{BooleanType},
+	)
+
+	m.methods["intersect"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("Intersect method expects exactly 1 argument")
+			}
+			return m.Intersect(args[0])
+		},
+		[]Type{m._type},
+		m._type,
+	)
+
+	m.methods["union"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("Union method expects exactly 1 argument")
+			}
+			return m.Union(args[0])
+		},
+		[]Type{m._type},
+		m._type,
 	)
 }
 
@@ -494,6 +632,7 @@ func (s Slice) String() string {
 	return str
 }
 
+// Slice specific methods
 func (s *Slice) Append(value Value) {
 	if !s._type.elementType.Equals(value.Type()) {
 		panic(fmt.Sprintf("Cannot append %s to slice of %s",
@@ -685,7 +824,7 @@ func (s *Slice) init_methods() {
 					panic(fmt.Sprintf("Parameter type must be %s, but got %s", s._type.elementType.String(), paramType.String()))
 				}
 			} else {
-				panic("forEach method expects exactly two arguments or one argument")
+				panic("each method expects exactly two arguments or one argument")
 			}
 
 			for index, element := range *s.elements {
@@ -705,6 +844,7 @@ func (s *Slice) init_methods() {
 
 				slice.Append(callValue)
 			}
+
 			return slice
 		},
 		[]Type{PrimitiveType{AnyType}},

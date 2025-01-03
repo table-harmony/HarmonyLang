@@ -413,19 +413,36 @@ func parse_array_instantiation_expression(parser *parser) ast.Expression {
 	parser.advance(1)
 
 	var size ast.Expression
-	if parser.current_token().Kind != lexer.CLOSE_BRACKET {
+	elements := make([]ast.Expression, 0)
+	for parser.current_token().Kind != lexer.CLOSE_BRACKET {
 		size = parse_expression(parser, comma)
+
+		if parser.current_token().Kind == lexer.COMMA {
+			elements = append(elements, size)
+			parser.advance(1)
+		}
+
+		if parser.current_token().Kind == lexer.CLOSE_BRACKET && len(elements) != 0 {
+			elements = append(elements, size)
+		}
 	}
 
 	parser.expect(lexer.CLOSE_BRACKET)
 	parser.advance(1)
+
+	if len(elements) != 0 {
+		return ast.SliceInstantiationExpression{
+			ElementType: nil,
+			Elements:    elements,
+		}
+	}
 
 	elementType := parse_type(parser, default_bp)
 
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
 
-	elements := make([]ast.Expression, 0)
+	elements = make([]ast.Expression, 0)
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
 		element := parse_expression(parser, comma)
 		elements = append(elements, element)

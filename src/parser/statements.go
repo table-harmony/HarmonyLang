@@ -18,8 +18,7 @@ func parse_statement(parser *parser) ast.Statement {
 		ast = parse_expression_statement(parser)
 	}
 
-	if !parser.is_empty() {
-		parser.expect(lexer.SEMI_COLON)
+	for !parser.is_empty() && parser.current_token().Kind == lexer.SEMI_COLON {
 		parser.advance(1)
 	}
 

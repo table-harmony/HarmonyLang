@@ -15,7 +15,7 @@ const x = true && (false || true);  // true
 const y = 1 && "";                  // false
 
 const foo: number = 34.2;
-let bar: number[][] = 12.12;
+let bar: [][]number = [[1, 2], [2, 3], [3, 4]];
 
 const foo = "liron1";
 const bar = switch foo + 1 {
@@ -24,9 +24,7 @@ const bar = switch foo + 1 {
   _ -> "3",
 }
 
-const x = "";
-
-switch foo {
+const x = switch foo {
   case 1, 2 {
     1
   }
@@ -38,7 +36,15 @@ switch foo {
   }
 }
 
-let x = if true { 5; } else { x; }
+let x = if true { 
+  let y = 10
+  
+  y + 1 
+} else { 
+  2 
+}
+
+let x = true ? 5 : 2
 
 if foo == bar {
   x = 1;
@@ -54,11 +60,11 @@ for let i = 0; i < 10; i++ {
   }
 }
 
-const x = fn(a: number) {
+const generator = fn(a: number) {
   return fn(b: number) { return a + b }
 }
 
-let add2 = x(2)
+let add2 = generator(2)
 let a = add2(10)
 
 fn recursive(a) {
@@ -72,7 +78,7 @@ fn recursive(a) {
 a = recursive(10)
 
 
-const x = try {
+const result = try {
   1 / 0
 } catch {
   1 + 1
@@ -112,8 +118,8 @@ z(copy)
 
 const arr = [3]number{1, 2, 3}
 
-const ref = &arr
 const copy = arr
+const ref = &arr
 
 (*ref)[1] = 10
 
@@ -132,10 +138,25 @@ const dict = map[string -> number]{
 const dict2 = dict
 dict2["one"] = 12
 dict.set("y", 3)
+dict1.intersect(dict2)
 const x = dict.get("two")
 dict.set("y", 3)
 const z = dict.get("y")
 let s = dict.pop("one")
+let isExist = dict1.exists("one")
+
+const dict1 = map[string -> number]{
+  "one" -> 1,
+  "two" -> 2,
+}
+
+const dict2 = map[string -> number]{
+  "one" -> 4,
+  "three" -> 3,
+}
+
+let newDict1 = dict2.intersect(dict1)
+let newDict2 = dict1.union(dict2)
 
 
 let nums: []number
@@ -149,3 +170,36 @@ nums2.set(2, 100)
 nums2[2] = 123
 let x = nums2.len()
 let y = nums2.cap()
+
+let nums = [1, 2, 3]
+
+let x = nums
+  .each(fn(value) {
+    return value % 2 == 0
+  })
+  .filter(fn(value) {
+    return !value
+  })
+
+let x = [1, 2, 3]
+// x = [1,] // if one element slice instansiation has to have a comma
+
+interface Shape {
+  vertices: int
+
+  fn getSize() -> number
+}
+
+struct Circle : Shape {
+  vertices: 0
+  radius 
+
+  fn getSize() -> number {
+    return radius * radius * 3.14
+  }
+}
+
+const myCircle = Circle{
+  radius: 10
+}
+myCircle.getSize()

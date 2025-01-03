@@ -54,6 +54,19 @@ func (lexer *lexer) peek() Token {
 	return lexer.Tokens[len(lexer.Tokens)-1]
 }
 
+func (lex *lexer) insert_semi_colon(index int) {
+	semiColon := NewToken(SEMI_COLON, ";")
+	semiColon.Line = lex.Tokens[index].Line
+
+	newTokens := make([]Token, len(lex.Tokens)+1)
+	copy(newTokens[:index+1], lex.Tokens[:index+1])
+
+	newTokens[index+1] = semiColon
+	copy(newTokens[index+2:], lex.Tokens[index+1:])
+
+	lex.Tokens = newTokens
+}
+
 func (lexer *lexer) at_eof() bool {
 	return lexer.pos >= len(lexer.source)
 }

@@ -1,6 +1,8 @@
 package interpreter
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type PrimitiveType struct {
 	kind PrimitiveKind

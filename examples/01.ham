@@ -1,20 +1,12 @@
-// dict1.intersect(dict2)
-// dict1.union(dict2)
-// dict.get("one")
-// dict.keys() --> list of all keys
-// dict.values() --> list of all values
-// dict.items() --> pairs of key, value
-// "key" in dict  --> does key exist in dict
-// dict.pop("ss")
+//TODO: for maps 
+// entries method which returns a key and value for loops
+// keys method which returns a slice of all keys
+// values method which returns a slice of all values
 
-//let nums = []number{1, 2, 3}
-let arr = nums
-  .each(fn(value) {
-    return value % 2 == 0
-  }).filter(fn(value) {
-    return value == false
-  })
-  
-  // NUD HANDLER FOR DOT
+//TODO: for arrays
+// maybe this 1..10
+// enumerate method for index and value for loops
 
+//TODO: for slices
+// enumerate method for index and value for loops
 
