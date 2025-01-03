@@ -174,6 +174,9 @@ func evaluate_equals(left, right Value) Value {
 	case Boolean:
 		right, _ := ExpectValue[Boolean](right)
 		return NewBoolean(left.Value() == right.Value())
+	case ValueType:
+		right, _ := ExpectValue[ValueType](right)
+		return NewBoolean(left._type.Equals(right._type))
 	case Nil:
 		return NewBoolean(true) // nil equals nil
 	default:

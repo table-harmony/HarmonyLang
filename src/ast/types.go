@@ -58,3 +58,8 @@ type PointerType struct {
 }
 
 func (PointerType) _type() {}
+
+type AnyType struct {
+}
+
+func (AnyType) _type() {}

@@ -78,7 +78,9 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 			panic(err)
 		}
 		return ref.Load().Type()
-	default:
+	case ast.AnyType:
 		return PrimitiveType{AnyType}
+	default:
+		panic("invalid type")
 	}
 }

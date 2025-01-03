@@ -76,7 +76,7 @@ func parse_symbol_type(parser *parser) ast.Type {
 	case "string":
 		return ast.StringType{}
 	case "any":
-		return nil
+		return ast.AnyType{}
 	default:
 		return ast.SymbolType{
 			Value: token.Value,

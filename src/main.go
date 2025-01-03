@@ -12,7 +12,7 @@ import (
 
 func main() {
 	start := time.Now()
-	run("examples/01.ham")
+	run("src/testing.ham")
 	duration := time.Since(start)
 
 	fmt.Printf("Duration: %v\n", duration)

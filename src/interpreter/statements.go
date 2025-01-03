@@ -42,11 +42,18 @@ func evaluate_variable_declaration_statement(statement ast.Statement, scope *Sco
 		panic(err)
 	}
 
+	value := evaluate_expression(expectedStatement.Value, scope)
+
+	var _type Type = value.Type()
+	if expectedStatement.ExplicitType != nil {
+		_type = EvaluateType(expectedStatement.ExplicitType, scope)
+	}
+
 	variable := NewVariableReference(
 		expectedStatement.Identifier,
 		expectedStatement.IsConstant,
-		evaluate_expression(expectedStatement.Value, scope),
-		EvaluateType(expectedStatement.ExplicitType, scope),
+		value,
+		_type,
 	)
 
 	err = scope.Declare(variable)
