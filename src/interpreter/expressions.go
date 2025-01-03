@@ -106,7 +106,7 @@ func evaluate_prefix_expression(expression ast.Expression, scope *Scope) Value {
 		return NewNumber(rightResult.Value())
 
 	case lexer.TYPEOF:
-		return NewString(right.Type().String()) //TODO: should return a type not a string of the type
+		return NewValueType(right.Type())
 
 	default:
 		panic(fmt.Sprintf("Invalid operation %v with type %v",
@@ -444,10 +444,10 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		return owner.Get(property)
 	case Map:
 		return owner.Get(property)
-	case *Slice:
+	case Slice:
 		return owner.Get(property)
 	default:
-		panic("not implemented yet")
+		panic(fmt.Sprintf("Computed member expression not supported for type: %T", ownerValue))
 	}
 }
 
@@ -498,5 +498,42 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		panic(fmt.Sprintf("Unknown map method: %s", property.Value))
 	}
 
-	panic(fmt.Sprintf("Member expression not implemented for type: %T", ownerValue))
+	panic(fmt.Sprintf("Member expression not supported for type: %T", ownerValue))
+}
+
+func evaluate_range_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.RangeExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	lower := evaluate_expression(expectedExpression.Lower, scope)
+	upper := evaluate_expression(expectedExpression.Upper, scope)
+	step := evaluate_expression(expectedExpression.Step, scope)
+
+	lowerValue, err := ExpectValue[Number](lower)
+	if err != nil {
+		panic("Lower bound must be a number")
+	}
+
+	upperValue, err := ExpectValue[Number](upper)
+	if err != nil {
+		panic("Upper bound must be a number")
+	}
+
+	stepValue, err := ExpectValue[Number](step)
+	if err != nil {
+		panic("Step must be a number")
+	}
+
+	if stepValue.Value() == 0 {
+		panic("Step cannot be zero")
+	}
+
+	values := make([]Value, 0)
+	for i := lowerValue.Value(); (stepValue.Value() > 0 && i <= upperValue.Value()) || (stepValue.Value() < 0 && i >= upperValue.Value()); i += stepValue.Value() {
+		values = append(values, NewNumber(i))
+	}
+
+	return NewArray(values, NewNumber(float64(len(values))), PrimitiveType{NumberType})
 }

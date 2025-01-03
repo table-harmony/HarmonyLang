@@ -7,17 +7,23 @@ import (
 func evaluate_addition(left, right Value) Value {
 	switch left := left.(type) {
 	case Number:
-		right, err := ExpectValue[Number](right)
-		if err != nil {
-			panic("right operand must be a number")
+		switch right := right.(type) {
+		case Number:
+			return NewNumber(left.Value() + right.Value())
+		case String:
+			return NewString(fmt.Sprintf("%v%v", left.Value(), right.Value()))
+		default:
+			panic(fmt.Sprintf("cannot add values of type %v and %v", left.Type(), right.Type()))
 		}
-		return NewNumber(left.Value() + right.Value())
 	case String:
-		right, err := ExpectValue[String](right)
-		if err != nil {
-			panic("right operand must be a string")
+		switch right := right.(type) {
+		case Number:
+			return NewString(fmt.Sprintf("%v%v", left.Value(), right.Value()))
+		case String:
+			return NewString(left.Value() + right.Value())
+		default:
+			panic(fmt.Sprintf("cannot add values of type %v and %v", left.Type(), right.Type()))
 		}
-		return NewString(left.Value() + right.Value())
 	default:
 		panic(fmt.Sprintf("cannot add values of type %v and %v", left.Type(), right.Type()))
 	}

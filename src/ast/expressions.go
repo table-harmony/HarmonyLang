@@ -142,3 +142,11 @@ type TryCatchExpression struct {
 }
 
 func (TryCatchExpression) expression() {}
+
+type RangeExpression struct {
+	Lower Expression
+	Upper Expression
+	Step  Expression
+}
+
+func (RangeExpression) expression() {}

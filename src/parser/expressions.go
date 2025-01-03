@@ -17,6 +17,7 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 
 	left := nud_handler(parser)
 	token = parser.current_token()
+
 	for binding_power_lookup[token.Kind] > bp {
 		led_handler, exists := led_lookup[token.Kind]
 		if !exists {
@@ -466,5 +467,24 @@ func parse_array_instantiation_expression(parser *parser) ast.Expression {
 	return ast.SliceInstantiationExpression{
 		ElementType: elementType,
 		Elements:    elements,
+	}
+}
+
+func parse_range_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	parser.expect(lexer.DOT_DOT)
+	parser.advance(1)
+
+	upper := parse_expression(parser, bp)
+
+	var step ast.Expression = ast.NumberExpression{Value: 1}
+	if parser.current_token().Kind == lexer.DOT_DOT {
+		parser.advance(1)
+		step = parse_expression(parser, bp)
+	}
+
+	return ast.RangeExpression{
+		Lower: left,
+		Upper: upper,
+		Step:  step,
 	}
 }

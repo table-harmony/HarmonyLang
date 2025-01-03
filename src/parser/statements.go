@@ -168,40 +168,6 @@ func parse_struct_declaration_statement(parser *parser) ast.Statement {
 	panic("Not implemented yet")
 }
 
-func parse_for_statement(parser *parser) ast.Statement {
-	parser.expect(lexer.FOR)
-	parser.advance(1)
-
-	initializer := parse_statement(parser)
-	condition := parse_expression(parser, assignment)
-
-	parser.expect(lexer.SEMI_COLON)
-	parser.advance(1)
-
-	var post []ast.Expression
-	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_PAREN {
-		post = append(post, parse_expression(parser, default_bp))
-
-		if parser.current_token().Kind != lexer.CLOSE_PAREN {
-			parser.expect(lexer.COMMA)
-			parser.advance(1)
-		}
-	}
-
-	body := make([]ast.Statement, 0)
-	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
-		statement := parse_statement(parser)
-		body = append(body, statement)
-	}
-
-	return ast.ForStatement{
-		Initializer: initializer,
-		Condition:   condition,
-		Post:        post,
-		Body:        body,
-	}
-}
-
 func parse_loop_control_statement(parser *parser) ast.Statement {
 	token := parser.current_token()
 	parser.advance(2)
@@ -324,4 +290,130 @@ func parse_type_declaration_statement(parser *parser) ast.Statement {
 		Identifier: identifier,
 		Type:       parse_type(parser, default_bp),
 	}
+}
+
+func parse_for_statement(parser *parser) ast.Statement {
+	if is_iterator_for_statement(*parser) {
+		return parse_iterator_for_statement(parser)
+	}
+	return parse_traditional_for_statement(parser)
+}
+
+func parse_traditional_for_statement(parser *parser) ast.Statement {
+	parser.expect(lexer.FOR)
+	parser.advance(1)
+
+	// for { }
+	if parser.current_token().Kind == lexer.OPEN_CURLY {
+		return ast.TraditionalForStatement{Body: parse_for_body(parser)}
+	}
+
+	initializer := parse_statement(parser)
+
+	// for expression { }
+	if parser.current_token().Kind == lexer.OPEN_CURLY {
+		condition, err := ast.ExpectStatement[ast.ExpressionStatement](initializer)
+		if err != nil {
+			panic(err)
+		}
+
+		return ast.TraditionalForStatement{
+			Condition: condition.Expression,
+			Body:      parse_for_body(parser),
+		}
+	}
+
+	condition := parse_expression(parser, assignment)
+
+	parser.expect(lexer.SEMI_COLON)
+	parser.advance(1)
+
+	var post []ast.Statement
+	for !parser.is_empty() && parser.current_token().Kind != lexer.OPEN_CURLY {
+		statement := parse_statement(parser)
+		post = append(post, statement)
+
+		if parser.current_token().Kind != lexer.OPEN_CURLY {
+			parser.expect(lexer.COMMA)
+			parser.advance(1)
+		}
+	}
+
+	return ast.TraditionalForStatement{
+		Initializer: initializer,
+		Condition:   condition,
+		Post:        post,
+		Body:        parse_for_body(parser),
+	}
+}
+
+func parse_iterator_for_statement(parser *parser) ast.Statement {
+	parser.expect(lexer.FOR)
+	parser.advance(1)
+
+	keyIdentifier := parser.expect(lexer.IDENTIFIER).Value
+	parser.advance(1)
+
+	var valueIdentifier string
+	if parser.current_token().Kind != lexer.IN {
+		parser.expect(lexer.COMMA)
+		parser.advance(1)
+
+		valueIdentifier = parser.expect(lexer.IDENTIFIER).Value
+		parser.advance(1)
+	}
+
+	parser.expect(lexer.IN)
+	parser.advance(1)
+
+	iterator := parse_expression(parser, default_bp)
+
+	return ast.IteratorForStatement{
+		KeyIdentifier:   keyIdentifier,
+		ValueIdentifier: valueIdentifier,
+		Iterator:        iterator,
+		Body:            parse_for_body(parser),
+	}
+}
+
+func parse_for_body(parser *parser) []ast.Statement {
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	body := make([]ast.Statement, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		statement := parse_statement(parser)
+		body = append(body, statement)
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return body
+}
+
+func is_iterator_for_statement(parser parser) bool {
+	parser.expect(lexer.FOR)
+	parser.advance(1)
+
+	if parser.current_token().Kind != lexer.IDENTIFIER {
+		return false
+	}
+
+	parser.advance(1)
+
+	// Check for comma
+	if parser.current_token().Kind == lexer.COMMA {
+		parser.advance(1)
+
+		if parser.current_token().Kind != lexer.IDENTIFIER {
+			return false
+		}
+		parser.advance(1)
+	}
+
+	// Must see "in" keyword
+	isIterator := parser.current_token().Kind == lexer.IN
+
+	return isIterator
 }

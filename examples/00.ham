@@ -217,3 +217,63 @@ const myCircle = Circle{
   radius: 10
 }
 myCircle.getSize()
+
+for let i = 10; i < arr.len() - 1; i++ {
+  z += arr[i]
+}
+
+for expression {
+
+}
+
+for {
+  
+}
+
+let x = arr.len()
+let z = 0
+
+for let i = 0; i < arr.len(); i++ {
+  z += arr[i]
+  arr[i] = z
+}
+ 
+
+let arr = []number{1, 2, 3}
+
+let g = 0
+for index, value in arr {
+  g += value
+}
+
+const dict = map[string -> number]{
+  "one" -> 1,
+  "two" -> 2,
+}
+
+let keys = ""
+let valuesSum = 0
+for key, value in dict {
+  keys += key + "\n"
+  valuesSum += value
+}
+
+const dict = map[string -> number]{
+  "one" -> 1,
+  "two" -> 2,
+}
+
+let x = dict.keys()
+let y = dict.values()
+x[0] = "1000"
+
+const x = 2..10
+const x = 10..3..-2
+const x = 2..10..2
+
+let indices = ""
+let values = ""
+for index, value in 1..10 {
+  indices += " " + index
+  values +=  " " + value
+}

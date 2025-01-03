@@ -53,14 +53,23 @@ type ImportStatement struct {
 
 func (ImportStatement) statement() {}
 
-type ForStatement struct {
+type TraditionalForStatement struct {
 	Initializer Statement
 	Condition   Expression
-	Post        []Expression
+	Post        []Statement
 	Body        []Statement
 }
 
-func (ForStatement) statement() {}
+func (TraditionalForStatement) statement() {}
+
+type IteratorForStatement struct {
+	KeyIdentifier   string
+	ValueIdentifier string
+	Iterator        Expression
+	Body            []Statement
+}
+
+func (IteratorForStatement) statement() {}
 
 type BreakStatement struct{}
 

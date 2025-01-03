@@ -69,6 +69,7 @@ func create_token_lookups() {
 	// Logical
 	register_led(lexer.AND, logical, parse_binary_expression)
 	register_led(lexer.OR, logical, parse_binary_expression)
+	register_led(lexer.DOT_DOT, logical, parse_range_expression)
 
 	// Relational
 	register_led(lexer.LESS, relational, parse_binary_expression)

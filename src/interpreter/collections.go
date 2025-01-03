@@ -3,6 +3,8 @@ package interpreter
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/sanity-io/litter"
 )
 
 type ArrayType struct {
@@ -44,7 +46,11 @@ func (a ArrayType) Equals(other Type) bool {
 		return false
 	}
 
-	return otherArray.size != a.size || !a.elementType.Equals(otherArray.elementType)
+	if otherArray.size != a.size || !a.elementType.Equals(otherArray.elementType) {
+		return false
+	}
+
+	return true
 }
 
 type Array struct {
@@ -144,6 +150,124 @@ func (a *Array) init_methods() {
 		},
 		[]Type{PrimitiveType{NumberType}, PrimitiveType{NumberType}},
 		NewSliceType(a._type.elementType),
+	)
+
+	a.methods["each"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			function, ok := args[0].(FunctionValue)
+			if !ok {
+				panic("only functions are allowed as parameters for the each function")
+			}
+
+			arr := NewArray(make([]Value, 0), NewNumber(float64(a._type.size)), PrimitiveType{AnyType})
+
+			var isFunctionWithIndex bool = false
+			if len(function.parameters) == 2 {
+				isFunctionWithIndex = true
+
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(PrimitiveType{NumberType}) {
+					panic("First parameter type must be a number")
+				}
+
+				paramType = EvaluateType(function.parameters[1].Type, function.closure)
+				if !paramType.Equals(a._type.elementType) {
+					panic(fmt.Sprintf("Second parameter type must be %s, but got %s", a._type.elementType.String(), paramType.String()))
+				}
+			} else if len(function.parameters) == 1 {
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(a._type.elementType) {
+					panic(fmt.Sprintf("Parameter type must be %s, but got %s", a._type.elementType.String(), paramType.String()))
+				}
+			} else {
+				panic("each method expects exactly two arguments or one argument")
+			}
+
+			for index, element := range a.elements {
+				var callValue Value
+				var err error
+				if isFunctionWithIndex {
+					callValue, err = function.Call(NewNumber(float64(index)), element)
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					callValue, err = function.Call(element)
+					if err != nil {
+						panic(err)
+					}
+				}
+
+				arr.elements[index] = callValue
+			}
+			litter.Dump(arr.String(), arr.Type().String(), function.returnType.String())
+			return arr
+		},
+		[]Type{PrimitiveType{AnyType}},
+		NewArrayType(NewNumber(float64(a._type.size)), PrimitiveType{AnyType}),
+	)
+
+	a.methods["filter"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			function, ok := args[0].(FunctionValue)
+			if !ok {
+				panic("only functions are allowed as parameters for the filter function")
+			}
+
+			if !function.returnType.Equals(PrimitiveType{BooleanType}) {
+				panic("function return type must be a boolean for the filter function")
+			}
+
+			arr := NewArray(make([]Value, 0), NewNumber(float64(a._type.size)), function.returnType)
+
+			var isFunctionWithIndex bool = false
+			if len(function.parameters) == 2 {
+				isFunctionWithIndex = true
+
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(PrimitiveType{NumberType}) {
+					panic("First parameter type must be a number")
+				}
+
+				paramType = EvaluateType(function.parameters[1].Type, function.closure)
+				if !paramType.Equals(a._type.elementType) {
+					panic(fmt.Sprintf("Second parameter type must be %s, but got %s", a._type.elementType.String(), paramType.String()))
+				}
+			} else if len(function.parameters) == 1 {
+				paramType := EvaluateType(function.parameters[0].Type, function.closure)
+				if !paramType.Equals(a._type.elementType) {
+					panic(fmt.Sprintf("Parameter type must be %s, but got %s", a._type.elementType.String(), paramType.String()))
+				}
+			} else {
+				panic("filter method expects exactly two arguments or one argument")
+			}
+
+			for index, element := range a.elements {
+				var callValue Value
+				var err error
+				if isFunctionWithIndex {
+					callValue, err = function.Call(NewNumber(float64(index)), element)
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					callValue, err = function.Call(element)
+					if err != nil {
+						panic(err)
+					}
+				}
+
+				if booleanValue, ok := callValue.(Boolean); ok && booleanValue.value {
+					arr.elements[index] = element.Clone()
+				} else {
+					arr.elements[index] = arr._type.DefaultValue()
+				}
+			}
+			litter.Dump(arr.String())
+			return arr
+		},
+		[]Type{PrimitiveType{AnyType}},
+		NewArrayType(NewNumber(float64(a._type.size)), PrimitiveType{AnyType}),
 	)
 }
 
@@ -502,17 +626,6 @@ func (m *Map) init_methods() {
 	m.methods["exists"] = *NewNativeFunction(
 		func(args ...Value) Value {
 			if len(args) != 1 {
-				panic("exists methods accepts only one argument for key")
-			}
-			return NewBoolean(m.IsExist(args[0]))
-		},
-		[]Type{m._type.keyType},
-		PrimitiveType{BooleanType},
-	)
-
-	m.methods["exists"] = *NewNativeFunction(
-		func(args ...Value) Value {
-			if len(args) != 1 {
 				panic("Exists method expects exactly 1 argument")
 			}
 			return NewBoolean(m.IsExist(args[0]))
@@ -541,6 +654,42 @@ func (m *Map) init_methods() {
 		},
 		[]Type{m._type},
 		m._type,
+	)
+
+	m.methods["keys"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 1 {
+				panic("Union method expects exactly 1 argument")
+			}
+			return m.Union(args[0])
+		},
+		[]Type{m._type},
+		m._type,
+	)
+
+	m.methods["values"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 0 {
+				panic("Values method expects exactly 0 arguments")
+			}
+			values := m.Values()
+			return NewArray(values, NewNumber(float64(len(*(m.entries)))), m._type.valueType)
+		},
+		[]Type{},
+		NewArrayType(NewNumber(float64(len(*(m.entries)))), m._type.valueType),
+	)
+
+	m.methods["keys"] = *NewNativeFunction(
+		func(args ...Value) Value {
+			if len(args) != 0 {
+				panic("Keys method expects exactly 0 arguments")
+			}
+			values := m.Keys()
+			litter.Dump()
+			return NewArray(values, NewNumber(float64(len(*(m.entries)))), m._type.keyType)
+		},
+		[]Type{},
+		NewArrayType(NewNumber(float64(len(*(m.entries)))), m._type.keyType),
 	)
 }
 
@@ -898,7 +1047,7 @@ func (s *Slice) init_methods() {
 				}
 
 				if booleanValue, ok := callValue.(Boolean); ok && booleanValue.value {
-					slice.Append(callValue)
+					slice.Append(element.Clone())
 				}
 			}
 			return slice

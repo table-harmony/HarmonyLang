@@ -27,7 +27,8 @@ func create_lookups() {
 	register_statement_handler[ast.ExpressionStatement](evaluate_expression_statement)
 	register_statement_handler[ast.VariableDeclarationStatement](evaluate_variable_declaration_statement)
 	register_statement_handler[ast.MultiVariableDeclarationStatement](evaluate_multi_variable_declaration_statement)
-	register_statement_handler[ast.ForStatement](evaluate_for_statement)
+	register_statement_handler[ast.TraditionalForStatement](evaluate_traditional_for_statement)
+	register_statement_handler[ast.IteratorForStatement](evaluate_iterator_for_statement)
 	register_statement_handler[ast.ContinueStatement](evaluate_continue_statement)
 	register_statement_handler[ast.BreakStatement](evaluate_break_statement)
 	register_statement_handler[ast.ReturnStatement](evaluate_return_statement)
@@ -45,6 +46,7 @@ func create_lookups() {
 	register_expression_handler[ast.FunctionDeclarationExpression](evaluate_function_declaration_expression)
 	register_expression_handler[ast.ComputedMemberExpression](evaluate_computed_member_expression)
 	register_expression_handler[ast.MemberExpression](evaluate_member_expression)
+	register_expression_handler[ast.RangeExpression](evaluate_range_expression)
 
 	// Block expressions
 	register_expression_handler[ast.BlockExpression](evaluate_block_expression)

@@ -14,8 +14,11 @@ func (interpreter *interpreter) evalute_current_statement(scope *Scope) {
 }
 
 func evaluate_statement(statement ast.Statement, scope *Scope) {
-	statementType := reflect.TypeOf(statement)
+	if statement == nil {
+		return
+	}
 
+	statementType := reflect.TypeOf(statement)
 	if handler, exists := statement_lookup[statementType]; exists {
 		handler(statement, scope)
 	} else {
@@ -80,8 +83,161 @@ func evaluate_return_statement(statement ast.Statement, scope *Scope) {
 	panic(NewReturnError(evaluate_expression(expectedStatement.Value, scope)))
 }
 
-// TODO: implement
-func evaluate_for_statement(statement ast.Statement, env *Scope) {
+func evaluate_traditional_for_statement(statement ast.Statement, scope *Scope) {
+	expectedStatement, err := ast.ExpectStatement[ast.TraditionalForStatement](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	loopScope := NewScope(scope)
+	evaluate_statement(expectedStatement.Initializer, loopScope)
+
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(BreakError); ok {
+				return
+			}
+			panic(r)
+		}
+	}()
+
+	for {
+		condition := evaluate_expression(expectedStatement.Condition, loopScope)
+		if condition == nil {
+			condition = NewBoolean(true)
+		}
+		conditionValue, err := ExpectValue[Boolean](condition)
+		if err != nil {
+			panic(err)
+		}
+
+		if !conditionValue.Value() {
+			return
+		}
+
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					if _, ok := r.(ContinueError); ok {
+						return
+					}
+					panic(r)
+				}
+			}()
+
+			for _, statement := range expectedStatement.Body {
+				evaluate_statement(statement, loopScope)
+			}
+		}()
+
+		for _, statement := range expectedStatement.Post {
+			evaluate_statement(statement, loopScope)
+		}
+	}
+}
+
+func evaluate_iterator_for_statement(statement ast.Statement, scope *Scope) {
+	expectedStatement, err := ast.ExpectStatement[ast.IteratorForStatement](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	loopScope := NewScope(scope)
+	iteratorValue := evaluate_expression(expectedStatement.Iterator, loopScope)
+
+	var keyType, valueType Type
+	iterations := 0
+	switch iterator := iteratorValue.(type) {
+	case Array:
+		keyType = PrimitiveType{NumberType}
+		valueType = iterator._type.elementType
+		iterations = len(iterator.elements)
+	case Slice:
+		keyType = PrimitiveType{NumberType}
+		valueType = iterator._type.elementType
+		iterations = iterator.length
+	case Map:
+		keyType = iterator._type.keyType
+		valueType = iterator._type.valueType
+		iterations = len(*iterator.entries)
+	}
+
+	key := NewVariableReference(
+		expectedStatement.KeyIdentifier,
+		false,
+		keyType.DefaultValue(),
+		keyType,
+	)
+
+	err = loopScope.Declare(key)
+	if err != nil {
+		panic(err)
+	}
+
+	var value *VariableReference
+	if expectedStatement.ValueIdentifier != "" {
+		value = NewVariableReference(
+			expectedStatement.ValueIdentifier,
+			false,
+			valueType.DefaultValue(),
+			valueType,
+		)
+
+		err = loopScope.Declare(value)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(BreakError); ok {
+				return
+			}
+			panic(r)
+		}
+	}()
+
+	for i := 0; i < iterations; i++ {
+		switch iterator := iteratorValue.(type) {
+		case Array:
+			keyValue := NewNumber(float64(i))
+			key.Store(keyValue)
+
+			if value != nil {
+				value.Store(iterator.elements[i])
+			}
+		case Slice:
+			keyValue := NewNumber(float64(i))
+			key.Store(keyValue)
+
+			if value != nil {
+				value.Store((*iterator.elements)[i])
+			}
+		case Map:
+			current := (*iterator.entries)[i]
+			keyValue := current.key
+			key.Store(keyValue)
+			if value != nil {
+				value.Store(current.value)
+			}
+		}
+
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					if _, ok := r.(ContinueError); ok {
+						return
+					}
+					panic(r)
+				}
+			}()
+
+			for _, statement := range expectedStatement.Body {
+				evaluate_statement(statement, loopScope)
+			}
+		}()
+	}
 }
 
 func evaluate_function_declaration_statement(statement ast.Statement, scope *Scope) {
