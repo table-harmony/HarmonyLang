@@ -182,5 +182,21 @@ func evaluate_throw_statement(statement ast.Statement, scope *Scope) {
 }
 
 func evaluate_type_declaration_statement(statement ast.Statement, scope *Scope) {
-	panic("not implemented evaluate type declaration statement")
+	expectedStatement, err := ast.ExpectStatement[ast.TypeDeclarationStatement](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	valueType := NewValueType(EvaluateType(expectedStatement.Type, scope))
+	variable := NewVariableReference(
+		expectedStatement.Identifier,
+		true,
+		valueType,
+		valueType,
+	)
+
+	err = scope.Declare(variable)
+	if err != nil {
+		panic(err)
+	}
 }

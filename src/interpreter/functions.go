@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 
+	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
@@ -41,7 +42,7 @@ func (f FunctionType) Equals(other Type) bool {
 	if primitive, ok := other.(PrimitiveType); ok {
 		return primitive.kind == NilType
 	}
-
+	litter.Dump(other.String())
 	otherFn, ok := other.(FunctionType)
 	if !ok {
 		return false
@@ -61,7 +62,7 @@ func (f FunctionType) Equals(other Type) bool {
 		return true
 	}
 
-	return otherFn.returnType.Equals(f.returnType)
+	return f.returnType.Equals(otherFn.returnType)
 }
 func (f FunctionType) DefaultValue() Value {
 	return NewNil()

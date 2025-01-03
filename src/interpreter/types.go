@@ -72,6 +72,12 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 	case ast.PointerType:
 		value := EvaluateType(t.Target, scope)
 		return NewPointerType(value)
+	case ast.SymbolType:
+		ref, err := scope.Resolve(t.Value)
+		if err != nil {
+			panic(err)
+		}
+		return ref.Load().Type()
 	default:
 		return PrimitiveType{AnyType}
 	}

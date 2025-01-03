@@ -84,6 +84,11 @@ const result = try {
   1 + 1
 }
 
+type handler fn() -> any
+const y: handler = fn() {
+  return 1
+}
+
 let myFunction: fn(a: number) -> any = nil
 
 myFunction = fn(a: number) -> number {
@@ -158,7 +163,6 @@ const dict2 = map[string -> number]{
 let newDict1 = dict2.intersect(dict1)
 let newDict2 = dict1.union(dict2)
 
-
 let nums: []number
 nums = []number{1, 2, 3}
 nums.append(10)
@@ -180,6 +184,16 @@ let x = nums
   .filter(fn(value) {
     return !value
   })
+
+type handler fn() -> number
+
+const y: handler = fn() -> number {
+  return 1
+}
+
+const z: handler = fn(r) -> number {
+  return 12
+}
 
 let x = [1, 2, 3]
 // x = [1,] // if one element slice instansiation has to have a comma

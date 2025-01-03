@@ -44,11 +44,7 @@ func (a ArrayType) Equals(other Type) bool {
 		return false
 	}
 
-	if otherArray.size != a.size || !a.elementType.Equals(otherArray.elementType) {
-		return false
-	}
-
-	return true
+	return otherArray.size != a.size || !a.elementType.Equals(otherArray.elementType)
 }
 
 type Array struct {
