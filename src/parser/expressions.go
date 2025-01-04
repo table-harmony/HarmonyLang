@@ -349,13 +349,18 @@ func parse_try_catch_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.CATCH)
 	parser.advance(1)
 
-	//TODO: parse error as well
+	var errorIdentifier string
+	if parser.current_token().Kind != lexer.OPEN_CURLY {
+		errorIdentifier = parser.expect(lexer.IDENTIFIER).Value
+		parser.advance(1)
+	}
 
 	catchBlock := parse_block_expression(parser)
 
 	return ast.TryCatchExpression{
-		TryBlock:   tryBlock,
-		CatchBlock: catchBlock,
+		TryBlock:        tryBlock,
+		CatchBlock:      catchBlock,
+		ErrorIdentifier: errorIdentifier,
 	}
 }
 

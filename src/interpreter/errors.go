@@ -17,3 +17,11 @@ type ReturnError struct {
 func (ReturnError) Error() string            { return "return statement outside of function body" }
 func NewReturnError(value Value) ReturnError { return ReturnError{value} }
 func (r ReturnError) Value() Value           { return r.value }
+
+type ThrowError struct {
+	value Value
+}
+
+func (v ThrowError) Error() string         { return v.value.String() }
+func NewThrowError(value Value) ThrowError { return ThrowError{value} }
+func (t ThrowError) Value() Value          { return t.value }

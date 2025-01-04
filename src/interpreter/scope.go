@@ -24,8 +24,15 @@ func NewRootScope() *Scope {
 	scope := NewScope(nil)
 
 	// Declare native printing functions
-	scope.Declare(NewFunctionReference("print", print))
-	scope.Declare(NewFunctionReference("println", println))
+	scope.Declare(NewFunctionReference("print", native_print))
+	scope.Declare(NewFunctionReference("println", native_println))
+	scope.Declare(NewFunctionReference("printf", native_printf))
+
+	// Declare native type conversion functions
+	scope.Declare(NewFunctionReference("string", native_string))
+	scope.Declare(NewFunctionReference("bool", native_bool))
+	scope.Declare(NewFunctionReference("number", native_number))
+	scope.Declare(NewFunctionReference("error", native_error))
 
 	return scope
 }

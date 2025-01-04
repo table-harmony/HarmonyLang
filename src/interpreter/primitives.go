@@ -14,6 +14,7 @@ const (
 	NumberType PrimitiveKind = iota
 	StringType
 	BooleanType
+	ErrorType
 	NilType
 	AnyType
 )
@@ -65,6 +66,10 @@ func (p PrimitiveType) Equals(other Type) bool {
 type Number struct{ value float64 }
 type String struct{ value string }
 type Boolean struct{ value bool }
+type Error struct {
+	value   string
+	methods map[string]Function
+}
 type Nil struct{}
 
 // Number implements Value interface
@@ -94,3 +99,20 @@ func (Nil) Type() Type     { return PrimitiveType{NilType} }
 func (Nil) Clone() Value   { return Nil{} }
 func (Nil) String() string { return "nil" }
 func NewNil() Value        { return Nil{} }
+
+// Error implements Value interface
+func (e Error) Type() Type     { return PrimitiveType{ErrorType} }
+func (e Error) Clone() Value   { return NewError(e.value) }
+func (e Error) String() string { return fmt.Sprintf("Error: %s", e.value) }
+func NewError(value string) Value {
+	err := &Error{value, map[string]Function{}}
+	err.init_methods()
+
+	return err
+}
+
+func (e *Error) init_methods() {
+	e.methods["message"] = NewNativeFunction(func(args ...Value) Value {
+		return NewString(e.value)
+	}, []Type{}, PrimitiveType{StringType})
+}

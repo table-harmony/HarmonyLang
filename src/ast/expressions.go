@@ -137,8 +137,9 @@ type FunctionDeclarationExpression struct {
 func (FunctionDeclarationExpression) expression() {}
 
 type TryCatchExpression struct {
-	TryBlock   Expression
-	CatchBlock Expression
+	TryBlock        Expression
+	CatchBlock      Expression
+	ErrorIdentifier string
 }
 
 func (TryCatchExpression) expression() {}

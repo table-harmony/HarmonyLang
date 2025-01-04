@@ -359,9 +359,31 @@ func evaluate_try_catch_expression(expression ast.Expression, scope *Scope) (res
 		panic(err)
 	}
 
+	errorIdentifier := expectedExpression.ErrorIdentifier
+
 	defer func() {
 		if r := recover(); r != nil {
-			result = evaluate_expression(expectedExpression.CatchBlock, scope)
+			catchScope := NewScope(scope)
+			if errorIdentifier != "" {
+				var value Value
+				switch e := r.(type) {
+				case error:
+					value = NewError(e.Error())
+				case string:
+					value = NewError(e)
+				default:
+					value = NewError(fmt.Sprintf("%v", e))
+				}
+				ref := NewVariableReference(
+					errorIdentifier,
+					true,
+					value,
+					PrimitiveType{ErrorType},
+				)
+				catchScope.Declare(ref)
+			}
+
+			result = evaluate_expression(expectedExpression.CatchBlock, catchScope)
 		}
 	}()
 
@@ -502,6 +524,18 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 
 		panic(fmt.Sprintf("Unknown map method: %s", property.Value))
+
+	case *Error:
+		property, ok := expectedExpression.Property.(ast.SymbolExpression)
+		if !ok {
+			panic("Error method must be a symbol")
+		}
+
+		if method, exists := owner.methods[property.Value]; exists {
+			return method
+		}
+
+		panic(fmt.Sprintf("Unknown error method: %s", property.Value))
 	}
 
 	panic(fmt.Sprintf("Member expression not supported for type: %T", ownerValue))

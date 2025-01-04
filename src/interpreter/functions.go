@@ -287,7 +287,17 @@ func (n NativeFunctionValue) Clone() Value {
 	return NewNativeFunction(n.value, n.paramTypes, n.returnType)
 }
 func (n NativeFunctionValue) String() string {
-	return fmt.Sprintf("native_fn(%v) -> %v", n.paramTypes, n.returnType)
+	str := "native_fn("
+
+	for i, param := range n.paramTypes {
+		if i > 0 {
+			str += ", "
+		}
+		str += param.String()
+	}
+
+	str += ") -> " + n.returnType.String()
+	return str
 }
 func (n NativeFunctionValue) Call(args ...Value) (Value, error) {
 	if len(args) > len(n.paramTypes) {

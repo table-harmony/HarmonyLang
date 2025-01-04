@@ -1,8 +1,11 @@
-//fn foo() {
-//  return 1
-//}
-//
+fn foo() {
+  return 1
+}
+
 //const x = foo()
-//
+
 
 const x = [1, 2, 3].each(fn() -> number { return 100 })
+
+const g: fn() -> number = nil
+printf(number("1"))

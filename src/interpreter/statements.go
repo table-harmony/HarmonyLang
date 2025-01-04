@@ -340,7 +340,7 @@ func evaluate_throw_statement(statement ast.Statement, scope *Scope) {
 	}
 
 	value := evaluate_expression(expectedStatement.Value, scope)
-	panic(value)
+	panic(NewThrowError(value))
 }
 
 func evaluate_type_declaration_statement(statement ast.Statement, scope *Scope) {

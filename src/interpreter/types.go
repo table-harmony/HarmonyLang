@@ -48,6 +48,8 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 	}
 
 	switch t := astType.(type) {
+	case ast.ErrorType:
+		return PrimitiveType{ErrorType}
 	case ast.StringType:
 		return PrimitiveType{StringType}
 	case ast.NumberType:

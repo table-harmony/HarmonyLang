@@ -63,3 +63,8 @@ type AnyType struct {
 }
 
 func (AnyType) _type() {}
+
+type ErrorType struct {
+}
+
+func (ErrorType) _type() {}
