@@ -45,7 +45,7 @@ func (scope *Scope) Declare(ref Reference) error {
 		identifier = ref.identifier
 	case *FunctionReference:
 		identifier = ref.identifier
-	}
+	} //TODO: interface struct
 
 	if _, exists := scope.storage[identifier]; exists {
 		return fmt.Errorf("redeclaration of '%s'", identifier)

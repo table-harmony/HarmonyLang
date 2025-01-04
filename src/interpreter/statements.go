@@ -2,10 +2,12 @@ package interpreter
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
+	"github.com/table-harmony/HarmonyLang/src/parser"
 )
 
 func (interpreter *interpreter) evalute_current_statement(scope *Scope) {
@@ -363,11 +365,52 @@ func evaluate_type_declaration_statement(statement ast.Statement, scope *Scope) 
 	}
 }
 
-func evaluate_export_statement(statement ast.Statement, scope *Scope) {
-	expectedStatement, err := ast.ExpectStatement[ast.ExportStatement](statement)
+func evaluate_import_statement(statement ast.Statement, scope *Scope) {
+	expectedStatement, err := ast.ExpectStatement[ast.ImportStatement](statement)
 	if err != nil {
 		panic(err)
 	}
 
-	evaluate_statement(expectedStatement.Exported, scope)
+	var module Module
+
+	_, err = os.Stat(expectedStatement.Module)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			panic(err)
+		}
+
+		var exists bool
+		module, exists = standard_modules[expectedStatement.Module]
+		if !exists {
+			panic(fmt.Sprintf("module '%s' not found", expectedStatement.Module))
+		}
+	} else {
+		file, err := os.ReadFile(expectedStatement.Module)
+		if err != nil {
+			panic(err)
+		}
+		source := string(file)
+
+		tokens := lexer.Tokenize(source)
+		ast := parser.Parse(tokens)
+		moduleScope := Interpret(ast)
+
+		module := NewModule()
+		for _, ref := range moduleScope.storage {
+			switch ref := ref.(type) {
+			case *FunctionReference:
+				module.exports[ref.identifier] = ref.Clone()
+			case *VariableReference:
+				module.exports[ref.identifier] = ref.Clone()
+			} //TODO: interface struct
+		}
+	}
+
+	for key, value := range expectedStatement.NamedImports {
+		scope.Declare(NewVariableReference(key, true, module.exports[value], module.exports[value].Type()))
+	}
+
+	if expectedStatement.Alias != "" {
+		scope.Declare(NewVariableReference(expectedStatement.Alias, true, module, PrimitiveType{AnyType}))
+	}
 }

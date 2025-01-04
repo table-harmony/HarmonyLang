@@ -1,11 +1,20 @@
-fn foo() {
-  return 1
-}
+import math from "math"
+import time from "time"
+import random from "random"
+import x from "os"
 
-//const x = foo()
+printf(math.PI)
+printf(x.write_file("src/main2.go", "liron kaner"))
+printf(math.abs(-10))
+const arr = [1, 2, 3]
+println(arr)
 
+const shuffle = random.shuffle(arr)
+const choice = random.choice(arr)
 
-const x = [1, 2, 3].each(fn() -> number { return 100 })
+println(shuffle)
+println(choice)
 
-const g: fn() -> number = nil
-printf(number("1"))
+printf(random.string(10))
+time.sleep(1000)
+println(time.now())

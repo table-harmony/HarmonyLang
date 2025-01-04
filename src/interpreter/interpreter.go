@@ -1,8 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
-
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
@@ -11,7 +9,7 @@ type interpreter struct {
 	pos int
 }
 
-func Interpret(ast []ast.Statement) {
+func Interpret(ast []ast.Statement) *Scope {
 	interpreter := create_interpreter(ast)
 	scope := NewRootScope()
 
@@ -20,7 +18,7 @@ func Interpret(ast []ast.Statement) {
 		interpreter.advance(1)
 	}
 
-	fmt.Println(scope.String())
+	return scope
 }
 
 func create_interpreter(ast []ast.Statement) *interpreter {

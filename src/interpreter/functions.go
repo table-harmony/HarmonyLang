@@ -299,29 +299,18 @@ func (n NativeFunctionValue) String() string {
 	str += ") -> " + n.returnType.String()
 	return str
 }
+
 func (n NativeFunctionValue) Call(args ...Value) (Value, error) {
-	if len(args) > len(n.paramTypes) {
-		return NewNil(), fmt.Errorf("expected at most %d arguments but got %d", len(n.paramTypes), len(args))
+	if len(args) != len(n.paramTypes) {
+		return NewNil(), fmt.Errorf("expected %d arguments but got %d", len(n.paramTypes), len(args))
 	}
-
-	finalArgs := make([]Value, len(n.paramTypes))
-	for i := range n.paramTypes {
-		if i < len(args) {
-			finalArgs[i] = args[i]
-		} else {
-			defaultValue := n.paramTypes[i].DefaultValue()
-			if defaultValue == nil {
-				return NewNil(), fmt.Errorf("missing value for parameter %d", i)
-			}
-			finalArgs[i] = defaultValue
-		}
-
-		if !n.paramTypes[i].Equals(finalArgs[i].Type()) {
-			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], finalArgs[i].Type())
+	for i, arg := range args {
+		if !n.paramTypes[i].Equals(arg.Type()) {
+			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], arg.Type())
 		}
 	}
 
-	result := n.value(finalArgs...)
+	result := n.value(args...)
 
 	if !n.returnType.Equals(result.Type()) {
 		return NewNil(), fmt.Errorf("return value: expected %v but got %v", n.returnType, result.Type())

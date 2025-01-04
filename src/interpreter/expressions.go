@@ -536,6 +536,18 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 
 		panic(fmt.Sprintf("Unknown error method: %s", property.Value))
+
+	case *Module:
+		property, ok := expectedExpression.Property.(ast.SymbolExpression)
+		if !ok {
+			panic("Module member must be a symbol")
+		}
+
+		if method, exists := owner.exports[property.Value]; exists {
+			return method
+		}
+
+		panic("Unknown module member")
 	}
 
 	panic(fmt.Sprintf("Member expression not supported for type: %T", ownerValue))

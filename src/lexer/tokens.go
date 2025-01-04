@@ -78,7 +78,6 @@ const (
 	ELSE
 	WHILE
 	FOR
-	EXPORT
 	IN
 	RETURN
 	STATIC
@@ -93,6 +92,7 @@ const (
 	THROW
 	TYPEOF
 	TYPE
+	AS
 )
 
 var reserved_keywords map[string]TokenKind = map[string]TokenKind{
@@ -110,7 +110,6 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"else":      ELSE,
 	"while":     WHILE,
 	"for":       FOR,
-	"export":    EXPORT,
 	"in":        IN,
 	"return":    RETURN,
 	"struct":    STRUCT,
@@ -127,6 +126,7 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"throw":     THROW,
 	"typeof":    TYPEOF,
 	"type":      TYPE,
+	"as":        AS,
 }
 
 type Token struct {
@@ -268,8 +268,6 @@ func (kind TokenKind) String() string {
 		return "for"
 	case WHILE:
 		return "while"
-	case EXPORT:
-		return "export"
 	case IN:
 		return "in"
 	case RETURN:
@@ -306,6 +304,8 @@ func (kind TokenKind) String() string {
 		return "typeof"
 	case TYPE:
 		return "type"
+	case AS:
+		return "as"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

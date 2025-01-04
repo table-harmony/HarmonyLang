@@ -47,8 +47,9 @@ type FunctionDeclarationStatment struct {
 func (FunctionDeclarationStatment) statement() {}
 
 type ImportStatement struct {
-	Name string
-	From string
+	Module       string
+	Alias        string
+	NamedImports map[string]string
 }
 
 func (ImportStatement) statement() {}
@@ -105,9 +106,3 @@ type TypeDeclarationStatement struct {
 }
 
 func (TypeDeclarationStatement) statement() {}
-
-type ExportStatement struct {
-	Exported Statement
-}
-
-func (ExportStatement) statement() {}

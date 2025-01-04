@@ -142,21 +142,49 @@ func parse_import_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.IMPORT)
 	parser.advance(1)
 
-	name := parser.expect(lexer.IDENTIFIER).Value
-	parser.advance(1)
+	var alias string
+	var namedAlias string
+	var namedImports map[string]string
+	if parser.current_token().Kind == lexer.OPEN_CURLY {
+		parser.advance(1)
+		namedImports = make(map[string]string)
+
+		for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+			identifier := parser.expect(lexer.IDENTIFIER).Value
+			parser.advance(1)
+
+			if parser.current_token().Kind == lexer.AS {
+				parser.advance(1)
+				namedAlias = parser.expect(lexer.IDENTIFIER).Value
+				parser.advance(1)
+			} else {
+				namedAlias = identifier
+			}
+
+			namedImports[identifier] = namedAlias
+
+			if parser.current_token().Kind != lexer.CLOSE_CURLY {
+				parser.advance(1)
+			}
+		}
+
+		parser.expect(lexer.CLOSE_CURLY)
+		parser.advance(1)
+	} else {
+		alias = parser.expect(lexer.IDENTIFIER).Value
+		parser.advance(1)
+	}
 
 	parser.expect(lexer.FROM)
 	parser.advance(1)
 
-	from := parser.expect(lexer.STRING).Value
-	parser.advance(1)
-
-	parser.expect(lexer.SEMI_COLON)
+	module := parser.expect(lexer.STRING).Value
 	parser.advance(1)
 
 	return ast.ImportStatement{
-		Name: name,
-		From: from,
+		Module:       module,
+		Alias:        alias,
+		NamedImports: namedImports,
 	}
 }
 
@@ -416,13 +444,4 @@ func is_iterator_for_statement(parser parser) bool {
 	isIterator := parser.current_token().Kind == lexer.IN
 
 	return isIterator
-}
-
-func parse_export_statement(parser *parser) ast.Statement {
-	parser.expect(lexer.EXPORT)
-	parser.advance(1)
-
-	return ast.ExportStatement{
-		Exported: parse_statement(parser),
-	}
 }

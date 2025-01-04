@@ -128,7 +128,6 @@ func create_token_lookups() {
 	register_nud(lexer.TRY, default_bp, parse_try_catch_expression)
 
 	// Statements
-	register_statement(lexer.EXPORT, parse_export_statement)
 	register_statement(lexer.TYPE, parse_type_declaration_statement)
 	register_statement(lexer.IMPORT, parse_import_statement)
 	register_statement(lexer.LET, parse_multi_variable_declaration_statement)
