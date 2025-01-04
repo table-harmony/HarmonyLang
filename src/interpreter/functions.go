@@ -7,6 +7,7 @@ import (
 )
 
 type Function interface {
+	Value
 	Call(args ...Value) (Value, error)
 }
 
@@ -148,16 +149,23 @@ func (f FunctionValue) Call(args ...Value) (result Value, err error) {
 	}()
 
 	functionScope := NewScope(f.closure)
-	if len(args) != len(f.parameters) {
-		return nil, fmt.Errorf("expected %d arguments but got %d",
+	if len(args) > len(f.parameters) {
+		return nil, fmt.Errorf("expected at most %d arguments but got %d",
 			len(f.parameters), len(args))
 	}
 
 	for i, param := range f.parameters {
-		paramType := EvaluateType(param.Type, f.closure)
-		paramValue := args[i]
+		var paramValue Value
+		if i < len(args) {
+			paramValue = args[i]
+		} else if param.DefaultValue != nil {
+			paramValue = evaluate_expression(param.DefaultValue, functionScope)
+		} else {
+			return nil, fmt.Errorf("missing value for parameter '%s'", param.Name)
+		}
 
-		if paramValue.Type().Equals(paramType) && paramType.Equals(PrimitiveType{AnyType}) {
+		paramType := EvaluateType(param.Type, f.closure)
+		if !paramValue.Type().Equals(paramType) && !paramType.Equals(PrimitiveType{AnyType}) {
 			return nil, fmt.Errorf("parameter '%s' expected type '%s' but got '%s'",
 				param.Name, paramType.String(), paramValue.Type())
 		}
@@ -175,10 +183,10 @@ func (f FunctionValue) Call(args ...Value) (result Value, err error) {
 
 type FunctionReference struct {
 	identifier string
-	value      FunctionValue
+	value      Function
 }
 
-func NewFunctionReference(identifier string, value FunctionValue) *FunctionReference {
+func NewFunctionReference(identifier string, value Function) *FunctionReference {
 	return &FunctionReference{
 		identifier: identifier,
 		value:      value,
@@ -282,16 +290,28 @@ func (n NativeFunctionValue) String() string {
 	return fmt.Sprintf("native_fn(%v) -> %v", n.paramTypes, n.returnType)
 }
 func (n NativeFunctionValue) Call(args ...Value) (Value, error) {
-	if len(args) != len(n.paramTypes) {
-		return NewNil(), fmt.Errorf("expected %d arguments but got %d", len(n.paramTypes), len(args))
+	if len(args) > len(n.paramTypes) {
+		return NewNil(), fmt.Errorf("expected at most %d arguments but got %d", len(n.paramTypes), len(args))
 	}
-	for i, arg := range args {
-		if !n.paramTypes[i].Equals(arg.Type()) {
-			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], arg.Type())
+
+	finalArgs := make([]Value, len(n.paramTypes))
+	for i := range n.paramTypes {
+		if i < len(args) {
+			finalArgs[i] = args[i]
+		} else {
+			defaultValue := n.paramTypes[i].DefaultValue()
+			if defaultValue == nil {
+				return NewNil(), fmt.Errorf("missing value for parameter %d", i)
+			}
+			finalArgs[i] = defaultValue
+		}
+
+		if !n.paramTypes[i].Equals(finalArgs[i].Type()) {
+			return NewNil(), fmt.Errorf("argument %d: expected %v but got %v", i, n.paramTypes[i], finalArgs[i].Type())
 		}
 	}
 
-	result := n.value(args...)
+	result := n.value(finalArgs...)
 
 	if !n.returnType.Equals(result.Type()) {
 		return NewNil(), fmt.Errorf("return value: expected %v but got %v", n.returnType, result.Type())

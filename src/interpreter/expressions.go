@@ -295,8 +295,8 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 			panic(fmt.Sprintf("cannot call undefined variable %s", caller.Value))
 		}
 
-		function, err = ExpectValue[FunctionValue](ref.Load())
-		if err != nil {
+		var ok bool
+		if function, ok = ref.Load().(Function); !ok {
 			panic("cannot call non-function values")
 		}
 
@@ -318,8 +318,8 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 		}
 
 	default:
-		function = evaluate_expression(caller, scope).(Function)
-		if false {
+		var ok bool
+		if function, ok = evaluate_expression(caller, scope).(Function); !ok {
 			panic("cannot call non-function values")
 		}
 	}

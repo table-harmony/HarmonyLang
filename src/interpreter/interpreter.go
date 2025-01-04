@@ -13,7 +13,7 @@ type interpreter struct {
 
 func Interpret(ast []ast.Statement) {
 	interpreter := create_interpreter(ast)
-	scope := NewScope(nil)
+	scope := NewRootScope()
 
 	for !interpreter.is_empty() {
 		interpreter.evalute_current_statement(scope)

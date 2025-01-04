@@ -20,6 +20,16 @@ func NewScope(parent *Scope) *Scope {
 	}
 }
 
+func NewRootScope() *Scope {
+	scope := NewScope(nil)
+
+	// Declare native printing functions
+	scope.Declare(NewFunctionReference("print", print))
+	scope.Declare(NewFunctionReference("println", println))
+
+	return scope
+}
+
 func (scope *Scope) Declare(ref Reference) error {
 	var identifier string
 

@@ -1,11 +1,8 @@
-export fn foo() {
-  return 1
-}
+//fn foo() {
+//  return 1
+//}
+//
+//const x = foo()
+//
 
-const x = foo()
-
-fn bar() {
-  return 2
-}
-
-const y = bar()
+const x = [1, 2, 3].each(fn() -> number { return 100 })

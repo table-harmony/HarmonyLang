@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type SliceType struct {
@@ -86,7 +85,7 @@ func (s Slice) String() string {
 			str += ", "
 		}
 	}
-	str += "] { len: " + strconv.Itoa(s.length) + ", cap: " + strconv.Itoa(s.capacity) + " }"
+	str += "]"
 	return str
 }
 

@@ -13,7 +13,7 @@ import (
 func main() {
 	start := time.Now()
 	run("src/testing.ham")
-	// run_repl()
+	//run_repl()
 	duration := time.Since(start)
 
 	fmt.Printf("Duration: %v\n", duration)
