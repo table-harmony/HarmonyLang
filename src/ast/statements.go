@@ -105,3 +105,9 @@ type TypeDeclarationStatement struct {
 }
 
 func (TypeDeclarationStatement) statement() {}
+
+type ExportStatement struct {
+	Exported Statement
+}
+
+func (ExportStatement) statement() {}

@@ -86,8 +86,8 @@ Slices are dynamic-length views into arrays.
 #### From Arrays
 
 ```
-let arr = [42, 100, 200, 300]
-let slice = arr.slice(1, 3)  // Creates slice from index 1 to 3
+const arr = [42, 100, 200, 300]
+const slice = arr.slice(1, 3)  // Creates slice from index 1 to 3
 ```
 
 #### Using Range Notation
@@ -106,9 +106,9 @@ const baz = 2..10..2     // Creates slice with step of 2
 Adds elements to the end of the slice.
 
 ```
-let arr: []number
-arr = []number{42, 100, 200}
-arr.append(300)        // arr is now [42, 100, 200, 300]
+const slice: []number
+slice = []number{42, 100, 200}
+slice.append(300)        // slice is now [42, 100, 200, 300]
 ```
 
 #### cap()
@@ -116,8 +116,8 @@ arr.append(300)        // arr is now [42, 100, 200, 300]
 Returns the capacity of the slice (maximum length before reallocation).
 
 ```
-let arr = []number{42, 100, 200}
-let capacity = arr.cap()
+const arr = []number{42, 100, 200}
+const capacity = arr.cap()
 ```
 
 #### len()
@@ -125,8 +125,8 @@ let capacity = arr.cap()
 Returns the current length of the slice.
 
 ```
-let arr = []number{42, 100, 200}
-let length = arr.len()
+const arr = []number{42, 100, 200}
+const length = arr.len()
 ```
 
 ## Common Patterns
@@ -134,7 +134,7 @@ let length = arr.len()
 ### Array/Slice Iteration
 
 ```
-let arr = []number{42, 100, 200}
+const arr = []number{42, 100, 200}
 for index, value in arr {
     // Process index and value
 }
@@ -143,7 +143,7 @@ for index, value in arr {
 ### Chaining Methods
 
 ```
-let result = arr
+const result = arr
     .each(fn(value) {
         return value % 2 == 0
     })
@@ -155,8 +155,8 @@ let result = arr
 ### Copying
 
 ```
-let arr = [3]number{42, 100, 200}
-let copy = arr             // Creates a copy
+const arr = [3]number{42, 100, 200}
+const copy = arr             // Creates a copy
 ```
 
 ## Best Practices

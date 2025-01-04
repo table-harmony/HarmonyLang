@@ -1,0 +1,11 @@
+export fn foo() {
+  return 1
+}
+
+const x = foo()
+
+fn bar() {
+  return 2
+}
+
+const y = bar()

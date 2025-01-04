@@ -417,3 +417,12 @@ func is_iterator_for_statement(parser parser) bool {
 
 	return isIterator
 }
+
+func parse_export_statement(parser *parser) ast.Statement {
+	parser.expect(lexer.EXPORT)
+	parser.advance(1)
+
+	return ast.ExportStatement{
+		Exported: parse_statement(parser),
+	}
+}

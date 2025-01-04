@@ -3,7 +3,6 @@ package interpreter
 import (
 	"fmt"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/ast"
 )
 
@@ -14,6 +13,13 @@ type Function interface {
 type FunctionType struct {
 	parameters []ParameterType
 	returnType Type
+}
+
+func NewFunctionType(params []ParameterType, returnType Type) FunctionType {
+	return FunctionType{
+		parameters: params,
+		returnType: returnType,
+	}
 }
 
 type ParameterType struct {
@@ -42,7 +48,7 @@ func (f FunctionType) Equals(other Type) bool {
 	if primitive, ok := other.(PrimitiveType); ok {
 		return primitive.kind == NilType
 	}
-	litter.Dump(other.String())
+
 	otherFn, ok := other.(FunctionType)
 	if !ok {
 		return false
@@ -142,7 +148,6 @@ func (f FunctionValue) Call(args ...Value) (result Value, err error) {
 	}()
 
 	functionScope := NewScope(f.closure)
-
 	if len(args) != len(f.parameters) {
 		return nil, fmt.Errorf("expected %d arguments but got %d",
 			len(f.parameters), len(args))

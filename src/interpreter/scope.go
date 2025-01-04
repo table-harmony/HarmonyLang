@@ -1,16 +1,22 @@
 package interpreter
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/table-harmony/HarmonyLang/src/ast"
+)
 
 type Scope struct {
-	parent  *Scope
-	storage map[string]Reference
+	parent       *Scope
+	storage      map[string]Reference
+	declarations map[string]Declaration // New field for tracking declarations
 }
 
 func NewScope(parent *Scope) *Scope {
 	return &Scope{
-		parent:  parent,
-		storage: make(map[string]Reference),
+		parent:       parent,
+		storage:      make(map[string]Reference),
+		declarations: make(map[string]Declaration),
 	}
 }
 
@@ -40,6 +46,41 @@ func (scope *Scope) Resolve(identifier string) (Reference, error) {
 		return scope.parent.Resolve(identifier)
 	}
 	return nil, fmt.Errorf("undefined: %s", identifier)
+}
+
+func (s *Scope) DeclareForward(decl Declaration) error {
+	name := decl.Name()
+	if existing, exists := s.declarations[name]; exists {
+		if existing.IsComplete() {
+			return fmt.Errorf("%d '%s' already declared", existing.Kind(), name)
+		}
+		return nil // Allow multiple incomplete declarations
+	}
+	s.declarations[name] = decl
+	return nil
+}
+
+func (s *Scope) CompleteDeclaration(name string, stmt ast.Statement) error {
+	decl, exists := s.declarations[name]
+	if !exists {
+		return fmt.Errorf("no forward declaration found for '%s'", name)
+	}
+
+	if decl.IsComplete() {
+		return fmt.Errorf("%d '%s' already implemented", decl.Kind(), name)
+	}
+
+	return decl.Complete(stmt, s)
+}
+
+func (s *Scope) GetDeclaration(name string) (Declaration, bool) {
+	if decl, exists := s.declarations[name]; exists {
+		return decl, true
+	}
+	if s.parent != nil {
+		return s.parent.GetDeclaration(name)
+	}
+	return nil, false
 }
 
 func (scope *Scope) String() string {

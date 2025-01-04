@@ -36,6 +36,7 @@ func create_lookups() {
 	register_statement_handler[ast.AssignmentStatement](evaluate_assignment_statement)
 	register_statement_handler[ast.ThrowStatement](evaluate_throw_statement)
 	register_statement_handler[ast.TypeDeclarationStatement](evaluate_type_declaration_statement)
+	register_statement_handler[ast.ExportStatement](evaluate_export_statement)
 
 	// Expressions
 	register_expression_handler[ast.PrefixExpression](evaluate_prefix_expression)

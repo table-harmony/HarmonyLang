@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+
 	"github.com/table-harmony/HarmonyLang/src/ast"
 	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
@@ -69,6 +71,8 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 	case ast.ArrayType:
 		size := evaluate_expression(t.Size, scope)
 		return NewArrayType(size, EvaluateType(t.Underlying, scope))
+	case ast.SliceType:
+		return NewSliceType(EvaluateType(t.Underlying, scope))
 	case ast.PointerType:
 		value := EvaluateType(t.Target, scope)
 		return NewPointerType(value)
@@ -81,6 +85,6 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 	case ast.AnyType:
 		return PrimitiveType{AnyType}
 	default:
-		panic("invalid type")
+		panic(fmt.Sprintf("invalid type: %T", t))
 	}
 }

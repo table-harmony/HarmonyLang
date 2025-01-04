@@ -33,7 +33,7 @@ Function types can be declared using the `fn` keyword with parameter and return 
 type handler fn() -> any
 
 // Function variable with type annotation
-let foo: fn(bar: number) -> any = nil
+const foo: fn(bar: number) -> any = nil
 ```
 
 ### Function Type Assignment

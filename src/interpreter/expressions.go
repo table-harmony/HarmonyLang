@@ -292,7 +292,7 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 	case ast.SymbolExpression:
 		ref, err := scope.Resolve(caller.Value)
 		if err != nil {
-			panic(fmt.Sprintf("cannot assign to undefined variable %s", caller.Value))
+			panic(fmt.Sprintf("cannot call undefined variable %s", caller.Value))
 		}
 
 		function, err = ExpectValue[FunctionValue](ref.Load())
@@ -413,7 +413,13 @@ func evaluate_slice_instantiation_expression(expression ast.Expression, scope *S
 		panic(err)
 	}
 
-	elementType := EvaluateType(expectedExpression.ElementType, scope)
+	var elementType Type
+	if expectedExpression.ElementType != nil {
+		elementType = EvaluateType(expectedExpression.ElementType, scope)
+	} else {
+		element := evaluate_expression(expectedExpression.Elements[0], scope)
+		elementType = element.Type()
+	}
 
 	elements := make([]Value, 0)
 	for _, value := range expectedExpression.Elements {

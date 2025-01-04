@@ -266,7 +266,6 @@ func evaluate_function_declaration_statement(statement ast.Statement, scope *Sco
 	)
 
 	err = scope.Declare(ref)
-
 	if err != nil {
 		panic(err)
 	}
@@ -362,4 +361,13 @@ func evaluate_type_declaration_statement(statement ast.Statement, scope *Scope) 
 	if err != nil {
 		panic(err)
 	}
+}
+
+func evaluate_export_statement(statement ast.Statement, scope *Scope) {
+	expectedStatement, err := ast.ExpectStatement[ast.ExportStatement](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	evaluate_statement(expectedStatement.Exported, scope)
 }

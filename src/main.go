@@ -13,6 +13,7 @@ import (
 func main() {
 	start := time.Now()
 	run("src/testing.ham")
+	// run_repl()
 	duration := time.Since(start)
 
 	fmt.Printf("Duration: %v\n", duration)
@@ -24,6 +25,10 @@ func run(path string) {
 	tokens := lexer.Tokenize(source)
 	ast := parser.Parse(tokens)
 	interpreter.Interpret(ast)
+}
+
+func run_repl() {
+	interpreter.StartREPL()
 }
 
 func read_file(path string) string {
