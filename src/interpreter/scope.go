@@ -9,7 +9,7 @@ import (
 type Scope struct {
 	parent       *Scope
 	storage      map[string]Reference
-	declarations map[string]Declaration // New field for tracking declarations
+	declarations map[string]Declaration
 }
 
 func NewScope(parent *Scope) *Scope {
@@ -45,7 +45,9 @@ func (scope *Scope) Declare(ref Reference) error {
 		identifier = ref.identifier
 	case *FunctionReference:
 		identifier = ref.identifier
-	} //TODO: interface struct
+	case *StructReference:
+		identifier = ref.identifier
+	}
 
 	if _, exists := scope.storage[identifier]; exists {
 		return fmt.Errorf("redeclaration of '%s'", identifier)
@@ -66,7 +68,7 @@ func (scope *Scope) Resolve(identifier string) (Reference, error) {
 }
 
 func (s *Scope) DeclareForward(decl Declaration) error {
-	name := decl.Name()
+	name := decl.Identifier()
 	if existing, exists := s.declarations[name]; exists {
 		if existing.IsComplete() {
 			return fmt.Errorf("%d '%s' already declared", existing.Kind(), name)

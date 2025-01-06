@@ -493,3 +493,7 @@ func parse_range_expression(parser *parser, left ast.Expression, bp binding_powe
 		Step:  step,
 	}
 }
+
+func parse_struct_instantiation_expression(parser *parser) ast.Expression {
+	panic("xx")
+}

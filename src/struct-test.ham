@@ -1,0 +1,20 @@
+struct Rectangle {
+  static counter = 0
+
+  width: number
+  height: number
+
+  fn getSize() -> number {
+    return self.width * self.height
+  }
+
+  static fn getCounter() -> number {
+    return 1 
+  }
+}
+
+//const square = Rectangle{10, 20,}
+
+printf(Rectangle.getCounter())
+printf(Rectangle)
+//printf(Rectangle)

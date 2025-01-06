@@ -193,7 +193,67 @@ func parse_interface_declaration_statement(parser *parser) ast.Statement {
 }
 
 func parse_struct_declaration_statement(parser *parser) ast.Statement {
-	panic("Not implemented yet")
+	parser.expect(lexer.STRUCT)
+	parser.advance(1)
+
+	identifier := parser.expect(lexer.IDENTIFIER).Value
+	parser.advance(1)
+
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	properties := make([]ast.Property, 0)
+	methods := make([]ast.Method, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		isStatic := parser.current_token().Kind == lexer.STATIC
+		if isStatic {
+			parser.advance(1)
+		}
+
+		if parser.current_token().Kind == lexer.FN {
+			decl := parse_function_declaration_statement(parser).(ast.FunctionDeclarationStatment)
+			methods = append(methods, ast.Method{IsStatic: isStatic, Declaration: decl})
+		} else {
+			propertyIdentifier := parser.expect(lexer.IDENTIFIER).Value
+			parser.advance(1)
+
+			var explicitType ast.Type
+			if parser.current_token().Kind == lexer.COLON {
+				parser.advance(1)
+				explicitType = parse_type(parser, default_bp)
+			}
+
+			var defaultValue ast.Expression
+			if parser.current_token().Kind == lexer.ASSIGNMENT {
+				parser.advance(1)
+				defaultValue = parse_expression(parser, default_bp)
+			}
+
+			if defaultValue == nil && explicitType == nil {
+				panic(fmt.Errorf("cannot declare property '%s' without a type and a default value", propertyIdentifier))
+			}
+
+			properties = append(properties, ast.Property{
+				IsStatic:     isStatic,
+				Type:         explicitType,
+				DefaultValue: defaultValue,
+				Identifier:   propertyIdentifier,
+			})
+		}
+
+		for parser.current_token().Kind == lexer.SEMI_COLON {
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.StructDeclarationStatement{
+		Identifier: identifier,
+		Properties: properties,
+		Methods:    methods,
+	}
 }
 
 func parse_loop_control_statement(parser *parser) ast.Statement {

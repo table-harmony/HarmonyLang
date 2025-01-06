@@ -395,7 +395,7 @@ func evaluate_import_statement(statement ast.Statement, scope *Scope) {
 		ast := parser.Parse(tokens)
 		moduleScope := Interpret(ast)
 
-		module := NewModule()
+		module = *NewModule()
 		for _, ref := range moduleScope.storage {
 			switch ref := ref.(type) {
 			case *FunctionReference:
@@ -413,4 +413,67 @@ func evaluate_import_statement(statement ast.Statement, scope *Scope) {
 	if expectedStatement.Alias != "" {
 		scope.Declare(NewVariableReference(expectedStatement.Alias, true, module, PrimitiveType{AnyType}))
 	}
+}
+
+func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope) {
+	expectedStatement, err := ast.ExpectStatement[ast.StructDeclarationStatement](statement)
+	if err != nil {
+		panic(err)
+	}
+
+	properties := make(map[string]StructProperty, 0)
+	for _, property := range expectedStatement.Properties {
+		if _, exists := properties[property.Identifier]; exists {
+			panic(fmt.Errorf("Property '%s' already exists", property.Identifier))
+		}
+
+		var explicitType Type
+		var defaultValue Value
+
+		if property.Type != nil {
+			explicitType = EvaluateType(property.Type, scope)
+			if property.DefaultValue == nil {
+				defaultValue = explicitType.DefaultValue()
+			} else {
+				defaultValue = evaluate_expression(property.DefaultValue, scope)
+			}
+		} else {
+			defaultValue = evaluate_expression(property.DefaultValue, scope)
+			explicitType = defaultValue.Type()
+		}
+
+		properties[property.Identifier] = StructProperty{
+			isStatic:     property.IsStatic,
+			defaultValue: defaultValue,
+			_type:        explicitType,
+		}
+	}
+
+	methods := make(map[string]StructMethod, 0)
+	for _, method := range expectedStatement.Methods {
+		if _, exists := properties[method.Declaration.Identifier]; exists {
+			panic(fmt.Errorf("Property '%s' already exists", method.Declaration.Identifier))
+		}
+		if _, exists := methods[method.Declaration.Identifier]; exists {
+			panic(fmt.Errorf("Method '%s' already exists", method.Declaration.Identifier))
+		}
+
+		ptr := NewFunctionValue(
+			method.Declaration.Parameters,
+			method.Declaration.Body,
+			EvaluateType(method.Declaration.ReturnType, scope),
+			scope,
+		)
+		methods[method.Declaration.Identifier] = StructMethod{
+			value:    *ptr,
+			isStatic: method.IsStatic,
+		}
+	}
+
+	ref := NewStructReference(
+		expectedStatement.Identifier,
+		NewStruct(properties, methods),
+	)
+
+	scope.Declare(ref)
 }

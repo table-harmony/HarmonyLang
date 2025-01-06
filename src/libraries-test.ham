@@ -3,8 +3,9 @@ import time from "time"
 import random from "random"
 import x from "os"
 
-printf(math.PI)
-printf(x.write_file("src/main2.go", "liron kaner"))
+const as1 = random.float()
+printf(as1)
+//printf(x.write_file("src/main2.go", "liron kaner"))
 printf(math.abs(-10))
 const arr = [1, 2, 3]
 println(arr)
@@ -15,6 +16,6 @@ const choice = random.choice(arr)
 println(shuffle)
 println(choice)
 
-printf(random.string(10))
-time.sleep(1000)
+printf(random.string(12))
+//time.sleep(1000)
 println(time.now())

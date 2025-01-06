@@ -548,6 +548,26 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 
 		panic("Unknown module member")
+
+	case *StructReference:
+		symbol, ok := expectedExpression.Property.(ast.SymbolExpression)
+		if !ok {
+			panic("Struct member must be a symbol")
+		}
+
+		if property, exists := owner._type.properties[symbol.Value]; exists {
+			if property.isStatic {
+				return property.defaultValue
+			}
+		}
+
+		if method, exists := owner._type.methods[symbol.Value]; exists {
+			if method.isStatic {
+				return method.value
+			}
+		}
+
+		panic("Unknown struct member")
 	}
 
 	panic(fmt.Sprintf("Member expression not supported for type: %T", ownerValue))

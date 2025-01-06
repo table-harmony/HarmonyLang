@@ -16,7 +16,7 @@ const (
 
 type Declaration interface {
 	Kind() DeclarationKind
-	Name() string
+	Identifier() string
 	IsComplete() bool
 	Complete(ast.Statement, *Scope) error
 }
@@ -38,20 +38,20 @@ func NewFunctionDecl(identifier string, signature FunctionType) *FunctionDecl {
 }
 
 func (f *FunctionDecl) Kind() DeclarationKind          { return FunctionDeclaration }
-func (f *FunctionDecl) Name() string                   { return f.identifier }
+func (f *FunctionDecl) Identifier() string             { return f.identifier }
 func (f *FunctionDecl) IsComplete() bool               { return f.isComplete }
 func (f *FunctionDecl) Implementation() *FunctionValue { return f.impl }
 
-func (f *FunctionDecl) Complete(stmt ast.Statement, scope *Scope) error {
-	funcStmt, ok := stmt.(ast.FunctionDeclarationStatment)
+func (f *FunctionDecl) Complete(statement ast.Statement, scope *Scope) error {
+	expectedStatement, ok := statement.(ast.FunctionDeclarationStatment)
 	if !ok {
-		return fmt.Errorf("expected function declaration, got %T", stmt)
+		return fmt.Errorf("expected function declaration, got %T", expectedStatement)
 	}
 
 	f.impl = NewFunctionValue(
-		funcStmt.Parameters,
-		funcStmt.Body,
-		EvaluateType(funcStmt.ReturnType, scope),
+		expectedStatement.Parameters,
+		expectedStatement.Body,
+		EvaluateType(expectedStatement.ReturnType, scope),
 		scope,
 	)
 	f.isComplete = true

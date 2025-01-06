@@ -194,9 +194,11 @@ func NewFunctionReference(identifier string, value Function) *FunctionReference 
 }
 
 // FunctionReference implements the Value interface
-func (f *FunctionReference) Type() Type     { return f.value.Type() }
-func (f *FunctionReference) Clone() Value   { return f.value.Clone() }
-func (f *FunctionReference) String() string { return f.value.String() }
+func (f *FunctionReference) Type() Type   { return f.value.Type() }
+func (f *FunctionReference) Clone() Value { return f.value.Clone() }
+func (f *FunctionReference) String() string {
+	return f.identifier + ": " + f.value.String()
+}
 
 // FunctionReference implements the Reference interface
 func (f *FunctionReference) Load() Value { return f.value }
