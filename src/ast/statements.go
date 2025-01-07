@@ -107,22 +107,22 @@ type TypeDeclarationStatement struct {
 
 func (TypeDeclarationStatement) statement() {}
 
-type Property struct {
+type StructProperty struct {
 	Identifier   string
 	Type         Type
 	DefaultValue Expression
 	IsStatic     bool
 }
 
-type Method struct {
+type StructMethod struct {
 	IsStatic    bool
 	Declaration FunctionDeclarationStatment
 }
 
 type StructDeclarationStatement struct {
 	Identifier string
-	Properties []Property
-	Methods    []Method
+	Properties []StructProperty
+	Methods    []StructMethod
 }
 
 func (StructDeclarationStatement) statement() {}

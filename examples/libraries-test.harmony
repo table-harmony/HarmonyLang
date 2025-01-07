@@ -1,0 +1,22 @@
+import math from "math"
+import time from "time"
+import random from "random"
+import os from "os"
+
+printf(math.abs(-10))
+
+const float = random.float()
+println(float)
+
+printf(x.write_file("src/main2.go", "liron kaner"))
+
+const arr = [1, 2, 3]
+
+const shuffle = random.shuffle(arr)
+println(shuffle)
+
+const choice = random.choice(arr)
+println(choice)
+
+time.sleep(1000)
+println(time.now())

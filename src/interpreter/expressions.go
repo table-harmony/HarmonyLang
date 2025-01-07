@@ -319,9 +319,19 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 
 	default:
 		var ok bool
-		if function, ok = evaluate_expression(caller, scope).(Function); !ok {
-			panic("cannot call non-function values")
+
+		value := evaluate_expression(caller, scope)
+		function, ok = value.(Function)
+		if ok {
+			break
 		}
+
+		if ref, ok := value.(*FunctionReference); ok {
+			function = ref.value
+			break
+		}
+
+		panic("cannot call non-function values")
 	}
 
 	params := make([]Value, 0)
@@ -555,16 +565,18 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 			panic("Struct member must be a symbol")
 		}
 
-		if property, exists := owner._type.properties[symbol.Value]; exists {
-			if property.isStatic {
-				return property.defaultValue
+		if property, exists := owner._type.staticValues[symbol.Value]; exists {
+			if ptr, ok := property.(*Pointer); ok {
+				return ptr.Deref()
 			}
+			return property
 		}
 
-		if method, exists := owner._type.methods[symbol.Value]; exists {
-			if method.isStatic {
-				return method.value
+		if method, exists := owner._type.staticMethods[symbol.Value]; exists {
+			if ptr, ok := method.(*Pointer); ok {
+				return ptr.Deref()
 			}
+			return method
 		}
 
 		panic("Unknown struct member")

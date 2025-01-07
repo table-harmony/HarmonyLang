@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/sanity-io/litter"
 	"github.com/table-harmony/HarmonyLang/src/interpreter"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 	"github.com/table-harmony/HarmonyLang/src/parser"
@@ -13,7 +12,7 @@ import (
 
 func main() {
 	start := time.Now()
-	run("src/struct-test.ham")
+	run("examples/struct-test.harmony")
 	//run_repl()
 	duration := time.Since(start)
 
@@ -29,7 +28,6 @@ func run(path string) {
 	source := string(bytes)
 	tokens := lexer.Tokenize(source)
 	ast := parser.Parse(tokens)
-	litter.Dump(ast)
 	interpreter.Interpret(ast)
 }
 

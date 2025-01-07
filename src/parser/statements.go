@@ -202,8 +202,8 @@ func parse_struct_declaration_statement(parser *parser) ast.Statement {
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
 
-	properties := make([]ast.Property, 0)
-	methods := make([]ast.Method, 0)
+	properties := make([]ast.StructProperty, 0)
+	methods := make([]ast.StructMethod, 0)
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
 		isStatic := parser.current_token().Kind == lexer.STATIC
 		if isStatic {
@@ -212,7 +212,7 @@ func parse_struct_declaration_statement(parser *parser) ast.Statement {
 
 		if parser.current_token().Kind == lexer.FN {
 			decl := parse_function_declaration_statement(parser).(ast.FunctionDeclarationStatment)
-			methods = append(methods, ast.Method{IsStatic: isStatic, Declaration: decl})
+			methods = append(methods, ast.StructMethod{IsStatic: isStatic, Declaration: decl})
 		} else {
 			propertyIdentifier := parser.expect(lexer.IDENTIFIER).Value
 			parser.advance(1)
@@ -233,7 +233,7 @@ func parse_struct_declaration_statement(parser *parser) ast.Statement {
 				panic(fmt.Errorf("cannot declare property '%s' without a type and a default value", propertyIdentifier))
 			}
 
-			properties = append(properties, ast.Property{
+			properties = append(properties, ast.StructProperty{
 				IsStatic:     isStatic,
 				Type:         explicitType,
 				DefaultValue: defaultValue,

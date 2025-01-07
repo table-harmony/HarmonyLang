@@ -328,7 +328,23 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 		}
 
 	case ast.MemberExpression:
-		panic("TODO: member expression in assignment statement evaluation")
+		targetRef := evaluate_member_expression(assigne, scope)
+
+		if ref, ok := targetRef.(Reference); ok {
+			if err := ref.Store(value); err != nil {
+				panic(err)
+			}
+			return
+		}
+
+		if ptr, ok := targetRef.(*Pointer); ok {
+			if err := ptr.Deref().Store(value); err != nil {
+				panic(err)
+			}
+			return
+		}
+
+		panic("invalid assignment target")
 
 	default:
 		panic("invalid assignment target")
@@ -424,7 +440,7 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 	properties := make(map[string]StructProperty, 0)
 	for _, property := range expectedStatement.Properties {
 		if _, exists := properties[property.Identifier]; exists {
-			panic(fmt.Errorf("Property '%s' already exists", property.Identifier))
+			panic(fmt.Errorf("property '%s' already exists", property.Identifier))
 		}
 
 		var explicitType Type
@@ -443,19 +459,19 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 		}
 
 		properties[property.Identifier] = StructProperty{
-			isStatic:     property.IsStatic,
 			defaultValue: defaultValue,
 			_type:        explicitType,
+			isStatic:     property.IsStatic,
 		}
 	}
 
 	methods := make(map[string]StructMethod, 0)
 	for _, method := range expectedStatement.Methods {
 		if _, exists := properties[method.Declaration.Identifier]; exists {
-			panic(fmt.Errorf("Property '%s' already exists", method.Declaration.Identifier))
+			panic(fmt.Errorf("property '%s' already exists", method.Declaration.Identifier))
 		}
 		if _, exists := methods[method.Declaration.Identifier]; exists {
-			panic(fmt.Errorf("Method '%s' already exists", method.Declaration.Identifier))
+			panic(fmt.Errorf("method '%s' already exists", method.Declaration.Identifier))
 		}
 
 		ptr := NewFunctionValue(
@@ -472,7 +488,7 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 
 	ref := NewStructReference(
 		expectedStatement.Identifier,
-		NewStruct(properties, methods),
+		NewStructType(properties, methods),
 	)
 
 	scope.Declare(ref)

@@ -104,8 +104,6 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"import":    IMPORT,
 	"from":      FROM,
 	"fn":        FN,
-	"func":      FN,
-	"function":  FN,
 	"if":        IF,
 	"else":      ELSE,
 	"while":     WHILE,

@@ -1,5 +1,5 @@
 struct Rectangle {
-  static counter = 0
+  static counter = 129
 
   width: number
   height: number
@@ -9,12 +9,15 @@ struct Rectangle {
   }
 
   static fn getCounter() -> number {
-    return 1 
+    return 1123
   }
 }
 
 //const square = Rectangle{10, 20,}
 
-printf(Rectangle.getCounter())
+//printf(Rectangle.getCounter())
 printf(Rectangle)
-//printf(Rectangle)
+Rectangle.counter = 1231
+printf(Rectangle.counter)
+printf(Rectangle.getCounter())
+Rectangle.counter = 123
