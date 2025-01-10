@@ -56,7 +56,6 @@ func is_continuation_token(token Token) bool {
 		DOT,
 		PLUS,
 		DASH,
-		STAR,
 		SLASH,
 		PERCENT,
 		OR,

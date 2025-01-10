@@ -45,7 +45,7 @@ func (scope *Scope) Declare(ref Reference) error {
 		identifier = ref.identifier
 	case *FunctionReference:
 		identifier = ref.identifier
-	case *StructReference:
+	case *Struct:
 		identifier = ref.identifier
 	}
 

@@ -214,6 +214,12 @@ func parse_struct_declaration_statement(parser *parser) ast.Statement {
 			decl := parse_function_declaration_statement(parser).(ast.FunctionDeclarationStatment)
 			methods = append(methods, ast.StructMethod{IsStatic: isStatic, Declaration: decl})
 		} else {
+			isConst := false
+			if parser.current_token().Kind == lexer.CONST {
+				isConst = true
+				parser.advance(1)
+			}
+
 			propertyIdentifier := parser.expect(lexer.IDENTIFIER).Value
 			parser.advance(1)
 
@@ -238,6 +244,7 @@ func parse_struct_declaration_statement(parser *parser) ast.Statement {
 				Type:         explicitType,
 				DefaultValue: defaultValue,
 				Identifier:   propertyIdentifier,
+				IsConst:      isConst,
 			})
 		}
 

@@ -151,3 +151,15 @@ type RangeExpression struct {
 }
 
 func (RangeExpression) expression() {}
+
+type StructLiteralProperty struct {
+	Identifier Expression
+	Value      Expression
+}
+
+type StructLiteralExpression struct {
+	Constructor Expression
+	Properties  []StructLiteralProperty
+}
+
+func (StructLiteralExpression) expression() {}

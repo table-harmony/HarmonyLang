@@ -44,7 +44,7 @@ func ExpectType[T Type](value Type) (T, error) {
 // EvaluateType evaluates an AST type into a runtime type
 func EvaluateType(astType ast.Type, scope *Scope) Type {
 	if astType == nil {
-		return PrimitiveType{AnyType}
+		return PrimitiveType{NilType}
 	}
 
 	switch t := astType.(type) {

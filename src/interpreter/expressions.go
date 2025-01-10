@@ -137,6 +137,14 @@ func evaluate_binary_expression(expression ast.Expression, scope *Scope) Value {
 	right := evaluate_expression(expectedExpression.Right, scope)
 	left := evaluate_expression(expectedExpression.Left, scope)
 
+	if varRef, ok := right.(*VariableReference); ok {
+		right = varRef.value
+	}
+
+	if varRef, ok := left.(*VariableReference); ok {
+		left = varRef.value
+	}
+
 	switch expectedExpression.Operator.Kind {
 	case lexer.PLUS:
 		return evaluate_addition(left, right)
@@ -319,7 +327,6 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 
 	default:
 		var ok bool
-
 		value := evaluate_expression(caller, scope)
 		function, ok = value.(Function)
 		if ok {
@@ -500,35 +507,25 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		ownerValue = ref.Load()
 	}
 
+	property, ok := expectedExpression.Property.(ast.SymbolExpression)
+	if !ok {
+		panic("Member access must use symbol expression")
+	}
+
 	switch owner := ownerValue.(type) {
 	case Array:
-		property, ok := expectedExpression.Property.(ast.SymbolExpression)
-		if !ok {
-			panic("Array method must be a symbol")
-		}
-
 		if method, exists := owner.methods[property.Value]; exists {
 			return method
 		}
 		panic(fmt.Sprintf("Unknown array method: %s", property.Value))
 
 	case Slice:
-		property, ok := expectedExpression.Property.(ast.SymbolExpression)
-		if !ok {
-			panic("Slice method must be a symbol")
-		}
-
 		if method, exists := owner.methods[property.Value]; exists {
 			return method
 		}
 		panic(fmt.Sprintf("Unknown slice method: %s", property.Value))
 
 	case Map:
-		property, ok := expectedExpression.Property.(ast.SymbolExpression)
-		if !ok {
-			panic("Map method must be a symbol")
-		}
-
 		if method, exists := owner.methods[property.Value]; exists {
 			return method
 		}
@@ -536,11 +533,6 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		panic(fmt.Sprintf("Unknown map method: %s", property.Value))
 
 	case *Error:
-		property, ok := expectedExpression.Property.(ast.SymbolExpression)
-		if !ok {
-			panic("Error method must be a symbol")
-		}
-
 		if method, exists := owner.methods[property.Value]; exists {
 			return method
 		}
@@ -548,38 +540,45 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		panic(fmt.Sprintf("Unknown error method: %s", property.Value))
 
 	case *Module:
-		property, ok := expectedExpression.Property.(ast.SymbolExpression)
-		if !ok {
-			panic("Module member must be a symbol")
-		}
-
 		if method, exists := owner.exports[property.Value]; exists {
 			return method
 		}
 
 		panic("Unknown module member")
 
-	case *StructReference:
-		symbol, ok := expectedExpression.Property.(ast.SymbolExpression)
-		if !ok {
-			panic("Struct member must be a symbol")
+	case *Struct:
+		attr, exists := owner._type.storage[property.Value]
+		if !exists {
+			panic(fmt.Sprintf("Unknown struct member: %s", property.Value))
 		}
 
-		if property, exists := owner._type.staticValues[symbol.Value]; exists {
-			if ptr, ok := property.(*Pointer); ok {
-				return ptr.Deref()
-			}
-			return property
+		if !attr.isStatic {
+			panic(fmt.Sprintf("Cannot access non-static member '%s' on struct type", property.Value))
 		}
 
-		if method, exists := owner._type.staticMethods[symbol.Value]; exists {
-			if ptr, ok := method.(*Pointer); ok {
-				return ptr.Deref()
-			}
-			return method
+		return attr.Reference
+
+	case StructInstantiation:
+		attr, exists := owner.constructor._type.storage[property.Value]
+		if !exists {
+			panic(fmt.Sprintf("Unknown struct member: %s", property.Value))
 		}
 
-		panic("Unknown struct member")
+		if attr.isStatic {
+			panic(fmt.Sprintf("Cannot access static member '%s' on struct instantiation type", property.Value))
+		}
+
+		if ref, ok := attr.Reference.(*FunctionReference); ok {
+			ref.value.(*FunctionValue).closure.Declare(NewVariableReference("this", true, owner, owner.constructor.Type()))
+			return ref.value
+		}
+
+		ref, exists := owner.storage[property.Value]
+		if !exists {
+			panic(fmt.Sprintf("Member '%s' not initialized", property.Value))
+		}
+
+		return ref
 	}
 
 	panic(fmt.Sprintf("Member expression not supported for type: %T", ownerValue))
@@ -620,4 +619,68 @@ func evaluate_range_expression(expression ast.Expression, scope *Scope) Value {
 	}
 
 	return NewArray(values, NewNumber(float64(len(values))), PrimitiveType{NumberType})
+}
+
+func evaluate_struct_instantiation_expression(expression ast.Expression, scope *Scope) Value {
+	expectedExpression, err := ast.ExpectExpression[ast.StructLiteralExpression](expression)
+	if err != nil {
+		panic(err)
+	}
+
+	constructor := evaluate_expression(expectedExpression.Constructor, scope)
+	constructorStruct, err := ExpectValue[*Struct](constructor)
+	if err != nil {
+		panic(err)
+	}
+
+	storage := make(map[string]Reference)
+	for _, propertyExpression := range expectedExpression.Properties {
+		var propertyName string
+		var propertyValue Value
+
+		if propertyExpression.Identifier != nil {
+			identifier, err := ast.ExpectExpression[ast.SymbolExpression](propertyExpression.Identifier)
+			if err != nil {
+				panic(err)
+			}
+			propertyName = identifier.Value
+		} else {
+			for name, attr := range constructorStruct._type.storage {
+				if _, ok := attr.Reference.(*FunctionReference); !ok && !attr.isStatic && storage[name] == nil {
+					propertyName = name
+					break
+				}
+			}
+		}
+
+		structAttr, exists := constructorStruct._type.storage[propertyName]
+		if !exists {
+			panic(fmt.Sprintf("Property '%s' does not exist in struct", propertyName))
+		}
+
+		if structAttr.isStatic {
+			panic(fmt.Sprintf("Cannot assign to static property '%s'", propertyName))
+		}
+
+		if propertyExpression.Value != nil {
+			propertyValue = evaluate_expression(propertyExpression.Value, scope)
+		} else {
+			propertyValue = structAttr.Reference.Load()
+		}
+
+		storage[propertyName] = NewVariableReference(
+			propertyName,
+			structAttr.Reference.(*VariableReference).isConstant,
+			propertyValue,
+			structAttr.Reference.Type(),
+		)
+	}
+
+	for name, attr := range constructorStruct._type.storage {
+		if ref, ok := attr.Reference.(*VariableReference); ok && !attr.isStatic && storage[name] == nil {
+			storage[name] = NewVariableReference(name, ref.isConstant, attr.Load(), attr.Type())
+		}
+	}
+
+	return NewStructInstaniation(*constructorStruct, storage)
 }

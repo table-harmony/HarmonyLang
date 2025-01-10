@@ -112,6 +112,7 @@ type StructProperty struct {
 	Type         Type
 	DefaultValue Expression
 	IsStatic     bool
+	IsConst      bool
 }
 
 type StructMethod struct {

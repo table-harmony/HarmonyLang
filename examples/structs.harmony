@@ -1,0 +1,28 @@
+struct Rectangle {
+  static counter = 10
+
+  const width = 100
+  height: number
+  name: fn() -> number
+
+  fn get_size() -> number {
+    return this.width * this.height
+  }
+
+  static fn increment_counter() {
+    counter++
+  }
+}
+
+print(Rectangle)
+const rect = Rectangle{ 
+  name: fn() -> number { return 1 },
+  height: 13,
+}
+
+printf(rect)
+rect.width = 10
+printf(rect)
+
+//printf(typeof(rect.name))
+//printf(rect.getSize())

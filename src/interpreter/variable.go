@@ -36,7 +36,7 @@ func NewVariableReference(identifier string, isConstant bool, value Value, expli
 }
 
 // VariableReference implements the Value interface
-func (s *VariableReference) Type() Type     { return s.value.Type() }
+func (s *VariableReference) Type() Type     { return s.explicitType }
 func (s *VariableReference) Clone() Value   { return s.value.Clone() }
 func (s *VariableReference) String() string { return s.value.String() }
 
@@ -44,7 +44,7 @@ func (s *VariableReference) String() string { return s.value.String() }
 func (s *VariableReference) Load() Value { return s.value }
 func (s *VariableReference) Store(v Value) error {
 	if s.isConstant {
-		return fmt.Errorf("cannot assign to constant '%s'", s.identifier)
+		return fmt.Errorf("cannot assign to constant variable '%s'", s.identifier)
 	}
 
 	if !s.explicitType.Equals(v.Type()) && !s.explicitType.Equals(PrimitiveType{AnyType}) {

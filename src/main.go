@@ -12,7 +12,7 @@ import (
 
 func main() {
 	start := time.Now()
-	run("examples/struct-test.harmony")
+	run("examples/structs.harmony")
 	//run_repl()
 	duration := time.Since(start)
 

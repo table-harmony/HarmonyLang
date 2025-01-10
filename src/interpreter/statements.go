@@ -437,10 +437,10 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 		panic(err)
 	}
 
-	properties := make(map[string]StructProperty, 0)
+	storage := make(map[string]StructAttribute)
 	for _, property := range expectedStatement.Properties {
-		if _, exists := properties[property.Identifier]; exists {
-			panic(fmt.Errorf("property '%s' already exists", property.Identifier))
+		if _, exists := storage[property.Identifier]; exists {
+			panic(fmt.Errorf("attribute '%s' already exists", property.Identifier))
 		}
 
 		var explicitType Type
@@ -458,20 +458,16 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 			explicitType = defaultValue.Type()
 		}
 
-		properties[property.Identifier] = StructProperty{
-			defaultValue: defaultValue,
-			_type:        explicitType,
-			isStatic:     property.IsStatic,
+		ref := NewVariableReference(property.Identifier, property.IsConst, defaultValue, explicitType)
+		storage[property.Identifier] = StructAttribute{
+			Reference: ref,
+			isStatic:  property.IsStatic,
 		}
 	}
 
-	methods := make(map[string]StructMethod, 0)
 	for _, method := range expectedStatement.Methods {
-		if _, exists := properties[method.Declaration.Identifier]; exists {
-			panic(fmt.Errorf("property '%s' already exists", method.Declaration.Identifier))
-		}
-		if _, exists := methods[method.Declaration.Identifier]; exists {
-			panic(fmt.Errorf("method '%s' already exists", method.Declaration.Identifier))
+		if _, exists := storage[method.Declaration.Identifier]; exists {
+			panic(fmt.Errorf("attribute '%s' already exists", method.Declaration.Identifier))
 		}
 
 		ptr := NewFunctionValue(
@@ -480,15 +476,16 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 			EvaluateType(method.Declaration.ReturnType, scope),
 			scope,
 		)
-		methods[method.Declaration.Identifier] = StructMethod{
-			value:    *ptr,
-			isStatic: method.IsStatic,
+		ref := NewFunctionReference(method.Declaration.Identifier, ptr)
+		storage[method.Declaration.Identifier] = StructAttribute{
+			Reference: ref,
+			isStatic:  method.IsStatic,
 		}
 	}
 
-	ref := NewStructReference(
+	ref := NewStruct(
 		expectedStatement.Identifier,
-		NewStructType(properties, methods),
+		NewStructType(storage),
 	)
 
 	scope.Declare(ref)

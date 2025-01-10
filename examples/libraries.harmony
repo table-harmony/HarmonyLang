@@ -8,7 +8,7 @@ printf(math.abs(-10))
 const float = random.float()
 println(float)
 
-printf(x.write_file("src/main2.go", "liron kaner"))
+os.write_file("src/readme.txt", "liron kaner")
 
 const arr = [1, 2, 3]
 

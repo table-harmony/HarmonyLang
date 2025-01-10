@@ -139,6 +139,9 @@ func (f FunctionValue) Call(args ...Value) (result Value, err error) {
 			switch e := r.(type) {
 			case ReturnError:
 				result = e.Value()
+				if !f.returnType.Equals(result.Type()) {
+					panic(fmt.Sprintf("expected return type '%s' but got '%s'", f.returnType.String(), result.Type().String()))
+				}
 				err = nil
 			case error:
 				err = e
@@ -176,6 +179,10 @@ func (f FunctionValue) Call(args ...Value) (result Value, err error) {
 
 	for _, statement := range f.body {
 		evaluate_statement(statement, functionScope)
+	}
+
+	if !f.returnType.Equals(PrimitiveType{NilType}) {
+		panic(fmt.Sprintf("expected return type '%s' but got '%s'", f.returnType.String(), NewNil().Type().String()))
 	}
 
 	return NewNil(), nil

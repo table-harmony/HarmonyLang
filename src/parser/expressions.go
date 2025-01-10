@@ -494,6 +494,38 @@ func parse_range_expression(parser *parser, left ast.Expression, bp binding_powe
 	}
 }
 
-func parse_struct_instantiation_expression(parser *parser) ast.Expression {
-	panic("xx")
+func parse_struct_instantiation_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+	parser.expect(lexer.OPEN_CURLY)
+	parser.advance(1)
+
+	properties := make([]ast.StructLiteralProperty, 0)
+	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
+		if parser.current_token().Kind == lexer.IDENTIFIER && parser.next_token().Kind == lexer.COLON {
+			identifier := parse_expression(parser, default_bp)
+
+			parser.expect(lexer.COLON)
+			parser.advance(1)
+
+			properties = append(properties, ast.StructLiteralProperty{
+				Identifier: identifier,
+				Value:      parse_expression(parser, default_bp),
+			})
+		} else {
+			properties = append(properties, ast.StructLiteralProperty{
+				Value: parse_expression(parser, default_bp),
+			})
+		}
+
+		if parser.current_token().Kind == lexer.SEMI_COLON || parser.current_token().Kind == lexer.COMMA {
+			parser.advance(1)
+		}
+	}
+
+	parser.expect(lexer.CLOSE_CURLY)
+	parser.advance(1)
+
+	return ast.StructLiteralExpression{
+		Constructor: left,
+		Properties:  properties,
+	}
 }

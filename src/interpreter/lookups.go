@@ -49,6 +49,7 @@ func create_lookups() {
 	register_expression_handler[ast.ComputedMemberExpression](evaluate_computed_member_expression)
 	register_expression_handler[ast.MemberExpression](evaluate_member_expression)
 	register_expression_handler[ast.RangeExpression](evaluate_range_expression)
+	register_expression_handler[ast.StructLiteralExpression](evaluate_struct_instantiation_expression)
 
 	// Block expressions
 	register_expression_handler[ast.BlockExpression](evaluate_block_expression)
