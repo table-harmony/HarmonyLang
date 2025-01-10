@@ -4,25 +4,40 @@ struct Rectangle {
   const width = 100
   height: number
   name: fn() -> number
+  rect: any
 
   fn get_size() -> number {
-    return this.width * this.height
+    return self.width * self.height
   }
 
   static fn increment_counter() {
-    counter++
+    Rectangle.counter++
   }
 }
 
-print(Rectangle)
+//print(Rectangle)  
+//print(Rectangle["counter"])
+//print(Rectangle["increment_counter"]())
+//Rectangle.increment_counter()
+//Rectangle["counter"] = 1
+
 const rect = Rectangle{ 
+  width: 11
   name: fn() -> number { return 1 },
   height: 13,
 }
-
 printf(rect)
-rect.width = 10
-printf(rect)
+//rect["width"] = 1
+//rect.width = 10
 
-//printf(typeof(rect.name))
-//printf(rect.getSize())
+printf(rect.name())
+rect.name = fn() -> number { return 2 }
+
+printf(rect.name())
+printf(rect.get_size())
+rect.rect = Rectangle{
+  height: 10,
+}
+
+rect.rect.height = 1
+printf(rect.rect)

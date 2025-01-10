@@ -44,11 +44,14 @@ func evaluate_variable_declaration_statement(statement ast.Statement, scope *Sco
 		panic(err)
 	}
 
-	value := evaluate_expression(expectedStatement.Value, scope)
-
-	var _type Type = value.Type()
-	if expectedStatement.ExplicitType != nil {
+	var value Value
+	var _type Type
+	if expectedStatement.Value == nil {
 		_type = EvaluateType(expectedStatement.ExplicitType, scope)
+		value = _type.DefaultValue()
+	} else {
+		value = evaluate_expression(expectedStatement.Value, scope)
+		_type = value.Type()
 	}
 
 	variable := NewVariableReference(
@@ -280,9 +283,7 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 	}
 
 	value := evaluate_expression(expectedStatement.Value, scope)
-	if arrayValue, ok := value.(Array); ok {
-		value = arrayValue.Clone()
-	}
+
 	switch assigne := expectedStatement.Assigne.(type) {
 	case ast.SymbolExpression:
 		ref, err := scope.Resolve(assigne.Value)
@@ -323,6 +324,30 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 			owner.Set(property, value)
 		case Slice:
 			owner.Set(property, value)
+		case *Struct:
+			propertyName, err := ExpectValue[String](property)
+			if err != nil {
+				panic(fmt.Sprintf("invalid property name: %v", property))
+			}
+			attribute, exists := owner._type.storage[propertyName.Value()]
+			if !exists {
+				panic(fmt.Sprintf("struct has no attribute '%s'", propertyName.Value()))
+			}
+			if err := attribute.Reference.Store(value); err != nil {
+				panic(err)
+			}
+		case StructInstantiation:
+			propertyName, err := ExpectValue[String](property)
+			if err != nil {
+				panic(fmt.Sprintf("invalid property name: %v", property))
+			}
+			attribute, exists := owner.storage[propertyName.Value()]
+			if !exists {
+				panic(fmt.Sprintf("struct instantiation has no attribute '%s'", propertyName.Value()))
+			}
+			if err := attribute.Store(value); err != nil {
+				panic(err)
+			}
 		default:
 			panic(fmt.Sprintf("cannot index into value of type %T", owner))
 		}
@@ -488,5 +513,8 @@ func evaluate_struct_declaration_statement(statement ast.Statement, scope *Scope
 		NewStructType(storage),
 	)
 
-	scope.Declare(ref)
+	err = scope.Declare(ref)
+	if err != nil {
+		panic(err)
+	}
 }

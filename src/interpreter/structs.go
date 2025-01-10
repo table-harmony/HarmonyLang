@@ -44,8 +44,29 @@ func (s StructType) String() string {
 	}
 	return str
 }
-func (s StructType) DefaultValue() Value    { return NewNil() }
-func (s StructType) Equals(other Type) bool { return true } //TODO:....
+func (s StructType) DefaultValue() Value { return NewNil() }
+func (s StructType) Equals(other Type) bool {
+	if other == nil {
+		return true
+	}
+	if primitive, ok := other.(PrimitiveType); ok {
+		return primitive.kind == NilType
+	}
+	otherStruct, ok := other.(StructType)
+	if !ok {
+		return false
+	}
+	if len(s.storage) != len(otherStruct.storage) {
+		return false
+	}
+	for key, attr := range s.storage {
+		otherAttr, exists := otherStruct.storage[key]
+		if !exists || !attr.Reference.Type().Equals(otherAttr.Reference.Type()) || attr.isStatic != otherAttr.isStatic {
+			return false
+		}
+	}
+	return true
+}
 
 type Struct struct {
 	identifier string
@@ -104,7 +125,7 @@ func (s StructInstantiation) Clone() Value {
 	for name, ref := range s.storage {
 		newStorage[name] = NewVariableReference(
 			name,
-			false,
+			ref.(*VariableReference).isConstant,
 			ref.Load().Clone(),
 			ref.Type(),
 		)

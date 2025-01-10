@@ -338,6 +338,11 @@ func evaluate_call_expression(expression ast.Expression, scope *Scope) (result V
 			break
 		}
 
+		if ref, ok := value.(*VariableReference); ok {
+			function = ref.value.(Function)
+			break
+		}
+
 		panic("cannot call non-function values")
 	}
 
@@ -484,6 +489,11 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		property = ref.Load()
 	}
 
+	propertyName, ok := property.(String)
+	if !ok {
+		panic("Computed member access must use string expression for property")
+	}
+
 	switch owner := ownerValue.(type) {
 	case Array:
 		return owner.Get(property)
@@ -491,6 +501,40 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		return owner.Get(property)
 	case Slice:
 		return owner.Get(property)
+	case *Struct:
+		attr, exists := owner._type.storage[propertyName.Value()]
+		if !exists {
+			panic(fmt.Sprintf("Unknown struct member: %s", propertyName.Value()))
+		}
+
+		if !attr.isStatic {
+			panic(fmt.Sprintf("Cannot access non-static member '%s' on struct type", propertyName.Value()))
+		}
+
+		return attr.Reference
+	case StructInstantiation:
+		attr, exists := owner.constructor._type.storage[propertyName.Value()]
+		if !exists {
+			panic(fmt.Sprintf("Unknown struct member: %s", propertyName.Value()))
+		}
+
+		if attr.isStatic {
+			panic(fmt.Sprintf("Cannot access static member '%s' on struct instantiation type", propertyName.Value()))
+		}
+
+		ref, exists := owner.storage[propertyName.Value()]
+		if !exists {
+			if ref, ok := attr.Reference.(*FunctionReference); ok {
+				if fn, ok := ref.value.(*FunctionValue); ok {
+					fn.closure.Declare(NewVariableReference("self", true, owner, owner.constructor.Type()))
+					return ref.Load()
+				}
+			}
+
+			panic(fmt.Sprintf("Member '%s' not initialized", propertyName.Value()))
+		}
+
+		return ref
 	default:
 		panic(fmt.Sprintf("Computed member expression not supported for type: %T", ownerValue))
 	}
@@ -568,13 +612,15 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 			panic(fmt.Sprintf("Cannot access static member '%s' on struct instantiation type", property.Value))
 		}
 
-		if ref, ok := attr.Reference.(*FunctionReference); ok {
-			ref.value.(*FunctionValue).closure.Declare(NewVariableReference("this", true, owner, owner.constructor.Type()))
-			return ref.value
-		}
-
 		ref, exists := owner.storage[property.Value]
 		if !exists {
+			if ref, ok := attr.Reference.(*FunctionReference); ok {
+				if fn, ok := ref.value.(*FunctionValue); ok {
+					fn.closure.Declare(NewVariableReference("self", true, owner, owner.constructor.Type()))
+					return ref.Load()
+				}
+			}
+
 			panic(fmt.Sprintf("Member '%s' not initialized", property.Value))
 		}
 
