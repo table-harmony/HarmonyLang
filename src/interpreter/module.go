@@ -55,7 +55,7 @@ var standard_modules = map[string]Module{
 	"time":   init_time_module(),
 	"random": init_random_module(),
 	"os":     init_os_module(),
-	//"http": TODO,
+	"net":    init_net_module(),
 }
 
 func init_math_module() Module {
@@ -531,6 +531,12 @@ func init_os_module() Module {
 		[]Type{PrimitiveType{NumberType}},
 		PrimitiveType{NilType},
 	)
+
+	return *module
+}
+
+func init_net_module() Module {
+	module := NewModule()
 
 	return *module
 }

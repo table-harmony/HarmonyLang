@@ -128,7 +128,7 @@ func create_token_lookups() {
 	register_nud(lexer.TRY, default_bp, parse_try_catch_expression)
 
 	// Struct instantiation
-	register_led(lexer.OPEN_CURLY, call, parse_struct_instantiation_expression)
+	register_nud(lexer.NEW, call, parse_struct_instantiation_expression)
 
 	// Statements
 	register_statement(lexer.TYPE, parse_type_declaration_statement)

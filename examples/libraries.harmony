@@ -20,3 +20,5 @@ println(choice)
 
 time.sleep(1000)
 println(time.now())
+
+import net from "net"

@@ -1,0 +1,44 @@
+import { Task } from "examples/tasks_system/task.harmony"
+
+struct TaskManager {
+    tasks: []Task
+    tags_index: map[string -> []number]  // Map of tag to task IDs
+
+    fn add_task(task: Task) {
+        self.tasks.append(task)
+        
+        // Update tags index
+        for _, tag in task.tags {
+            if !self.tags_index.exists(tag) {
+                self.tags_index[tag] = []number{}
+            }
+            self.tags_index[tag].append(task.id)
+        }
+    }
+
+    fn get_tasks_by_tag(tag: string) -> []Task {
+        let result = []Task{}
+        if self.tags_index.exists(tag) {
+            for _, id in self.tags_index[tag] {
+                for _, task in self.tasks {
+                    if task.id == id {
+                        result.append(task)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    fn get_overdue_tasks() -> []Task {
+        let current_time = timestamp()
+        let overdue = []Task{}
+        
+        for _, task in self.tasks {
+            if !task.completed && task.due_date < current_time {
+                overdue.append(task)
+            }
+        }
+        return overdue
+    }
+}

@@ -494,7 +494,12 @@ func parse_range_expression(parser *parser, left ast.Expression, bp binding_powe
 	}
 }
 
-func parse_struct_instantiation_expression(parser *parser, left ast.Expression, bp binding_power) ast.Expression {
+func parse_struct_instantiation_expression(parser *parser) ast.Expression {
+	parser.expect(lexer.NEW)
+	parser.advance(1)
+
+	constructor := parse_expression(parser, default_bp)
+
 	parser.expect(lexer.OPEN_CURLY)
 	parser.advance(1)
 
@@ -525,7 +530,7 @@ func parse_struct_instantiation_expression(parser *parser, left ast.Expression, 
 	parser.advance(1)
 
 	return ast.StructLiteralExpression{
-		Constructor: left,
+		Constructor: constructor,
 		Properties:  properties,
 	}
 }

@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"regexp"
-	"strings"
 )
 
 func default_handler(kind TokenKind, value string) regex_handler {
@@ -29,8 +28,7 @@ func number_handler(lex *lexer, regex *regexp.Regexp) {
 func symbol_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
-	// to disregrard uppercase in keywords so IF = if
-	if kind, found := reserved_keywords[strings.ToLower(match)]; found {
+	if kind, found := reserved_keywords[match]; found {
 		lex.push(NewToken(kind, match))
 	} else {
 		lex.push(NewToken(IDENTIFIER, match))
@@ -56,23 +54,6 @@ func newline_handler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 	lex.line++
 	lex.advance(len(match))
-}
-
-func needs_semi_colon(token Token) bool {
-	return token.IsOfKind(
-		IDENTIFIER,
-		NUMBER,
-		STRING,
-		BREAK,
-		CONTINUE,
-		RETURN,
-		TRUE,
-		FALSE,
-		NIL,
-		CLOSE_PAREN,
-		CLOSE_BRACKET,
-		CLOSE_CURLY,
-	)
 }
 
 // reserved regex patterns

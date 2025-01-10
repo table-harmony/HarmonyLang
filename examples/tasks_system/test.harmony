@@ -1,0 +1,41 @@
+import { Task } from "examples/tasks_system/task.harmony"
+
+fn test_task_creation() -> bool {
+    let task = Task.init("Test task", "Test description")
+    
+    if task.title != "Test task" {
+        return false
+    }
+    
+    if task.completed {
+        return false
+    }
+    
+    if task.priority != 3 {
+        return false
+    }
+    
+    return true
+}
+
+fn test_task_completion() -> bool {
+    let task = Task.init("Test task", "Test description")
+    task.complete()
+    
+    return task.completed
+}
+
+fn run_tests() {
+    let tests = map[string -> fn() -> bool]{
+        "task_creation" -> test_task_creation,
+        "task_completion" -> test_task_completion,
+    }
+    
+    for name, test in tests {
+        if test() {
+            print("Test passed:", name)
+        } else {
+            print("Test failed:", name)
+        }
+    }
+}

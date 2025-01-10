@@ -1,0 +1,23 @@
+import { Task } from "examples/tasks_system/task.harmony"
+
+fn format_task_date(task: Task) -> string {
+    return format(task.due_date, "2006-01-02 15:04:05")
+}
+
+fn sort_tasks_by_priority(tasks: []Task) -> []Task {
+    let sorted = tasks
+    let n = sorted.len()
+    
+    for let i = 0; i < n - 1; i++ {
+        for let j = 0; j < n - i - 1; j++ {
+            if sorted[j].priority < sorted[j + 1].priority {
+                // Swap tasks
+                let temp = sorted[j]
+                sorted[j] = sorted[j + 1]
+                sorted[j + 1] = temp
+            }
+        }
+    }
+    
+    return sorted
+}

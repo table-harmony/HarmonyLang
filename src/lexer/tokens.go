@@ -93,6 +93,7 @@ const (
 	TYPEOF
 	TYPE
 	AS
+	NEW
 )
 
 var reserved_keywords map[string]TokenKind = map[string]TokenKind{
@@ -125,6 +126,7 @@ var reserved_keywords map[string]TokenKind = map[string]TokenKind{
 	"typeof":    TYPEOF,
 	"type":      TYPE,
 	"as":        AS,
+	"new":       NEW,
 }
 
 type Token struct {
@@ -304,6 +306,8 @@ func (kind TokenKind) String() string {
 		return "type"
 	case AS:
 		return "as"
+	case NEW:
+		return "new"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

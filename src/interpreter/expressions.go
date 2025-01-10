@@ -489,11 +489,6 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		property = ref.Load()
 	}
 
-	propertyName, ok := property.(String)
-	if !ok {
-		panic("Computed member access must use string expression for property")
-	}
-
 	switch owner := ownerValue.(type) {
 	case Array:
 		return owner.Get(property)
@@ -502,6 +497,10 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 	case Slice:
 		return owner.Get(property)
 	case *Struct:
+		propertyName, ok := property.(String)
+		if !ok {
+			panic("Computed member access must use string expression for property")
+		}
 		attr, exists := owner._type.storage[propertyName.Value()]
 		if !exists {
 			panic(fmt.Sprintf("Unknown struct member: %s", propertyName.Value()))
@@ -513,6 +512,10 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 
 		return attr.Reference
 	case StructInstantiation:
+		propertyName, ok := property.(String)
+		if !ok {
+			panic("Computed member access must use string expression for property")
+		}
 		attr, exists := owner.constructor._type.storage[propertyName.Value()]
 		if !exists {
 			panic(fmt.Sprintf("Unknown struct member: %s", propertyName.Value()))

@@ -69,3 +69,20 @@ func is_continuation_token(token Token) bool {
 		ARROW,
 	)
 }
+
+func needs_semi_colon(token Token) bool {
+	return token.IsOfKind(
+		IDENTIFIER,
+		NUMBER,
+		STRING,
+		BREAK,
+		CONTINUE,
+		RETURN,
+		TRUE,
+		FALSE,
+		NIL,
+		CLOSE_PAREN,
+		CLOSE_BRACKET,
+		CLOSE_CURLY,
+	)
+}

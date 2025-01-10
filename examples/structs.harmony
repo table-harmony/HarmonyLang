@@ -21,7 +21,7 @@ struct Rectangle {
 //Rectangle.increment_counter()
 //Rectangle["counter"] = 1
 
-const rect = Rectangle{ 
+const rect = new Rectangle{ 
   width: 11
   name: fn() -> number { return 1 },
   height: 13,
@@ -35,7 +35,7 @@ rect.name = fn() -> number { return 2 }
 
 printf(rect.name())
 printf(rect.get_size())
-rect.rect = Rectangle{
+rect.rect = new Rectangle{
   height: 10,
 }
 
