@@ -13,8 +13,8 @@ import (
 func main() {
 	start := time.Now()
 	//run("examples/tasks_system/main.harmony")
-	//run("examples/structs.harmony")
-	run_repl()
+	run("examples/server.harmony")
+	//run_repl()
 	duration := time.Since(start)
 
 	fmt.Printf("Duration: %v\n", duration)

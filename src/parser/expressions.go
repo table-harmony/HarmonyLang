@@ -12,7 +12,7 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 	token := parser.current_token()
 	nud_handler, exists := nud_lookup[token.Kind]
 	if !exists {
-		panic(fmt.Sprintf("NUD Handler expected for token %s at line %b\n", token.Kind.String(), token.Line))
+		panic(fmt.Sprintf("NUD Handler expected for token %s at line %d\n", token.Kind.String(), token.Line))
 	}
 
 	left := nud_handler(parser)
@@ -21,7 +21,7 @@ func parse_expression(parser *parser, bp binding_power) ast.Expression {
 	for binding_power_lookup[token.Kind] > bp {
 		led_handler, exists := led_lookup[token.Kind]
 		if !exists {
-			panic(fmt.Sprintf("LED Handler expected for token %s at line %b\n", token.Kind.String(), token.Line))
+			panic(fmt.Sprintf("LED Handler expected for token %s at line %d\n", token.Kind.String(), token.Line))
 		}
 
 		left = led_handler(parser, left, binding_power_lookup[token.Kind])

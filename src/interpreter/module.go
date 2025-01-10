@@ -1,10 +1,15 @@
 package interpreter
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"math"
 	"math/rand"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -50,13 +55,7 @@ func (m Module) String() string {
 	return str
 }
 
-var standard_modules = map[string]Module{
-	"math":   init_math_module(),
-	"time":   init_time_module(),
-	"random": init_random_module(),
-	"os":     init_os_module(),
-	"net":    init_net_module(),
-}
+var standard_modules = map[string]Module{}
 
 func init_math_module() Module {
 	module := NewModule()
@@ -535,8 +534,358 @@ func init_os_module() Module {
 	return *module
 }
 
+type Request struct {
+	Method  string
+	Path    string
+	Query   map[string]string
+	Headers map[string]string
+	Body    string
+	Params  map[string]string
+}
+
+// Response represents an HTTP response
+type Response struct {
+	StatusCode int
+	Headers    map[string]string
+	Body       string
+}
+
+// RouteHandler represents a function that handles a route
+type RouteHandler func(req Request) Response
+
+// Server represents an HTTP server
+type Server struct {
+	routes map[string]map[string]RouteHandler
+}
+
+func (Server) Type() Type     { return MapType{} }
+func (s Server) Clone() Value { return s }
+func (s Server) String() string {
+	return ""
+}
+
 func init_net_module() Module {
 	module := NewModule()
 
+	// Create a new server instance
+	module.exports["create_server"] = NewNativeFunction(
+		func(args ...Value) Value {
+			server := &Server{
+				routes: make(map[string]map[string]RouteHandler),
+			}
+			return NewPointer(NewVariableReference("server", false, server, nil))
+		},
+		[]Type{},
+		NewPointerType(PrimitiveType{AnyType}),
+	)
+
+	// HTTP client methods
+	module.exports["get"] = NewNativeFunction(
+		func(args ...Value) Value {
+			url := args[0].(String).Value()
+			resp, err := http.Get(url)
+			if err != nil {
+				panic(err.Error())
+			}
+			defer resp.Body.Close()
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			entries := []MapEntry{
+				{NewString("status"), NewNumber(float64(resp.StatusCode))},
+				{NewString("body"), NewString(string(body))},
+			}
+			result := NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+			resultValue, err := standard_modules["json"].exports["stringify"].(Function).Call(result)
+			if err != nil {
+				panic(err)
+			}
+
+			return resultValue
+		},
+		[]Type{PrimitiveType{StringType}},
+		PrimitiveType{StringType},
+	)
+
+	module.exports["post"] = NewNativeFunction(
+		func(args ...Value) Value {
+			url := args[0].(String).Value()
+			data := args[1].(String).Value()
+			contentType := "application/json"
+			if len(args) > 2 {
+				contentType = args[2].(String).Value()
+			}
+
+			resp, err := http.Post(url, contentType, strings.NewReader(data))
+			if err != nil {
+				panic(err.Error())
+			}
+			defer resp.Body.Close()
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Create response map
+			entries := []MapEntry{
+				{NewString("status"), NewNumber(float64(resp.StatusCode))},
+				{NewString("body"), NewString(string(body))},
+			}
+			result := NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+			resultValue, err := standard_modules["json"].exports["stringify"].(Function).Call(result)
+			if err != nil {
+				panic(err)
+			}
+
+			return resultValue
+		},
+		[]Type{PrimitiveType{StringType}, PrimitiveType{StringType}},
+		PrimitiveType{StringType},
+	)
+
+	// Server methods
+	module.exports["route"] = NewNativeFunction(
+		func(args ...Value) Value {
+			server := args[0].(*Server)
+			method := strings.ToUpper(args[1].(String).Value())
+			path := args[2].(String).Value()
+
+			handler := args[3].(Function)
+			if server.routes[method] == nil {
+				server.routes[method] = make(map[string]RouteHandler)
+			}
+
+			server.routes[method][path] = func(req Request) Response {
+				// Convert request to map for handler
+				reqEntries := []MapEntry{
+					{NewString("method"), NewString(req.Method)},
+					{NewString("path"), NewString(req.Path)},
+					{NewString("body"), NewString(req.Body)},
+				}
+				reqMap := NewMap(reqEntries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+
+				result, err := handler.Call(reqMap)
+				if err != nil {
+					panic(err)
+				}
+
+				// Convert handler result to Response
+				resMap := result.(Map)
+				statusCode := 200
+				body := ""
+
+				for _, entry := range *resMap.entries {
+					key := entry.key.(String).Value()
+					switch key {
+					case "status":
+						statusCode = int(entry.value.(Number).Value())
+					case "body":
+						body = entry.value.(String).Value()
+					}
+				}
+
+				return Response{
+					StatusCode: statusCode,
+					Headers:    map[string]string{"Content-Type": "application/json"},
+					Body:       body,
+				}
+			}
+
+			return NewNil()
+		},
+		[]Type{NewPointerType(PrimitiveType{AnyType}), PrimitiveType{StringType}, PrimitiveType{StringType}, NewFunctionType([]ParameterType{}, PrimitiveType{AnyType})},
+		PrimitiveType{NilType},
+	)
+
+	module.exports["serve"] = NewNativeFunction(
+		func(args ...Value) Value {
+			server := args[0].(*Server)
+			port := int(args[1].(Number).Value())
+
+			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				// Parse request
+				body, _ := io.ReadAll(r.Body)
+				defer r.Body.Close()
+
+				req := Request{
+					Method:  r.Method,
+					Path:    r.URL.Path,
+					Query:   parse_query(r.URL.Query()),
+					Headers: parse_headers(r.Header),
+					Body:    string(body),
+					Params:  make(map[string]string),
+				}
+
+				// Find matching route
+				if handlers, ok := server.routes[r.Method]; ok {
+					if handler, ok := handlers[r.URL.Path]; ok {
+						resp := handler(req)
+
+						// Set response headers
+						for key, value := range resp.Headers {
+							w.Header().Set(key, value)
+						}
+
+						w.WriteHeader(resp.StatusCode)
+						w.Write([]byte(resp.Body))
+						return
+					}
+				}
+
+				// No route found
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404 Not Found"))
+			})
+
+			fmt.Printf("Server listening on port %d\n", port)
+			err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			return NewNil()
+		},
+		[]Type{NewPointerType(PrimitiveType{AnyType}), PrimitiveType{NumberType}},
+		PrimitiveType{NilType},
+	)
+
 	return *module
+}
+
+func init_json_module() Module {
+	module := NewModule()
+
+	module.exports["parse"] = NewNativeFunction(
+		func(args ...Value) Value {
+			jsonStr := args[0].(String).Value()
+			var result map[string]interface{}
+			if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+				panic(fmt.Sprintf("JSON parse error: %v", err))
+			}
+
+			entries := make([]MapEntry, 0)
+			for k, v := range result {
+				entries = append(entries, MapEntry{
+					key:   NewString(k),
+					value: convert_to_value(v),
+				})
+			}
+			return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+		},
+		[]Type{PrimitiveType{StringType}},
+		NewMapType(PrimitiveType{StringType}, PrimitiveType{AnyType}),
+	)
+
+	module.exports["stringify"] = NewNativeFunction(
+		func(args ...Value) Value {
+			data := args[0].(Map)
+			nativeMap := make(map[string]interface{})
+
+			for _, entry := range *data.entries {
+				key := entry.key.(String).Value()
+				nativeMap[key] = convert_to_native(entry.value)
+			}
+
+			jsonBytes, err := json.Marshal(nativeMap)
+			if err != nil {
+				panic(fmt.Sprintf("JSON stringify error: %v", err))
+			}
+			return NewString(string(jsonBytes))
+		},
+		[]Type{NewMapType(PrimitiveType{StringType}, PrimitiveType{AnyType})},
+		PrimitiveType{StringType},
+	)
+
+	return *module
+}
+
+func parse_query(values map[string][]string) map[string]string {
+	result := make(map[string]string)
+	for key, vals := range values {
+		if len(vals) > 0 {
+			result[key] = vals[0]
+		}
+	}
+	return result
+}
+
+func parse_headers(headers http.Header) map[string]string {
+	result := make(map[string]string)
+	for key, vals := range headers {
+		if len(vals) > 0 {
+			result[key] = vals[0]
+		}
+	}
+	return result
+}
+
+func convert_to_value(native interface{}) Value {
+	switch v := native.(type) {
+	case string:
+		return NewString(v)
+	case float64:
+		return NewNumber(v)
+	case bool:
+		return NewBoolean(v)
+	case nil:
+		return NewNil()
+	case map[string]interface{}:
+		entries := make([]MapEntry, 0)
+		for k, val := range v {
+			entries = append(entries, MapEntry{
+				key:   NewString(k),
+				value: convert_to_value(val),
+			})
+		}
+		return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+	case []interface{}:
+		elements := make([]Value, len(v))
+		for i, val := range v {
+			elements[i] = convert_to_value(val)
+		}
+		return NewSlice(elements, PrimitiveType{AnyType})
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", v))
+	}
+}
+
+func convert_to_native(value Value) interface{} {
+	switch v := value.(type) {
+	case String:
+		return v.Value()
+	case Number:
+		return v.Value()
+	case Boolean:
+		return v.Value()
+	case *Nil:
+		return nil
+	case Map:
+		result := make(map[string]interface{})
+		for _, entry := range *v.entries {
+			key := entry.key.(String).Value()
+			result[key] = convert_to_value(entry.value)
+		}
+		return result
+	case Slice:
+		result := make([]interface{}, len(*v.elements))
+		for i, elem := range *v.elements {
+			result[i] = convert_to_value(elem)
+		}
+		return result
+	default:
+		panic(fmt.Sprintf("unsupported type: %T", v))
+	}
+}
+
+func load_native_modules() {
+	standard_modules["math"] = init_math_module()
+	standard_modules["random"] = init_random_module()
+	standard_modules["time"] = init_time_module()
+	standard_modules["os"] = init_os_module()
+	standard_modules["net"] = init_net_module()
+	standard_modules["json"] = init_json_module()
 }

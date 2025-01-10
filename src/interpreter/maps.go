@@ -58,7 +58,7 @@ func NewMap(entries []MapEntry, keyType Type, valueType Type) Map {
 	_type := NewMapType(keyType, valueType)
 
 	for _, entry := range entries {
-		if !entry.key.Type().Equals(keyType) || !entry.value.Type().Equals(valueType) {
+		if !keyType.Equals(entry.key.Type()) || !valueType.Equals(entry.value.Type()) {
 			panic(fmt.Sprintf("Map entry type is not compatible with key type %s or value type %s, expected key type %s and value type %s", entry.key.Type().String(), entry.value.Type().String(), keyType.String(), valueType.String()))
 		}
 	}

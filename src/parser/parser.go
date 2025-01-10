@@ -62,7 +62,7 @@ func (parser *parser) expect_error(expectedKind lexer.TokenKind, err any) lexer.
 
 	if currentToken.Kind != expectedKind {
 		if err == nil {
-			err = fmt.Sprintf("Expected %s but recieved %s instead at line %b\n",
+			err = fmt.Sprintf("Expected %s but recieved %s instead at line %d\n",
 				expectedKind.String(), currentToken.Kind.String(), currentToken.Line)
 		}
 

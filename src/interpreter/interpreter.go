@@ -13,6 +13,8 @@ func Interpret(ast []ast.Statement) *Scope {
 	interpreter := create_interpreter(ast)
 	scope := NewRootScope()
 
+	load_native_modules()
+
 	for !interpreter.is_empty() {
 		interpreter.evalute_current_statement(scope)
 		interpreter.advance(1)

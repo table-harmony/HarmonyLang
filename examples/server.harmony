@@ -1,0 +1,34 @@
+import net from "net"
+import json from "json"
+
+// GET request
+//const response = net.get("https://dummyjson.com/test")
+//printf(response)
+//const data = json.parse(response)
+// printf(data)
+
+// POST request
+//const request = map[string -> string]{
+//  "objectId" -> "j974jktgez2xkhmm8x5resd9m1710q15",
+//  "key" -> "testing",
+//}
+//const response = net.post("https://www.devharmony.io/api/events", json.stringify(request))
+//printf(response)
+//const data = json.parse(response)
+//printf(data)
+
+// HTTP Server
+const server = net.create_server()
+server.get("/api/users", fn(req: any) -> any {
+  printf(req)
+  const data = map[string -> []string]{
+    "users" -> ["Alice", "Bob"],
+  }
+
+  return map[string -> any]{
+    "status" -> 200,
+    "body" -> json.stringify(data),
+  }
+})
+
+net.serve(server, 3000)
