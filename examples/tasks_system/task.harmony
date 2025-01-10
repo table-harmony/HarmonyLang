@@ -1,38 +1,39 @@
 import math from "math"
 
 struct Task {
-    id: number
-    title: string
-    description: string
-    due_date: number  // Unix timestamp
-    completed: bool
-    priority: number  // 1-5 scale
-    tags: []string
+  id: number
+  title: string
+  description: string
+  due_date: number  // Unix timestamp
+  completed: bool
+  priority: number  // 1-5 scale
+  tags: []string
 
     // Create a new task with the current timestamp
-    static fn init(title: string, description: string) -> Task {
-        Task.count++
-        return new Task{
-            id: Task.count,
-            title: title,
-            description: description,
-            due_date: timestamp(),
-            completed: false,
-            priority: 3,
-            tags: []string{}
-        }
-    }
+  static fn init(title: string, description: string) -> Task {
+    Task.count++
 
-    // Instance method to mark task as complete
-    fn complete() {
-        self.completed = true
+    return new Task{
+        id: Task.count,
+        title: title,
+        description: description,
+        due_date: timestamp(),
+        completed: false,
+        priority: 3,
+        tags: []string{}
     }
+  }
 
-    // Instance method to update priority
-    fn set_priority(priority: number) {
-        self.priority = math.clamp(priority, 1, 5)
-    }
+  // Instance method to mark task as complete
+  fn complete() {
+      self.completed = true
+  }
 
-    // Static counter for generating unique IDs
-    static count = 0
+  // Instance method to update priority
+  fn set_priority(priority: number) {
+      self.priority = math.clamp(priority, 1, 5)
+  }
+
+  // Static counter for generating unique IDs
+  static count = 0
 }

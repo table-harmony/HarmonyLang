@@ -2,45 +2,39 @@ import { TaskManager } from "examples/tasks_system/task_manager.harmony"
 import { Task } from "examples/tasks_system/task.harmony"
 
 fn main() {
-    // Create task manager
-    let manager = new TaskManager{
-        tasks: []Task{},
-        tags_index: map[string -> []number]{},
-    }
+  let manager = new TaskManager{
+      tasks: []Task{},
+      tags_index: map[string -> []number]{},
+  }
 
-    // Create some tasks
-    let task1 = Task.init(
-        "Complete documentation",
-        "Write user guide for new features",
-    )
-    task1.tags = []string{"documentation", "urgent"}
-    task1.set_priority(5)
+  let task1 = Task.init(
+      "Complete documentation",
+      "Write user guide for new features",
+  )
+  task1.tags = []string{"documentation", "urgent"}
+  task1.set_priority(5)
 
-    let task2 = Task.init(
-        "Review pull requests",
-        "Review and merge pending PRs",
-    )
-    task2.tags = []string{"code-review", "maintenance"}
-    task2.set_priority(4)
+  let task2 = Task.init(
+    "Review pull requests",
+    "Review and merge pending PRs",
+  )
+  task2.tags = []string{"code-review", "maintenance"}
+  task2.set_priority(4)
 
-    // Add tasks to manager
-    manager.add_task(task1)
-    manager.add_task(task2)
+  manager.add_task(task1)
+  manager.add_task(task2)
 
-    // Get tasks by tag
-    let docs_tasks = manager.get_tasks_by_tag("documentation")
-    for _, task in docs_tasks {
-        print("Documentation task:", task.title)
-    }
+  let docs_tasks = manager.get_tasks_by_tag("documentation")
+  for _, task in docs_tasks {
+      print("Documentation task:", task.title)
+  }
 
-    // Mark task as complete
-    task1.complete()
+  task1.complete()
 
-    // Check overdue tasks
-    let overdue = manager.get_overdue_tasks()
-    for _, task in overdue {
-        print("Overdue task:", task.title);
-    }
+  let overdue = manager.get_overdue_tasks()
+  for _, task in overdue {
+      print("Overdue task:", task.title);
+  }
 }
 
 main()

@@ -129,7 +129,10 @@ func create_token_lookups() {
 
 	// Struct instantiation
 	register_nud(lexer.NEW, call, parse_struct_instantiation_expression)
-
+	register_nud(lexer.SEMI_COLON, default_bp, func(parser *parser) ast.Expression {
+		parser.advance(1)
+		return nil
+	})
 	// Statements
 	register_statement(lexer.TYPE, parse_type_declaration_statement)
 	register_statement(lexer.IMPORT, parse_import_statement)
