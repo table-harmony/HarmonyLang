@@ -54,12 +54,6 @@ func evaluate_prefix_expression(expression ast.Expression, scope *Scope) Value {
 			}
 			return NewPointer(ref)
 
-		case ast.ComputedMemberExpression:
-			panic("TODO: computed member expression in prefix expression")
-
-		case ast.MemberExpression:
-			panic("TODO: member expression in prefix expression")
-
 		case ast.CallExpression:
 			result := evaluate_call_expression(right, scope)
 			if ref, ok := result.(Reference); ok {
@@ -276,8 +270,7 @@ func evaluate_switch_expression(expression ast.Expression, scope *Scope) Value {
 		for _, pattern := range switchCase.Patterns {
 			casePatternValue := evaluate_expression(pattern, scope)
 
-			//TODO: IS THIS EQUALITY OK ? sense we are comparing Value
-			if casePatternValue == value {
+			if reflect.DeepEqual(casePatternValue, value) {
 				return evaluate_expression(switchCase.Body, scope)
 			}
 		}
@@ -536,7 +529,6 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		if method, exists := owner.Methods[propertyName.value]; exists {
 			return method
 		}
-
 		value := reflect.ValueOf(owner)
 		field := value.FieldByName(helpers.Capitalize(propertyName.value))
 		if field.IsValid() {

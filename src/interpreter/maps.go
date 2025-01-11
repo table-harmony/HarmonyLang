@@ -96,7 +96,7 @@ func (m Map) String() string {
 // Map specific methods
 func (m *Map) Get(key Value) Value {
 	for _, entry := range *(m.entries) {
-		if entry.key == key {
+		if entry.key.String() == key.String() {
 			return entry.value
 		}
 	}

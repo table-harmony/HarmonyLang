@@ -144,6 +144,19 @@ func (res *Response) init_methods() {
 		[]Type{PrimitiveType{StringType}},
 		ResponseType{},
 	)
+
+	res.Methods["redirect"] = NewNativeFunction(
+		func(args ...Value) Value {
+			url := args[0].(String).Value()
+			statusCode := int(args[1].(Number).Value())
+
+			res.Headers["Location"] = url
+			res.StatusCode = statusCode
+			return res
+		},
+		[]Type{PrimitiveType{StringType}, PrimitiveType{NumberType}},
+		ResponseType{},
+	)
 }
 
 // Response implements Value interface

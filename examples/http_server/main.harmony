@@ -7,6 +7,10 @@ server.get("/", fn(req, res) {
   res.html("<h1>Hello World</h1>")
 })
 
+server.get("/redirected", fn(req, res) {
+  res.redirect("/", 302)
+})
+
 server.get("/api/data", fn(req, res) {
   const data = map{
     "message" -> "Hello from API",
