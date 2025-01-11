@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
 // RequestType represents the type of an HTTP request
@@ -30,20 +32,17 @@ func (r ResponseType) DefaultValue() Value { return NewResponse() }
 
 // Request represents an HTTP request with methods
 type Request struct {
-	Method      string
-	Path        string
-	Query       map[string]string
-	Headers     map[string]string
-	Body        string
-	Params      map[string]string
-	ContentType string
+	Method  string
+	Path    string
+	Query   map[string]string
+	Headers map[string]string
+	Body    string
 }
 
 func NewRequest() *Request {
 	return &Request{
 		Headers: make(map[string]string),
 		Query:   make(map[string]string),
-		Params:  make(map[string]string),
 	}
 }
 
@@ -56,12 +55,11 @@ func (r Request) String() string {
 
 // Response represents an HTTP response with methods
 type Response struct {
-	StatusCode  int
-	Headers     map[string]string
-	Body        strings.Builder
-	ContentType string
-	Writer      http.ResponseWriter
-	Methods     map[string]Function
+	StatusCode int
+	Headers    map[string]string
+	Body       strings.Builder
+	Writer     http.ResponseWriter
+	Methods    map[string]Function
 }
 
 func NewResponse() *Response {
@@ -109,7 +107,7 @@ func (res *Response) init_methods() {
 	res.Methods["json"] = NewNativeFunction(
 		func(args ...Value) Value {
 			data := args[0]
-			res.ContentType = "application/json"
+			res.Headers["Content-Type"] = "application/json"
 			jsonBytes, err := json.Marshal(convert_to_native(data))
 			if err != nil {
 				panic(err)
@@ -117,14 +115,29 @@ func (res *Response) init_methods() {
 			res.Body.Write(jsonBytes)
 			return res
 		},
-		[]Type{PrimitiveType{AnyType}},
+		[]Type{NewMapType(PrimitiveType{AnyType}, PrimitiveType{AnyType})},
+		ResponseType{},
+	)
+
+	res.Methods["xml"] = NewNativeFunction(
+		func(args ...Value) Value {
+			data := args[0]
+			res.Headers["Content-Type"] = "application/xml"
+			xmlMap, err := helpers.MapToXml("", convert_to_native(data).(map[string]interface{}))
+			if err != nil {
+				panic(err)
+			}
+			res.Body.Write(xmlMap)
+			return res
+		},
+		[]Type{NewMapType(PrimitiveType{AnyType}, PrimitiveType{AnyType})},
 		ResponseType{},
 	)
 
 	res.Methods["html"] = NewNativeFunction(
 		func(args ...Value) Value {
 			content := args[0].(String).Value()
-			res.ContentType = "text/html"
+			res.Headers["Content-Type"] = "text/html"
 			res.Body.WriteString(content)
 			return res
 		},
@@ -223,38 +236,27 @@ func init_net_module() Module {
 		ServerType{},
 	)
 
-	// Serve function with improved request/response handling
+	// Serves an http route
 	module.exports["serve"] = NewNativeFunction(
 		func(args ...Value) Value {
 			server := args[0].(Server)
 			port := args[1].(Number)
 
 			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				// Create request object
-				req := NewRequest()
-				req.Method = r.Method
-				req.Path = r.URL.Path
-				req.Headers = parse_headers(r.Header)
-				req.Query = parse_query(r.URL.Query())
-				body, _ := io.ReadAll(r.Body)
-				req.Body = string(body)
-				req.ContentType = r.Header.Get("Content-Type")
+				req := parse_request(r)
 
-				// Create response object
 				res := NewResponse()
 				res.Writer = w
 
-				// Find and execute route handler
 				if routeHandlers := server.routes[req.Path]; routeHandlers != nil {
 					if handler := routeHandlers[req.Method]; handler != nil {
-						handler.Call(req, res)
+						_, err := handler.Call(req, res)
+						if err != nil {
+							panic(err)
+						}
 
-						// Write response
 						for key, value := range res.Headers {
 							w.Header().Set(key, value)
-						}
-						if res.ContentType != "" {
-							w.Header().Set("Content-Type", res.ContentType)
 						}
 						w.WriteHeader(res.StatusCode)
 						w.Write([]byte(res.Body.String()))
@@ -262,7 +264,6 @@ func init_net_module() Module {
 					}
 				}
 
-				// Route not found
 				w.WriteHeader(http.StatusNotFound)
 				w.Write([]byte("404 - Not Found"))
 			})
@@ -282,22 +283,130 @@ func init_net_module() Module {
 	return *module
 }
 
-func parse_query(values map[string][]string) map[string]string {
-	result := make(map[string]string)
-	for key, vals := range values {
-		if len(vals) > 0 {
-			result[key] = vals[0]
+func init_http_module() Module {
+	module := NewModule()
+
+	sendRequest := func(method, url string, reqMap Map) Value {
+		req := NewRequest()
+		req.Path = url
+		req.Method = method
+
+		for _, entry := range *reqMap.entries {
+			if entry.key.(String).value == "headers" {
+				headers := convert_to_native(entry.value).(map[string]interface{})
+				for k, v := range headers {
+					req.Headers[k] = v.(string)
+				}
+			}
+
+			if entry.key.(String).value == "query" {
+				query := convert_to_native(entry.value).(map[string]interface{})
+				for k, v := range query {
+					req.Query[k] = v.(string)
+				}
+			}
+
+			if entry.key.(String).value == "body" {
+				req.Body = entry.value.(String).Value()
+			}
 		}
+
+		var queryParams string
+		if strings.Contains(url, "?") {
+			queryParams = "&"
+		} else {
+			queryParams = "?"
+		}
+
+		for key, value := range req.Query {
+			queryParams += fmt.Sprintf("%s=%s&", key, value)
+		}
+		fullURL := url + strings.TrimRight(queryParams, "&")
+
+		httpReq, err := http.NewRequest(req.Method, fullURL, strings.NewReader(req.Body))
+		if err != nil {
+			panic(err)
+		}
+		for key, value := range req.Headers {
+			httpReq.Header.Set(key, value)
+		}
+
+		client := &http.Client{}
+		res, err := client.Do(httpReq)
+		if err != nil {
+			panic(err)
+		}
+		defer res.Body.Close()
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		headerEntries := []MapEntry{}
+		for key, values := range res.Header {
+			if len(values) > 0 {
+				headerEntries = append(headerEntries, MapEntry{NewString(key), NewString(values[0])})
+			}
+		}
+		headersMap := NewMap(headerEntries, PrimitiveType{StringType}, PrimitiveType{StringType})
+
+		entries := []MapEntry{
+			{NewString("statusCode"), NewNumber(float64(res.StatusCode))},
+			{NewString("body"), NewString(string(body))},
+			{NewString("headers"), headersMap},
+		}
+
+		for key, values := range res.Header {
+			if len(values) > 0 {
+				entries = append(entries, MapEntry{NewString(key), NewString(values[0])})
+			}
+		}
+
+		result := NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+		return result
 	}
-	return result
+
+	methods := []string{"get", "post", "put", "patch", "delete"}
+	for _, method := range methods {
+		module.exports[method] = NewNativeFunction(
+			func(args ...Value) Value {
+				url := args[0].(String).Value()
+				reqMap := args[1].(Map)
+				return sendRequest(strings.ToUpper(method), url, reqMap)
+			},
+			[]Type{PrimitiveType{StringType}, PrimitiveType{AnyType}},
+			NewMapType(PrimitiveType{StringType}, PrimitiveType{AnyType}),
+		)
+	}
+
+	return *module
 }
 
-func parse_headers(headers http.Header) map[string]string {
-	result := make(map[string]string)
-	for key, vals := range headers {
+func parse_request(r *http.Request) *Request {
+	req := NewRequest()
+
+	req.Method = r.Method
+	req.Path = r.URL.Path
+
+	headers := make(map[string]string)
+	for key, vals := range r.Header {
 		if len(vals) > 0 {
-			result[key] = vals[0]
+			headers[key] = vals[0]
 		}
 	}
-	return result
+	req.Headers = headers
+
+	query := make(map[string]string)
+	for key, vals := range r.URL.Query() {
+		if len(vals) > 0 {
+			query[key] = vals[0]
+		}
+	}
+	req.Query = query
+
+	body, _ := io.ReadAll(r.Body)
+	req.Body = string(body)
+
+	return req
 }

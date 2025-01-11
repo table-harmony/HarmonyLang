@@ -1,0 +1,65 @@
+import http from "http"
+import json from "json"
+
+struct Event {
+  _creationTime: number
+  _id: string
+  key: string
+  objectId: string
+
+  static fn init(value) -> any {
+    const event = new Event{
+      _creationTime: value["_creationTime"],
+      _id: value["_id"],
+      key: value["key"],
+      objectId: value["objectId"],
+    }
+    return event
+  }
+}
+
+let data = try {
+  const response = http.post("https://www.devharmony.io/api/events", map{
+    "headers" -> map{
+      "Content-Type" -> "application/json",
+    },
+    "body" -> json.stringify(map{
+      "objectId" -> "j974jktgez2xkhmm8x5resd9m1710q15",
+      "key" -> "my key",
+    }),
+  })
+
+  const isSuccess = response["statusCode"] < 300
+  if !isSuccess {
+    throw error("request has failed")
+  }
+
+  json.parse(response["body"])
+} catch {
+  map{}  
+}
+
+// GET Request
+data = try {
+  const response = http.get("https://www.devharmony.io/api/schools/j974jktgez2xkhmm8x5resd9m1710q15", map{})
+
+  const isSuccess = response["statusCode"] < 300
+  if !isSuccess {
+    throw error("request has failed")
+  }
+
+  json.parse(response["body"])
+} catch err {
+  printf(err)
+  map{}
+}
+
+const events = []number{}
+
+for _, eventMap in data["events"] {
+  printf(eventMap)
+  const event = Event.init(eventMap)
+  printf(event)
+}
+
+printf(events)

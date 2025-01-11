@@ -12,7 +12,7 @@ import (
 
 func main() {
 	start := time.Now()
-	run("examples/server.harmony")
+	run("examples/api.harmony")
 	//run_repl()
 	duration := time.Since(start)
 

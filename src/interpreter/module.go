@@ -2,12 +2,15 @@ package interpreter
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
 type ModuleType struct {
@@ -552,7 +555,7 @@ func init_json_module() Module {
 			return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
 		},
 		[]Type{PrimitiveType{StringType}},
-		NewMapType(PrimitiveType{StringType}, PrimitiveType{AnyType}),
+		NewMapType(PrimitiveType{AnyType}, PrimitiveType{AnyType}),
 	)
 
 	module.exports["stringify"] = NewNativeFunction(
@@ -570,6 +573,58 @@ func init_json_module() Module {
 				panic(fmt.Sprintf("JSON stringify error: %v", err))
 			}
 			return NewString(string(jsonBytes))
+		},
+		[]Type{NewMapType(PrimitiveType{AnyType}, PrimitiveType{AnyType})},
+		PrimitiveType{StringType},
+	)
+
+	return *module
+}
+
+func init_xml_module() Module {
+	module := NewModule()
+
+	// parse(xmlString: string): map
+	// Purpose: Parses an XML string into a map
+	module.exports["parse"] = NewNativeFunction(
+		func(args ...Value) Value {
+			xmlStr := args[0].(String).Value()
+			var result map[string]interface{}
+			if err := xml.Unmarshal([]byte(xmlStr), &result); err != nil {
+				panic(fmt.Sprintf("XML parse error: %v", err))
+			}
+
+			entries := make([]MapEntry, 0)
+			for k, v := range result {
+				entries = append(entries, MapEntry{
+					key:   NewString(k),
+					value: convert_to_value(v),
+				})
+			}
+			return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+		},
+		[]Type{PrimitiveType{StringType}},
+		NewMapType(PrimitiveType{StringType}, PrimitiveType{AnyType}),
+	)
+
+	// stringify(data: map): string
+	// Purpose: Converts a map into an XML string
+	module.exports["stringify"] = NewNativeFunction(
+		func(args ...Value) Value {
+			data := args[0].(Map)
+			nativeMap := make(map[string]interface{})
+
+			for _, entry := range *data.entries {
+				key := entry.key.(String).Value()
+				nativeMap[key] = convert_to_native(entry.value)
+			}
+
+			xmlBytes, err := helpers.MapToXml("", nativeMap)
+			if err != nil {
+				panic(err)
+			}
+
+			return NewString(string(xmlBytes))
 		},
 		[]Type{NewMapType(PrimitiveType{StringType}, PrimitiveType{AnyType})},
 		PrimitiveType{StringType},
@@ -654,4 +709,6 @@ func load_native_modules() {
 	standard_modules["os"] = init_os_module()
 	standard_modules["net"] = init_net_module()
 	standard_modules["json"] = init_json_module()
+	standard_modules["xml"] = init_xml_module()
+	standard_modules["http"] = init_http_module()
 }

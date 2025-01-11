@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nyan Cat</title>
+    <link rel="stylesheet" type="text/css" href="index.css" />
+  </head>
+  <body>
+    <div id="stars">
+      <span class="star" style="--level-y: 25px; animation-delay: 0"></span>
+      <span class="star" style="--level-y: 45px; animation-delay: 0.8s"></span>
+      <span class="star" style="--level-y: 75px; animation-delay: 2.1s"></span>
+      <span class="star" style="--level-y: 105px; animation-delay: 0.5s"></span>
+      <span class="star" style="--level-y: 125px; animation-delay: 1.3s"></span>
+      <span class="star" style="--level-y: 250px; animation-delay: 1.6s"></span>
+      <span class="star" style="--level-y: 305px; animation-delay: 0.2s"></span>
+      <span class="star" style="--level-y: 330px; animation-delay: 1s"></span>
+      <span class="star" style="--level-y: 375px; animation-delay: 1.9s"></span>
+      <span class="star" style="--level-y: 400px; animation-delay: 1.1s"></span>
+      <span class="star" style="--level-y: 450px; animation-delay: 2.7s"></span>
+      <span class="star" style="--level-y: 455px; animation-delay: 0.6s"></span>
+      <span class="star" style="--level-y: 475px; animation-delay: 0"></span>
+    </div>
+    <div id="rainbow">
+      <span class="rainbow-arc" style="--clr: red"> </span>
+      <span class="rainbow-arc" style="--clr: orange"> </span>
+      <span class="rainbow-arc" style="--clr: yellow"> </span>
+      <span class="rainbow-arc" style="--clr: limegreen"> </span>
+      <span class="rainbow-arc" style="--clr: dodgerblue"> </span>
+      <span class="rainbow-arc" style="--clr: rgb(138 43 226)"> </span>
+    </div>
+    <div>
+      <span class="legs short-legs" id="leg-2"></span>
+      <span class="legs short-legs" id="leg-3"></span>
+      <span class="toast"></span>
+      <span class="face"></span>
+      <span class="tail"></span>
+    </div>
+  </body>
+  <style>
+    body {
+      background-color: darkblue;
+      overflow: hidden;
+    }
+
+    /* sliding an object from right side to left side of the screen */
+
+    @keyframes slide-animation {
+      0% {
+        left: 115%;
+      }
+
+      100% {
+        left: -15%;
+      }
+    }
+
+    /* background stars and animation */
+
+    .star {
+      display: inline-block;
+      position: relative;
+      background-color: transparent;
+      width: 7px;
+      height: 7px;
+      transform: translateY(var(--level-y));
+      animation: slide-animation 1.5s linear infinite,
+        star-animation 0.9s linear infinite;
+    }
+
+    @keyframes star-animation {
+      20% {
+        box-shadow: -7px 0 0 white, 0 -7px 0 white, 7px 0 0 white, 0 7px 0 white;
+      }
+
+      40% {
+        box-shadow: -7px 0 0 white, 0 -7px 0 white, 7px 0 0 white, 0 7px 0 white,
+          -14px 0 0 white, 0 -14px 0 white, 14px 0 0 white, 0 14px 0 white;
+      }
+
+      60% {
+        box-shadow: -14px 0 0 white, 0 -14px 0 white, 14px 0 0 white,
+          0 12px 0 white, -21px 0 0 white, 0 -21px 0 white, 21px 0 0 white,
+          0 21px 0 white;
+      }
+
+      80% {
+        box-shadow: -28px 0 0 white, 0 -28px 0 white, 28px 0 0 white,
+          0 24px 0 white, -14px 14px 0 white, 14px 14px 0 white,
+          14px -14px 0 white, -14px -14px 0 white;
+      }
+
+      100% {
+        box-shadow: -21px 0 0 white, 0 -21px 0 white, 21px 0 0 white,
+          0 21px 0 white;
+      }
+    }
+
+    /* rainbow */
+
+    .rainbow-arc {
+      display: block;
+      background-color: var(--clr);
+
+      position: relative;
+      top: 192px;
+      width: 65px;
+      height: 8px;
+      margin-bottom: 18px;
+
+      animation: rainbow-arc-animaition 150ms alternate infinite;
+      animation-timing-function: steps(2, end);
+
+      box-shadow: -65px 0 0 var(--clr), -65px 8px 0 var(--clr),
+        -65px 16px 0 var(--clr), -65px 24px 0 var(--clr), 0 0 0 var(--clr),
+        0 8px 0 var(--clr), 0 16px 0 var(--clr), 0 24px 0 var(--clr),
+        65px 8px 0 var(--clr), 65px 16px 0 var(--clr), 65px 24px 0 var(--clr),
+        65px 32px 0 var(--clr), 130px 8px 0 var(--clr), 130px 16px 0 var(--clr),
+        130px 24px 0 var(--clr), 130px 32px 0 var(--clr), 195px 0 0 var(--clr),
+        195px 8px 0 var(--clr), 195px 16px 0 var(--clr), 195px 24px 0 var(--clr),
+        260px 0 0 var(--clr), 260px 8px 0 var(--clr), 260px 16px 0 var(--clr),
+        260px 24px 0 var(--clr), 325px 8px 0 var(--clr), 325px 16px 0 var(--clr),
+        325px 24px 0 var(--clr), 325px 32px 0 var(--clr), 390px 8px 0 var(--clr),
+        390px 16px 0 var(--clr), 390px 24px 0 var(--clr),
+        390px 32px 0 var(--clr), 455px 0 0 var(--clr), 455px 8px 0 var(--clr),
+        455px 16px 0 var(--clr), 455px 24px 0 var(--clr), 520px 0 0 var(--clr),
+        520px 8px 0 var(--clr), 520px 16px 0 var(--clr), 520px 24px 0 var(--clr);
+    }
+
+    @keyframes rainbow-arc-animaition {
+      from {
+        left: -130px;
+      }
+
+      to {
+        left: 130px;
+      }
+    }
+
+    /* legs */
+
+    .legs {
+      display: block;
+      position: relative;
+      width: 12px;
+      height: 12px;
+    }
+
+    .short-legs {
+      animation: leg-animation 350ms linear infinite;
+      box-shadow: 0 12px 0 black, 12px 12px 0 grey, 24px 12px 0 grey,
+        36px 12px 0 grey, 48px 12px 0 black, 0 24px 0 black, 12px 24px 0 grey,
+        24px 24px 0 grey, 36px 24px 0 grey, 48px 24px 0 black, 12px 36px 0 black,
+        24px 36px 0 black, 36px 36px 0 black, 48px 36px 0 black;
+    }
+
+    #leg-2 {
+      top: 210px;
+      left: 490px;
+    }
+
+    #leg-3 {
+      top: 196px;
+      left: 680px;
+    }
+
+    @keyframes leg-animation {
+      25% {
+        transform: translateX(-6px);
+      }
+
+      75% {
+        transform: translateX(6px);
+      }
+    }
+
+    .toast {
+      display: block;
+      position: absolute;
+      top: 200px;
+      left: 430px;
+      width: 12px;
+      height: 12px;
+      box-shadow: 24px 0 0 #a5641d, 36px 0 0 #a5641d, 48px 0 0 #a5641d,
+        60px 0 0 #a5641d, 72px 0 0 #a5641d, 84px 0 0 #a5641d, 96px 0 0 #a5641d,
+        108px 0 0 #a5641d, 120px 0 0 #a5641d, 132px 0 0 #a5641d,
+        144px 0 0 #a5641d, 156px 0 0 #a5641d, 168px 0 0 #a5641d,
+        180px 0 0 #a5641d, 192px 0 0 #a5641d, 204px 0 0 #a5641d,
+        216px 0 0 #a5641d, 228px 0 0 #a5641d, 240px 0 0 #a5641d,
+        252px 0 0 #a5641d, 264px 0 0 #a5641d, 276px 0 0 #a5641d,
+        288px 0 0 #a5641d, 300px 0 0 #a5641d, 312px 0 0 #a5641d,
+        324px 0 0 #a5641d, 336px 0 0 #a5641d, 348px 0 0 #a5641d,
+        24px 12px 0 #a5641d, 36px 12px 0 #ffcd94, 48px 12px 0 #ffcd94,
+        60px 12px 0 #ffcd94, 72px 12px 0 #ffcd94, 84px 12px 0 #ffcd94,
+        96px 12px 0 #ffcd94, 108px 12px 0 #ffcd94, 120px 12px 0 #ffcd94,
+        132px 12px 0 #ffcd94, 144px 12px 0 #ffcd94, 156px 12px 0 #ffcd94,
+        168px 12px 0 #ffcd94, 180px 12px 0 #ffcd94, 192px 12px 0 #ffcd94,
+        204px 12px 0 #ffcd94, 216px 12px 0 #ffcd94, 228px 12px 0 #ffcd94,
+        240px 12px 0 #ffcd94, 252px 12px 0 #ffcd94, 264px 12px 0 #ffcd94,
+        276px 12px 0 #ffcd94, 288px 12px 0 #ffcd94, 300px 12px 0 #ffcd94,
+        312px 12px 0 #ffcd94, 324px 12px 0 #ffcd94, 336px 12px 0 #ffcd94,
+        348px 12px 0 #a5641d, 360px 12px 0 #a5641d, 12px 24px 0 #a5641d,
+        24px 24px 0 #a5641d, 36px 24px 0 #ffcd94, 48px 24px 0 #ffcd94,
+        60px 24px 0 lightpink, 72px 24px 0 lightpink, 84px 24px 0 lightpink,
+        96px 24px 0 lightpink, 108px 24px 0 lightpink, 120px 24px 0 lightpink,
+        132px 24px 0 lightpink, 144px 24px 0 lightpink, 156px 24px 0 lightpink,
+        168px 24px 0 lightpink, 180px 24px 0 lightpink, 192px 24px 0 lightpink,
+        204px 24px 0 lightpink, 216px 24px 0 lightpink, 228px 24px 0 lightpink,
+        240px 24px 0 lightpink, 252px 24px 0 lightpink, 264px 24px 0 lightpink,
+        276px 24px 0 lightpink, 288px 24px 0 lightpink, 300px 24px 0 lightpink,
+        312px 24px 0 lightpink, 324px 24px 0 lightpink, 336px 24px 0 #ffcd94,
+        348px 24px 0 #ffcd94, 360px 24px 0 #a5641d, 12px 36px 0 #a5641d,
+        24px 36px 0 #ffcd94, 36px 36px 0 #ffcd94, 48px 36px 0 lightpink,
+        60px 36px 0 lightpink, 72px 36px 0 lightpink, 84px 36px 0 lightpink,
+        96px 36px 0 lightpink, 108px 36px 0 lightpink, 120px 36px 0 lightpink,
+        132px 36px 0 lightpink, 144px 36px 0 lightpink, 156px 36px 0 lightpink,
+        168px 36px 0 lightpink, 180px 36px 0 deeppink, 192px 36px 0 lightpink,
+        204px 36px 0 lightpink, 216px 36px 0 lightpink, 228px 36px 0 lightpink,
+        240px 36px 0 deeppink, 252px 36px 0 lightpink, 264px 36px 0 lightpink,
+        276px 36px 0 lightpink, 288px 36px 0 lightpink, 300px 36px 0 lightpink,
+        312px 36px 0 lightpink, 324px 36px 0 lightpink, 336px 36px 0 lightpink,
+        348px 36px 0 #ffcd94, 360px 36px 0 #a5641d, 12px 48px 0 #a5641d,
+        24px 48px 0 #ffcd94, 36px 48px 0 lightpink, 48px 48px 0 lightpink,
+        60px 48px 0 lightpink, 72px 48px 0 lightpink, 84px 48px 0 lightpink,
+        96px 48px 0 lightpink, 108px 48px 0 lightpink, 120px 48px 0 lightpink,
+        132px 48px 0 lightpink, 144px 48px 0 lightpink, 156px 48px 0 lightpink,
+        168px 48px 0 lightpink, 180px 48px 0 lightpink, 192px 48px 0 lightpink,
+        204px 48px 0 lightpink, 216px 48px 0 lightpink, 228px 48px 0 lightpink,
+        240px 48px 0 lightpink, 252px 48px 0 lightpink, 264px 48px 0 lightpink,
+        276px 48px 0 lightpink, 288px 48px 0 lightpink, 300px 48px 0 lightpink,
+        312px 48px 0 deeppink, 324px 48px 0 lightpink, 336px 48px 0 lightpink,
+        348px 48px 0 #ffcd94, 360px 48px 0 #a5641d, 12px 60px 0 #a5641d,
+        24px 60px 0 #ffcd94, 36px 60px 0 lightpink, 48px 60px 0 lightpink,
+        60px 60px 0 lightpink, 72px 60px 0 lightpink, 84px 60px 0 deeppink,
+        96px 60px 0 lightpink, 108px 60px 0 lightpink, 120px 60px 0 lightpink,
+        132px 60px 0 lightpink, 144px 60px 0 lightpink, 156px 60px 0 lightpink,
+        168px 60px 0 lightpink, 180px 60px 0 lightpink, 192px 60px 0 lightpink,
+        204px 60px 0 lightpink, 216px 60px 0 lightpink, 228px 60px 0 lightpink,
+        240px 60px 0 lightpink, 252px 60px 0 lightpink, 264px 60px 0 lightpink,
+        276px 60px 0 lightpink, 288px 60px 0 lightpink, 300px 60px 0 lightpink,
+        312px 60px 0 lightpink, 324px 60px 0 lightpink, 336px 60px 0 lightpink,
+        348px 60px 0 #ffcd94, 360px 60px 0 #a5641d, 12px 72px 0 #a5641d,
+        24px 72px 0 #ffcd94, 36px 72px 0 lightpink, 48px 72px 0 lightpink,
+        60px 72px 0 lightpink, 72px 72px 0 lightpink, 84px 72px 0 lightpink,
+        96px 72px 0 lightpink, 108px 72px 0 lightpink, 120px 72px 0 lightpink,
+        132px 72px 0 deeppink, 144px 72px 0 lightpink, 156px 72px 0 lightpink,
+        168px 72px 0 lightpink, 180px 72px 0 lightpink, 192px 72px 0 lightpink,
+        204px 72px 0 lightpink, 216px 72px 0 lightpink, 228px 72px 0 lightpink,
+        240px 72px 0 lightpink, 252px 72px 0 deeppink, 264px 72px 0 lightpink,
+        276px 72px 0 lightpink, 288px 72px 0 lightpink, 300px 72px 0 lightpink,
+        312px 72px 0 lightpink, 324px 72px 0 lightpink, 336px 72px 0 lightpink,
+        348px 72px 0 #ffcd94, 360px 72px 0 #a5641d, 12px 84px 0 #a5641d,
+        24px 84px 0 #ffcd94, 36px 84px 0 lightpink, 48px 84px 0 lightpink,
+        60px 84px 0 lightpink, 72px 84px 0 lightpink, 84px 84px 0 lightpink,
+        96px 84px 0 lightpink, 108px 84px 0 lightpink, 120px 84px 0 lightpink,
+        132px 84px 0 lightpink, 144px 84px 0 lightpink, 156px 84px 0 lightpink,
+        168px 84px 0 lightpink, 180px 84px 0 lightpink, 192px 84px 0 lightpink,
+        204px 84px 0 lightpink, 216px 84px 0 lightpink, 228px 84px 0 lightpink,
+        240px 84px 0 lightpink, 252px 84px 0 lightpink, 264px 84px 0 lightpink,
+        276px 84px 0 lightpink, 288px 84px 0 lightpink, 300px 84px 0 lightpink,
+        312px 84px 0 lightpink, 324px 84px 0 lightpink, 336px 84px 0 lightpink,
+        348px 84px 0 #ffcd94, 360px 84px 0 #a5641d, 12px 96px 0 #a5641d,
+        24px 96px 0 #ffcd94, 36px 96px 0 lightpink, 48px 96px 0 lightpink,
+        60px 96px 0 lightpink, 72px 96px 0 lightpink, 84px 96px 0 lightpink,
+        96px 96px 0 deeppink, 108px 96px 0 lightpink, 120px 96px 0 lightpink,
+        132px 96px 0 lightpink, 144px 96px 0 lightpink, 156px 96px 0 lightpink,
+        168px 96px 0 lightpink, 180px 96px 0 lightpink, 192px 96px 0 deeppink,
+        204px 96px 0 lightpink, 216px 96px 0 lightpink, 228px 96px 0 lightpink,
+        240px 96px 0 lightpink, 252px 96px 0 lightpink, 264px 96px 0 lightpink,
+        276px 96px 0 lightpink, 288px 96px 0 deeppink, 300px 96px 0 lightpink,
+        312px 96px 0 lightpink, 324px 96px 0 lightpink, 336px 96px 0 lightpink,
+        348px 96px 0 #ffcd94, 360px 96px 0 #a5641d, 12px 108px 0 #a5641d,
+        24px 108px 0 #ffcd94, 36px 108px 0 lightpink, 48px 108px 0 lightpink,
+        60px 108px 0 lightpink, 72px 108px 0 lightpink, 84px 108px 0 lightpink,
+        96px 108px 0 lightpink, 108px 108px 0 lightpink, 120px 108px 0 lightpink,
+        132px 108px 0 lightpink, 144px 108px 0 lightpink,
+        156px 108px 0 lightpink, 168px 108px 0 lightpink,
+        180px 108px 0 lightpink, 192px 108px 0 lightpink,
+        204px 108px 0 lightpink, 216px 108px 0 lightpink,
+        228px 108px 0 lightpink, 240px 108px 0 lightpink,
+        252px 108px 0 lightpink, 264px 108px 0 lightpink,
+        276px 108px 0 lightpink, 288px 108px 0 lightpink,
+        300px 108px 0 lightpink, 312px 108px 0 lightpink,
+        324px 108px 0 lightpink, 336px 108px 0 lightpink, 348px 108px 0 #ffcd94,
+        360px 108px 0 #a5641d, 12px 120px 0 #a5641d, 24px 120px 0 #ffcd94,
+        36px 120px 0 lightpink, 48px 120px 0 lightpink, 60px 120px 0 lightpink,
+        72px 120px 0 lightpink, 84px 120px 0 lightpink, 96px 120px 0 lightpink,
+        108px 120px 0 lightpink, 120px 120px 0 lightpink,
+        132px 120px 0 lightpink, 144px 120px 0 lightpink,
+        156px 120px 0 lightpink, 168px 120px 0 lightpink,
+        180px 120px 0 lightpink, 192px 120px 0 lightpink,
+        204px 120px 0 lightpink, 216px 120px 0 deeppink, 228px 120px 0 lightpink,
+        240px 120px 0 lightpink, 252px 120px 0 lightpink,
+        264px 120px 0 lightpink, 276px 120px 0 lightpink,
+        288px 120px 0 lightpink, 300px 120px 0 lightpink,
+        312px 120px 0 lightpink, 324px 120px 0 lightpink,
+        336px 120px 0 lightpink, 348px 120px 0 #ffcd94, 360px 120px 0 #a5641d,
+        12px 132px 0 #a5641d, 24px 132px 0 #ffcd94, 36px 132px 0 lightpink,
+        48px 132px 0 deeppink, 60px 132px 0 lightpink, 72px 132px 0 lightpink,
+        84px 132px 0 lightpink, 96px 132px 0 lightpink, 108px 132px 0 lightpink,
+        120px 132px 0 lightpink, 132px 132px 0 lightpink,
+        144px 132px 0 lightpink, 156px 132px 0 deeppink, 168px 132px 0 lightpink,
+        180px 132px 0 lightpink, 192px 132px 0 lightpink,
+        204px 132px 0 lightpink, 216px 132px 0 lightpink,
+        228px 132px 0 lightpink, 240px 132px 0 lightpink,
+        252px 132px 0 lightpink, 264px 132px 0 lightpink,
+        276px 132px 0 lightpink, 288px 132px 0 lightpink, 300px 132px 0 deeppink,
+        312px 132px 0 lightpink, 324px 132px 0 lightpink,
+        336px 132px 0 lightpink, 348px 132px 0 #ffcd94, 360px 132px 0 #a5641d,
+        12px 144px 0 #a5641d, 24px 144px 0 #ffcd94, 36px 144px 0 lightpink,
+        48px 144px 0 lightpink, 60px 144px 0 lightpink, 72px 144px 0 lightpink,
+        84px 144px 0 lightpink, 96px 144px 0 lightpink, 108px 144px 0 deeppink,
+        120px 144px 0 lightpink, 132px 144px 0 lightpink,
+        144px 144px 0 lightpink, 156px 144px 0 lightpink,
+        168px 144px 0 lightpink, 180px 144px 0 lightpink,
+        192px 144px 0 lightpink, 204px 144px 0 lightpink,
+        216px 144px 0 lightpink, 228px 144px 0 lightpink,
+        240px 144px 0 lightpink, 252px 144px 0 lightpink,
+        264px 144px 0 lightpink, 276px 144px 0 lightpink,
+        288px 144px 0 lightpink, 300px 144px 0 lightpink,
+        312px 144px 0 lightpink, 324px 144px 0 lightpink,
+        336px 144px 0 lightpink, 348px 144px 0 #ffcd94, 360px 144px 0 #a5641d,
+        12px 156px 0 #a5641d, 24px 156px 0 #ffcd94, 36px 156px 0 #ffcd94,
+        48px 156px 0 lightpink, 60px 156px 0 lightpink, 72px 156px 0 lightpink,
+        84px 156px 0 lightpink, 96px 156px 0 lightpink, 108px 156px 0 lightpink,
+        120px 156px 0 lightpink, 132px 156px 0 lightpink,
+        144px 156px 0 lightpink, 156px 156px 0 lightpink,
+        168px 156px 0 lightpink, 180px 156px 0 lightpink,
+        192px 156px 0 lightpink, 204px 156px 0 lightpink,
+        216px 156px 0 lightpink, 228px 156px 0 lightpink,
+        240px 156px 0 lightpink, 252px 156px 0 deeppink, 264px 156px 0 lightpink,
+        276px 156px 0 lightpink, 288px 156px 0 lightpink,
+        300px 156px 0 lightpink, 312px 156px 0 lightpink,
+        324px 156px 0 lightpink, 336px 156px 0 lightpink, 348px 156px 0 #ffcd94,
+        360px 156px 0 #a5641d, 12px 168px 0 #a5641d, 24px 168px 0 #a5641d,
+        36px 168px 0 #ffcd94, 48px 168px 0 #ffcd94, 60px 168px 0 lightpink,
+        72px 168px 0 lightpink, 84px 168px 0 lightpink, 96px 168px 0 lightpink,
+        108px 168px 0 lightpink, 120px 168px 0 lightpink,
+        132px 168px 0 lightpink, 144px 168px 0 lightpink,
+        156px 168px 0 lightpink, 168px 168px 0 lightpink,
+        180px 168px 0 lightpink, 192px 168px 0 deeppink, 204px 168px 0 lightpink,
+        216px 168px 0 lightpink, 228px 168px 0 lightpink,
+        240px 168px 0 lightpink, 252px 168px 0 lightpink,
+        264px 168px 0 lightpink, 276px 168px 0 lightpink,
+        288px 168px 0 lightpink, 300px 168px 0 lightpink,
+        312px 168px 0 lightpink, 324px 168px 0 lightpink, 336px 168px 0 #ffcd94,
+        348px 168px 0 #ffcd94, 360px 168px 0 #a5641d, 24px 180px 0 #a5641d,
+        36px 180px 0 #ffcd94, 48px 180px 0 #ffcd94, 60px 180px 0 #ffcd94,
+        72px 180px 0 #ffcd94, 84px 180px 0 #ffcd94, 96px 180px 0 #ffcd94,
+        108px 180px 0 #ffcd94, 120px 180px 0 #ffcd94, 132px 180px 0 #ffcd94,
+        144px 180px 0 #ffcd94, 156px 180px 0 #ffcd94, 168px 180px 0 #ffcd94,
+        180px 180px 0 #ffcd94, 192px 180px 0 #ffcd94, 204px 180px 0 #ffcd94,
+        216px 180px 0 #ffcd94, 228px 180px 0 #ffcd94, 240px 180px 0 #ffcd94,
+        252px 180px 0 #ffcd94, 264px 180px 0 #ffcd94, 276px 180px 0 #ffcd94,
+        288px 180px 0 #ffcd94, 300px 180px 0 #ffcd94, 312px 180px 0 #ffcd94,
+        324px 180px 0 #ffcd94, 336px 180px 0 #ffcd94, 348px 180px 0 #a5641d,
+        360px 180px 0 #a5641d, 24px 192px 0 #a5641d, 36px 192px 0 #a5641d,
+        48px 192px 0 #a5641d, 60px 192px 0 #a5641d, 72px 192px 0 #a5641d,
+        84px 192px 0 #a5641d, 96px 192px 0 #a5641d, 108px 192px 0 #a5641d,
+        120px 192px 0 #a5641d, 132px 192px 0 #a5641d, 144px 192px 0 #a5641d,
+        156px 192px 0 #a5641d, 168px 192px 0 #a5641d, 180px 192px 0 #a5641d,
+        192px 192px 0 #a5641d, 204px 192px 0 #a5641d, 216px 192px 0 #a5641d,
+        228px 192px 0 #a5641d, 240px 192px 0 #a5641d, 252px 192px 0 #a5641d,
+        264px 192px 0 #a5641d, 276px 192px 0 #a5641d, 288px 192px 0 #a5641d,
+        300px 192px 0 #a5641d, 312px 192px 0 #a5641d, 324px 192px 0 #a5641d,
+        336px 192px 0 #a5641d, 348px 192px 0 #a5641d;
+    }
+
+    .face {
+      display: block;
+      background-color: black;
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      top: 280px;
+      left: 744px;
+      animation: face-animation 450ms linear infinite;
+
+      /* the cat is mirrored so i just copied the right side and changed the sign so it would be on the left */
+      box-shadow: 
+        
+                /* right */ 72px -48px 0 black,
+        60px -36px 0 black, 72px -36px 0 black, 48px -24px 0 black,
+        60px -24px 0 grey, 72px -24px 0 black, 36px -12px 0 black,
+        48px -12px 0 grey, 60px -12px 0 grey, 72px -12px 0 black,
+        12px 0 0 0 black, 24px 0 0 0 black, 36px 0 0 grey, 48px 0 0 grey,
+        60px 0 0 grey, 72px 0 0 black, 0 12px 0 grey, 12px 12px 0 grey,
+        24px 12px 0 grey, 36px 12px 0 grey, 48px 12px 0 grey, 60px 12px 0 grey,
+        72px 12px 0 black, 0 12px 0 grey, 12px 12px 0 grey, 24px 12px 0 grey,
+        36px 12px 0 grey, 48px 12px 0 grey, 60px 12px 0 grey, 72px 12px 0 black,
+        0 24px 0 grey, 12px 24px 0 grey, 24px 24px 0 grey, 36px 24px 0 black,
+        48px 24px 0 white, 60px 24px 0 grey, 72px 24px 0 grey, 84px 24px 0 black,
+        0 36px 0 grey, 12px 36px 0 grey, 24px 36px 0 grey, 36px 36px 0 black,
+        48px 36px 0 black, 60px 36px 0 grey, 72px 36px 0 grey, 84px 36px 0 black,
+        0 48px 0 grey, 12px 48px 0 grey, 24px 48px 0 grey, 36px 48px 0 grey,
+        48px 48px 0 grey, 60px 48px 0 #eb92a9, 72px 48px 0 #eb92a9,
+        84px 48px 0 black, 0 60px 0 black, 12px 60px 0 grey, 24px 60px 0 grey,
+        36px 60px 0 black, 48px 60px 0 grey, 60px 60px 0 #eb92a9,
+        72px 60px 0 #eb92a9, 84px 60px 0 black, 0 72px 0 black,
+        12px 72px 0 black, 24px 72px 0 black, 36px 72px 0 black,
+        48px 72px 0 grey, 60px 72px 0 grey, 72px 72px 0 black, 0 84px 0 grey,
+        12px 84px 0 grey, 24px 84px 0 grey, 36px 84px 0 grey, 48px 84px 0 grey,
+        60px 84px 0 black, 0 96px 0 black, 12px 96px 0 black, 24px 96px 0 black,
+        36px 96px 0 black, 48px 96px 0 black /* left */, -72px -48px 0 black,
+        -60px -36px 0 black, -72px -36px 0 black, -48px -24px 0 black,
+        -60px -24px 0 grey, -72px -24px 0 black, -36px -12px 0 black,
+        -48px -12px 0 grey, -60px -12px 0 grey, -72px -12px 0 black,
+        -12px 0 0 0 black, -24px 0 0 0 black, -36px 0 0 grey, -48px 0 0 grey,
+        -60px 0 0 grey, -72px 0 0 black, -12px 12px 0 grey, -24px 12px 0 grey,
+        -36px 12px 0 grey, -48px 12px 0 grey, -60px 12px 0 grey,
+        -72px 12px 0 black, -12px 12px 0 grey, -24px 12px 0 grey,
+        -36px 12px 0 grey, -48px 12px 0 grey, -60px 12px 0 grey,
+        -72px 12px 0 black, -12px 24px 0 grey, -24px 24px 0 grey,
+        -36px 24px 0 white, -48px 24px 0 black, -60px 24px 0 grey,
+        -72px 24px 0 grey, -84px 24px 0 black, -12px 36px 0 grey,
+        -24px 36px 0 grey, -36px 36px 0 black, -48px 36px 0 black,
+        -60px 36px 0 grey, -72px 36px 0 grey, -84px 36px 0 black,
+        -12px 48px 0 grey, -24px 48px 0 grey, -36px 48px 0 grey,
+        -48px 48px 0 grey, -60px 48px 0 #eb92a9, -72px 48px 0 #eb92a9,
+        -84px 48px 0 black, -12px 60px 0 grey, -24px 60px 0 grey,
+        -36px 60px 0 black, -48px 60px 0 grey, -60px 60px 0 #eb92a9,
+        -72px 60px 0 #eb92a9, -84px 60px 0 black, -12px 72px 0 black,
+        -24px 72px 0 black, -36px 72px 0 black, -48px 72px 0 grey,
+        -60px 72px 0 grey, -72px 72px 0 black, -12px 84px 0 grey,
+        -24px 84px 0 grey, -36px 84px 0 grey, -48px 84px 0 grey,
+        -60px 84px 0 black, -12px 96px 0 black, -24px 96px 0 black,
+        -36px 96px 0 black, -48px 96px 0 black;
+    }
+
+    @keyframes face-animation {
+      25% {
+        transform: translateX(4px);
+      }
+
+      45% {
+        transform: translateY(4px);
+      }
+
+      65% {
+        transform: translateX(-4px);
+      }
+
+      85% {
+        transform: translateY(-4px);
+      }
+    }
+
+    .tail {
+      display: block;
+      position: absolute;
+      background-color: grey;
+      width: 12px;
+      height: 12px;
+      top: 312px;
+      left: 430px;
+
+      box-shadow: 0 -24px 0 black, 0 -12px grey, 0 12px 0 black,
+        -12px -24px 0 black, -12px -12px grey, -12px 0 0 grey,
+        -12px 12px 0 black, -24px -24px 0 black, -24px -12px grey,
+        -24px 0 0 grey, -24px 12px 0 black, -36px -36px 0 black,
+        -36px -24px 0 black, -36px -12px grey, -36px 0 0 black,
+        -48px -48px 0 black, -48px -36px 0 grey, -48px -24px 0 grey,
+        -48px -12px grey, -48px 0 0 black, -60px -48px 0 black,
+        -60px -36px 0 grey, -60px -24px 0 grey, -60px -12px grey,
+        -60px 0 0 black, -72px -36px 0 black, -72px -24px 0 black,
+        -72px -12px 0 black;
+    }
+  </style>
+</html>

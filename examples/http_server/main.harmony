@@ -1,4 +1,6 @@
 import net from "net"
+import os from "os"
+
 const server = net.create_server()
 
 server.get("/", fn(req, res) {
@@ -11,7 +13,7 @@ server.get("/api/data", fn(req, res) {
     "query" -> req.query,
   }
 
-  res.json(data)
+  res.xml(data)
 })
 
 server.post("/api/submit", fn(req, res) {
@@ -21,6 +23,11 @@ server.post("/api/submit", fn(req, res) {
   }
 
   res.status(201).json(data)
+})
+
+server.get("/static", fn(req, res) {
+  const fileContent = os.read_file("examples/http_server/file.html")
+  res.html(fileContent)
 })
 
 net.serve(server, 3000)
