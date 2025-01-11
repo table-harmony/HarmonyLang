@@ -676,6 +676,8 @@ func convert_to_value(native interface{}) Value {
 
 func convert_to_native(value Value) interface{} {
 	switch v := value.(type) {
+	case Reference:
+		return convert_to_native(v.Load())
 	case String:
 		return v.Value()
 	case Number:

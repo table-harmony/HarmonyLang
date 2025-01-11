@@ -1,6 +1,35 @@
 import http from "http"
 import json from "json"
 
+struct User {
+  id: string
+  username: string
+  email: string
+
+  static fn create(data) {
+    if data == nil {
+      return nil
+    }
+  
+    return new User{
+      id: data["id"],
+      username: data["userName"],
+      email: data["email"],
+    }
+  }
+}
+
+const currentUser = User.create(map{
+  "id" -> "asda",
+  "email" -> "asdasd",
+  "userName" -> "asdasd",
+})
+const userMap = map{
+      "id" -> currentUser.id,
+      "email" -> currentUser.email,
+      "username" -> currentUser.username,
+    }
+printf(userMap)
 const response = http.post("http://localhost:7137/api/auth/login", map{
   "headers" -> map{
     "Content-Type" -> "application/json",
