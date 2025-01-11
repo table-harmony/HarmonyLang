@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/table-harmony/HarmonyLang/src/ast"
+	"github.com/table-harmony/HarmonyLang/src/helpers"
 	"github.com/table-harmony/HarmonyLang/src/lexer"
 )
 
@@ -496,6 +497,47 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		return owner.Get(property)
 	case Slice:
 		return owner.Get(property)
+	case Server:
+		propertyName, ok := property.(String)
+		if !ok {
+			panic("Computed member access must use string expression for property")
+		}
+
+		if method, exists := owner.methods[propertyName.value]; exists {
+			return method
+		}
+
+		panic(fmt.Sprintf("Unknown server method: %s", propertyName.value))
+	case Response:
+		propertyName, ok := property.(String)
+		if !ok {
+			panic("Computed member access must use string expression for property")
+		}
+
+		if method, exists := owner.Methods[propertyName.value]; exists {
+			return method
+		}
+
+		value := reflect.ValueOf(owner)
+		field := value.FieldByName(helpers.Capitalize(propertyName.value))
+		if field.IsValid() {
+			return convert_to_value(field.Interface())
+		}
+
+		panic(fmt.Sprintf("Unknown response method or property: %s", propertyName.value))
+	case Request:
+		propertyName, ok := property.(String)
+		if !ok {
+			panic("Computed member access must use string expression for property")
+		}
+
+		value := reflect.ValueOf(owner)
+		field := value.FieldByName(helpers.Capitalize(propertyName.value))
+		if field.IsValid() {
+			return convert_to_value(field.Interface())
+		}
+
+		panic(fmt.Sprintf("Unknown request method or property: %s", propertyName.value))
 	case *Struct:
 		propertyName, ok := property.(String)
 		if !ok {
@@ -585,6 +627,28 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 
 		panic(fmt.Sprintf("Unknown server method: %s", property.Value))
+
+	case Request:
+		value := reflect.ValueOf(owner)
+		field := value.FieldByName(helpers.Capitalize(property.Value))
+		if field.IsValid() {
+			return convert_to_value(field.Interface())
+		}
+
+		panic(fmt.Sprintf("Unknown request method or property: %s", property.Value))
+
+	case Response:
+		if method, exists := owner.Methods[property.Value]; exists {
+			return method
+		}
+
+		value := reflect.ValueOf(owner)
+		field := value.FieldByName(helpers.Capitalize(property.Value))
+		if field.IsValid() {
+			return convert_to_value(field.Interface())
+		}
+
+		panic(fmt.Sprintf("Unknown response method or property: %s", property.Value))
 
 	case *Error:
 		if method, exists := owner.methods[property.Value]; exists {
