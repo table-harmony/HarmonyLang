@@ -12,10 +12,14 @@ import (
 
 func main() {
 	start := time.Now()
-	run("examples/api.harmony")
-	//run_repl()
-	duration := time.Since(start)
 
+	if len(os.Args) == 1 {
+		run_repl()
+	} else {
+		run(os.Args[1])
+	}
+
+	duration := time.Since(start)
 	fmt.Printf("Duration: %v\n", duration)
 }
 
