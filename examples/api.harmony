@@ -16,8 +16,19 @@ struct Event {
     }
     return event
   }
+
+  fn string() -> string {
+    let str: string = "Event{\n"
+    str += "  _id: " + self._id + "\n"
+    str += "  _creationTime: " + self._creationTime + "\n"
+    str += "  key: " + self.key + "\n"
+    str += "  objectId: " + self.objectId + "\n"
+    str += "}"
+    return str
+  }
 }
 
+// POST Request
 let data = try {
   const response = http.post("https://www.devharmony.io/api/events", map{
     "headers" -> map{
@@ -35,7 +46,8 @@ let data = try {
   }
 
   json.parse(response["body"])
-} catch {
+} catch err {
+  printf(err)
   map{}  
 }
 
@@ -54,12 +66,13 @@ data = try {
   map{}
 }
 
-const events = []number{}
+const events = []Event{}
 
 for _, eventMap in data["events"] {
-  printf(eventMap)
   const event = Event.init(eventMap)
-  printf(event)
+  events.append(event)
 }
 
-printf(events)
+events.each(fn (_, event) {
+  println(event.string())
+})

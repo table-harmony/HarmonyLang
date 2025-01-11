@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+
+	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
 var native_print = NewNativeFunction(print_function, []Type{PrimitiveType{AnyType}}, PrimitiveType{NilType})
@@ -13,7 +15,8 @@ func print_function(args ...Value) Value {
 		if i > 0 {
 			fmt.Print(" ")
 		}
-		fmt.Print(arg.String())
+		processed := helpers.ProcessEscapes(arg.String())
+		fmt.Print(processed)
 	}
 	return NewNil()
 }
@@ -25,7 +28,9 @@ func println_function(args ...Value) Value {
 		if i > 0 {
 			fmt.Print(" ")
 		}
-		fmt.Print(arg.String())
+
+		processed := helpers.ProcessEscapes(arg.String())
+		fmt.Println(processed)
 	}
 	fmt.Print("\n")
 	return NewNil()
@@ -38,7 +43,9 @@ func printf_function(args ...Value) Value {
 		if rand.Intn(100) == 42 {
 			fmt.Println("🎉 YOU FOUND THE SECRET MESSAGE! 🎉")
 		}
-		fmt.Printf("💥🌟💥 %s 💥🌟💥\n", arg.String())
+
+		processed := helpers.ProcessEscapes(arg.String())
+		fmt.Printf("💥🌟💥 %s 💥🌟💥\n", processed)
 	}
 
 	return NewNil()

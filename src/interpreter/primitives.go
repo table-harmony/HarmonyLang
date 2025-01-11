@@ -83,7 +83,7 @@ func NewNumber(value float64) Value { return Number{value} }
 // Number implements Value interface
 func (s String) Type() Type        { return PrimitiveType{StringType} }
 func (s String) Clone() Value      { return NewString(s.value) }
-func (s String) String() string    { return fmt.Sprintf("\"%s\"", s.value) }
+func (s String) String() string    { return s.value }
 func (s String) Value() string     { return s.value }
 func NewString(value string) Value { return String{value} }
 
