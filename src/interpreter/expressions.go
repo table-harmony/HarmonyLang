@@ -497,6 +497,25 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		return owner.Get(property)
 	case Slice:
 		return owner.Get(property)
+	case String:
+		numberProperty, ok := property.(Number)
+		if ok {
+			if len(owner.value) <= int(numberProperty.value) {
+				panic(fmt.Sprintf("Index out of range '%b'", numberProperty.value))
+			}
+			return NewString(string(owner.value[int(numberProperty.value)]))
+		}
+
+		propertyName, ok := property.(String)
+		if !ok {
+			panic("Computed member access must use string expression for property")
+		}
+
+		if method, exists := owner.methods[propertyName.value]; exists {
+			return method
+		}
+
+		panic(fmt.Sprintf("Unknown string method: %s", propertyName.value))
 	case Server:
 		propertyName, ok := property.(String)
 		if !ok {
@@ -620,6 +639,13 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		}
 
 		panic(fmt.Sprintf("Unknown map method: %s", property.Value))
+
+	case String:
+		if method, exists := owner.methods[property.Value]; exists {
+			return method
+		}
+
+		panic(fmt.Sprintf("Unknown server method: %s", property.Value))
 
 	case Server:
 		if method, exists := owner.methods[property.Value]; exists {

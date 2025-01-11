@@ -173,6 +173,10 @@ func evaluate_iterator_for_statement(statement ast.Statement, scope *Scope) {
 		keyType = iterator._type.keyType
 		valueType = iterator._type.valueType
 		iterations = len(*iterator.entries)
+	case String:
+		keyType = PrimitiveType{NumberType}
+		valueType = PrimitiveType{StringType}
+		iterations = len(iterator.value)
 	}
 
 	key := NewVariableReference(
@@ -233,6 +237,13 @@ func evaluate_iterator_for_statement(statement ast.Statement, scope *Scope) {
 			key.Store(keyValue)
 			if value != nil {
 				value.Store(current.value)
+			}
+		case String:
+			keyValue := NewNumber(float64(i))
+			key.Store(keyValue)
+
+			if value != nil {
+				value.Store(NewString(string(iterator.value[i])))
 			}
 		}
 
@@ -326,6 +337,8 @@ func evaluate_assignment_statement(statement ast.Statement, scope *Scope) {
 			owner.Set(property, value)
 		case Slice:
 			owner.Set(property, value)
+		case String:
+			panic("cannot assign a value to char of a string")
 		case *Struct:
 			propertyName, err := ExpectValue[String](property)
 			if err != nil {

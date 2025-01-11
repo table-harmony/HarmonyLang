@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"strings"
 )
 
 type PrimitiveType struct {
@@ -64,7 +65,10 @@ func (p PrimitiveType) Equals(other Type) bool {
 
 // primitive values
 type Number struct{ value float64 }
-type String struct{ value string }
+type String struct {
+	value   string
+	methods map[string]Function
+}
 type Boolean struct{ value bool }
 type Error struct {
 	value   string
@@ -81,11 +85,94 @@ func (n Number) IsInteger() bool    { return n.value == float64(int(n.value)) }
 func NewNumber(value float64) Value { return Number{value} }
 
 // Number implements Value interface
-func (s String) Type() Type        { return PrimitiveType{StringType} }
-func (s String) Clone() Value      { return NewString(s.value) }
-func (s String) String() string    { return s.value }
-func (s String) Value() string     { return s.value }
-func NewString(value string) Value { return String{value} }
+func (s String) Type() Type     { return PrimitiveType{StringType} }
+func (s String) Clone() Value   { return NewString(s.value) }
+func (s String) String() string { return s.value }
+func (s String) Value() string  { return s.value }
+func NewString(value string) Value {
+	methods := make(map[string]Function)
+
+	s := String{value, methods}
+
+	methods["len"] = NewNativeFunction(
+		func(args ...Value) Value {
+			return NewNumber(float64(len(s.value)))
+		},
+		[]Type{},
+		PrimitiveType{NumberType},
+	)
+
+	methods["index"] = NewNativeFunction(
+		func(args ...Value) Value {
+			substr := args[0].(String)
+			return NewNumber(float64(strings.Index(s.value, substr.value)))
+		},
+		[]Type{PrimitiveType{StringType}},
+		PrimitiveType{NumberType},
+	)
+
+	methods["contains"] = NewNativeFunction(
+		func(args ...Value) Value {
+			substr := args[0].(String)
+			return NewBoolean(strings.Contains(s.value, substr.value))
+		},
+		[]Type{PrimitiveType{StringType}},
+		PrimitiveType{BooleanType},
+	)
+
+	methods["substr"] = NewNativeFunction(
+		func(args ...Value) Value {
+			start := args[0].(Number).value
+			end := args[1].(Number).value
+			if start < 0 || int(end) > len(s.value) || start > end {
+				panic("substring indices out of range")
+			}
+			return NewString(s.value[int(start):int(end)])
+		},
+		[]Type{PrimitiveType{NumberType}, PrimitiveType{NumberType}},
+		PrimitiveType{StringType},
+	)
+
+	methods["upper"] = NewNativeFunction(
+		func(args ...Value) Value {
+			return NewString(strings.ToUpper(s.value))
+		},
+		[]Type{},
+		PrimitiveType{StringType},
+	)
+
+	methods["lower"] = NewNativeFunction(
+		func(args ...Value) Value {
+			return NewString(strings.ToLower(s.value))
+		},
+		[]Type{},
+		PrimitiveType{StringType},
+	)
+
+	methods["trim"] = NewNativeFunction(
+		func(args ...Value) Value {
+			return NewString(strings.TrimSpace(s.value))
+		},
+		[]Type{},
+		PrimitiveType{StringType},
+	)
+
+	methods["split"] = NewNativeFunction(
+		func(args ...Value) Value {
+			sep := args[0].(String).value
+			parts := strings.Split(s.value, sep)
+			result := make([]Value, len(parts))
+			for i, part := range parts {
+				result[i] = NewString(part)
+			}
+			return NewSlice(result, PrimitiveType{StringType})
+		},
+		[]Type{PrimitiveType{StringType}},
+		NewSliceType(PrimitiveType{StringType}),
+	)
+
+	return s
+}
 
 // Boolean implements Value interface
 func (b Boolean) Type() Type      { return PrimitiveType{BooleanType} }

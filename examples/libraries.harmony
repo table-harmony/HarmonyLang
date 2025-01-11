@@ -9,7 +9,7 @@ printf(math.pow(2, 3))
 const float = random.float()
 println(float)
 
-os.write_file("src/readme.txt", "liron kaner")
+os.write_file("readme.txt", "liron kaner")
 
 const arr = [1, 2, 3]
 

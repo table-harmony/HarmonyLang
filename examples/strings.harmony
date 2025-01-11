@@ -1,0 +1,40 @@
+// Create a new string
+let str = "Hello, Harmony!"
+
+// Test len method
+let length = str.len()
+println("Length:" + length) // Output: Length: 15
+
+// Test index method
+let index = str.index("Harmony")
+println("Index of 'Harmony': " + index) // Output: Index of 'Harmony': 7
+
+// Test contains method
+let contains = str.contains("Harmony")
+print("Contains 'Harmony': ") // Output: Contains 'Harmony': true
+println(contains)
+
+// Test substr method
+let substring = str.substr(7, 14)
+println("Substring (7, 14): " + substring) // Output: Substring (7, 14): Harmony
+
+// Test upper method
+let upper = str.upper()
+println("Uppercase: " + upper) // Output: Uppercase: HELLO, HARMONY!
+
+// Test lower method
+let lower = str.lower()
+println("Lowercase: " + lower) // Output: Lowercase: hello, harmony!
+
+// Test trim method
+let trimmed = "  Hello, Harmony!  ".trim()
+println("Trimmed: " + trimmed) // Output: Trimmed: Hello, Harmony!
+
+// Test split method
+let parts = str["split"](", ")
+print("Split by ', ': ") // Output: Split by ', ': [Hello Harmony!]
+println(parts)
+
+for index, char in str {
+  println("index: " + index + " char: " + char)
+}
