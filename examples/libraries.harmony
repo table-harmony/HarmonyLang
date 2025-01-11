@@ -1,9 +1,10 @@
-import math from "math"
+import { abs as cool_abs }, math from "math"
 import time from "time"
 import random from "random"
 import os from "os"
 
-printf(math.abs(-10))
+printf(cool_abs(-10))
+printf(math.pow(2, 3))
 
 const float = random.float()
 println(float)

@@ -143,11 +143,44 @@ func parse_import_statement(parser *parser) ast.Statement {
 	parser.advance(1)
 
 	var alias string
-	var namedAlias string
 	var namedImports map[string]string
 	if parser.current_token().Kind == lexer.OPEN_CURLY {
+		namedImports = parse_named_imports(parser)
+
+		if parser.current_token().Kind == lexer.COMMA {
+			parser.advance(1)
+			alias = parser.expect(lexer.IDENTIFIER).Value
+			parser.advance(1)
+		}
+	} else {
+		alias = parser.expect(lexer.IDENTIFIER).Value
 		parser.advance(1)
-		namedImports = make(map[string]string)
+
+		if parser.current_token().Kind == lexer.COMMA {
+			parser.advance(1)
+			namedImports = parse_named_imports(parser)
+		}
+	}
+
+	parser.expect(lexer.FROM)
+	parser.advance(1)
+
+	module := parser.expect(lexer.STRING).Value
+	parser.advance(1)
+
+	return ast.ImportStatement{
+		Module:       module,
+		Alias:        alias,
+		NamedImports: namedImports,
+	}
+}
+
+func parse_named_imports(parser *parser) map[string]string {
+	var namedAlias string
+	namedImports := make(map[string]string)
+
+	if parser.current_token().Kind == lexer.OPEN_CURLY {
+		parser.advance(1)
 
 		for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
 			identifier := parser.expect(lexer.IDENTIFIER).Value
@@ -170,22 +203,9 @@ func parse_import_statement(parser *parser) ast.Statement {
 
 		parser.expect(lexer.CLOSE_CURLY)
 		parser.advance(1)
-	} else {
-		alias = parser.expect(lexer.IDENTIFIER).Value
-		parser.advance(1)
 	}
 
-	parser.expect(lexer.FROM)
-	parser.advance(1)
-
-	module := parser.expect(lexer.STRING).Value
-	parser.advance(1)
-
-	return ast.ImportStatement{
-		Module:       module,
-		Alias:        alias,
-		NamedImports: namedImports,
-	}
+	return namedImports
 }
 
 func parse_interface_declaration_statement(parser *parser) ast.Statement {

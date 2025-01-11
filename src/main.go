@@ -13,7 +13,7 @@ import (
 func main() {
 	start := time.Now()
 	//run("examples/tasks_system/main.harmony")
-	run("examples/server.harmony")
+	run("examples/libraries.harmony")
 	//run_repl()
 	duration := time.Since(start)
 

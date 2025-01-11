@@ -443,12 +443,14 @@ func evaluate_import_statement(statement ast.Statement, scope *Scope) {
 				module.exports[ref.identifier] = ref.Clone()
 			case *VariableReference:
 				module.exports[ref.identifier] = ref.Clone()
-			} //TODO: interface struct
+			case *Struct:
+				module.exports[ref.identifier] = ref.Clone()
+			}
 		}
 	}
 
 	for key, value := range expectedStatement.NamedImports {
-		scope.Declare(NewVariableReference(key, true, module.exports[value], module.exports[value].Type()))
+		scope.Declare(NewVariableReference(value, true, module.exports[key], module.exports[key].Type()))
 	}
 
 	if expectedStatement.Alias != "" {

@@ -534,34 +534,130 @@ func init_os_module() Module {
 	return *module
 }
 
+// Request represents an HTTP request
 type Request struct {
-	Method  string
-	Path    string
-	Query   map[string]string
-	Headers map[string]string
-	Body    string
-	Params  map[string]string
+	method  string
+	path    string
+	query   map[string]string
+	headers map[string]string
+	body    string
+	params  map[string]string
 }
 
 // Response represents an HTTP response
 type Response struct {
-	StatusCode int
-	Headers    map[string]string
-	Body       string
+	statusCode int
+	headers    map[string]string
+	body       string
 }
 
 // RouteHandler represents a function that handles a route
-type RouteHandler func(req Request) Response
+type RouteHandler func(req Request, res Response)
+
+type ServerType struct {
+}
+
+func NewServerType() ServerType {
+	return ServerType{}
+}
+
+func (ServerType) String() string { return "server" }
+func (s ServerType) Equals(other Type) bool {
+	_, ok := other.(ServerType)
+	return ok
+}
+func (s ServerType) DefaultValue() Value { return NewNil() }
 
 // Server represents an HTTP server
 type Server struct {
-	routes map[string]map[string]RouteHandler
+	routes  map[string]map[string]RouteHandler
+	methods map[string]Function
 }
 
-func (Server) Type() Type     { return MapType{} }
-func (s Server) Clone() Value { return s }
+func NewServer(routes map[string]map[string]RouteHandler) Value {
+	server := Server{
+		routes:  routes,
+		methods: map[string]Function{},
+	}
+	server.init_methods()
+	return server
+}
+
+// Server implements the Value interface
+func (Server) Type() Type { return ServerType{} }
+func (s Server) Clone() Value {
+	copyRoutes := make(map[string]map[string]RouteHandler)
+	for method, routes := range s.routes {
+		copyRoutes[method] = make(map[string]RouteHandler)
+		for path, handler := range routes {
+			copyRoutes[method][path] = handler
+		}
+	}
+	return NewServer(copyRoutes)
+}
 func (s Server) String() string {
-	return ""
+	var builder strings.Builder
+	builder.WriteString("Server {\n")
+	for path, routes := range s.routes {
+		builder.WriteString(fmt.Sprintf("  %s:\n", path))
+		for method := range routes {
+			builder.WriteString(fmt.Sprintf("    %s\n", method))
+		}
+	}
+	builder.WriteString("}")
+	return builder.String()
+}
+
+func (s Server) serve(method string, path string, handler Function) Value {
+	if s.routes[path] == nil {
+		s.routes[path] = make(map[string]RouteHandler)
+	}
+
+	s.routes[path][method] = func(req Request, res Response) {
+		entries := []MapEntry{
+			{NewString("method"), convert_to_value(req.method)},
+			{NewString("path"), convert_to_value(req.path)},
+			{NewString("query"), convert_to_value(req.query)},
+			{NewString("headers"), convert_to_value(req.headers)},
+			{NewString("body"), convert_to_value(req.body)},
+			{NewString("params"), convert_to_value(req.params)},
+		}
+		reqMap := NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+
+		entries = []MapEntry{
+			{NewString("statusCode"), convert_to_value(res.statusCode)},
+			{NewString("headers"), convert_to_value(res.headers)},
+			{NewString("body"), convert_to_value(res.body)},
+		}
+		resMap := NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+
+		handler.Call(reqMap, resMap)
+	}
+
+	return NewNil()
+}
+
+func (s Server) init_methods() {
+	s.methods["get"] = NewNativeFunction(
+		func(args ...Value) Value {
+			path := args[0].(String).Value()
+			handler := args[1].(Function)
+			return s.serve("GET", path, handler)
+		},
+		[]Type{PrimitiveType{StringType}, PrimitiveType{AnyType}},
+		PrimitiveType{NilType},
+	)
+
+	s.methods["post"] = NewNativeFunction(
+		func(args ...Value) Value {
+			path := args[0].(String).Value()
+			handler := args[1].(Function)
+
+			return s.serve("POST", path, handler)
+		},
+		[]Type{PrimitiveType{StringType}, NewFunctionType([]ParameterType{}, PrimitiveType{AnyType})},
+		PrimitiveType{NilType},
+	)
 }
 
 func init_net_module() Module {
@@ -570,13 +666,10 @@ func init_net_module() Module {
 	// Create a new server instance
 	module.exports["create_server"] = NewNativeFunction(
 		func(args ...Value) Value {
-			server := &Server{
-				routes: make(map[string]map[string]RouteHandler),
-			}
-			return NewPointer(NewVariableReference("server", false, server, nil))
+			return NewServer(make(map[string]map[string]RouteHandler))
 		},
 		[]Type{},
-		NewPointerType(PrimitiveType{AnyType}),
+		NewServerType(),
 	)
 
 	// HTTP client methods
@@ -647,109 +740,44 @@ func init_net_module() Module {
 		PrimitiveType{StringType},
 	)
 
-	// Server methods
-	module.exports["route"] = NewNativeFunction(
-		func(args ...Value) Value {
-			server := args[0].(*Server)
-			method := strings.ToUpper(args[1].(String).Value())
-			path := args[2].(String).Value()
-
-			handler := args[3].(Function)
-			if server.routes[method] == nil {
-				server.routes[method] = make(map[string]RouteHandler)
-			}
-
-			server.routes[method][path] = func(req Request) Response {
-				// Convert request to map for handler
-				reqEntries := []MapEntry{
-					{NewString("method"), NewString(req.Method)},
-					{NewString("path"), NewString(req.Path)},
-					{NewString("body"), NewString(req.Body)},
-				}
-				reqMap := NewMap(reqEntries, PrimitiveType{StringType}, PrimitiveType{AnyType})
-
-				result, err := handler.Call(reqMap)
-				if err != nil {
-					panic(err)
-				}
-
-				// Convert handler result to Response
-				resMap := result.(Map)
-				statusCode := 200
-				body := ""
-
-				for _, entry := range *resMap.entries {
-					key := entry.key.(String).Value()
-					switch key {
-					case "status":
-						statusCode = int(entry.value.(Number).Value())
-					case "body":
-						body = entry.value.(String).Value()
-					}
-				}
-
-				return Response{
-					StatusCode: statusCode,
-					Headers:    map[string]string{"Content-Type": "application/json"},
-					Body:       body,
-				}
-			}
-
-			return NewNil()
-		},
-		[]Type{NewPointerType(PrimitiveType{AnyType}), PrimitiveType{StringType}, PrimitiveType{StringType}, NewFunctionType([]ParameterType{}, PrimitiveType{AnyType})},
-		PrimitiveType{NilType},
-	)
-
 	module.exports["serve"] = NewNativeFunction(
 		func(args ...Value) Value {
-			server := args[0].(*Server)
-			port := int(args[1].(Number).Value())
+			server := args[0].(Server)
+			port := args[1].(Number)
+			portNumber := int(port.value)
 
-			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				// Parse request
-				body, _ := io.ReadAll(r.Body)
-				defer r.Body.Close()
-
-				req := Request{
-					Method:  r.Method,
-					Path:    r.URL.Path,
-					Query:   parse_query(r.URL.Query()),
-					Headers: parse_headers(r.Header),
-					Body:    string(body),
-					Params:  make(map[string]string),
-				}
-
-				// Find matching route
-				if handlers, ok := server.routes[r.Method]; ok {
-					if handler, ok := handlers[r.URL.Path]; ok {
-						resp := handler(req)
-
-						// Set response headers
-						for key, value := range resp.Headers {
-							w.Header().Set(key, value)
+			for path, methods := range server.routes {
+				for method, handler := range methods {
+					http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+						if r.Method == method {
+							body, _ := io.ReadAll(r.Body)
+							defer r.Body.Close()
+							req := Request{
+								method:  r.Method,
+								path:    r.URL.Path,
+								query:   parse_query(r.URL.Query()),
+								headers: parse_headers(r.Header),
+								body:    string(body),
+								params:  make(map[string]string),
+							}
+							res := Response{}
+							handler(req, res)
+						} else {
+							http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 						}
-
-						w.WriteHeader(resp.StatusCode)
-						w.Write([]byte(resp.Body))
-						return
-					}
+					})
 				}
+			}
 
-				// No route found
-				w.WriteHeader(http.StatusNotFound)
-				w.Write([]byte("404 Not Found"))
-			})
-
-			fmt.Printf("Server listening on port %d\n", port)
-			err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+			fmt.Printf("Server listening on port: %d\n", portNumber)
+			err := http.ListenAndServe(fmt.Sprintf(":%d", portNumber), nil)
 			if err != nil {
-				panic(err.Error())
+				panic(err)
 			}
 
 			return NewNil()
 		},
-		[]Type{NewPointerType(PrimitiveType{AnyType}), PrimitiveType{NumberType}},
+		[]Type{NewServerType(), PrimitiveType{NumberType}},
 		PrimitiveType{NilType},
 	)
 
@@ -803,32 +831,14 @@ func init_json_module() Module {
 	return *module
 }
 
-func parse_query(values map[string][]string) map[string]string {
-	result := make(map[string]string)
-	for key, vals := range values {
-		if len(vals) > 0 {
-			result[key] = vals[0]
-		}
-	}
-	return result
-}
-
-func parse_headers(headers http.Header) map[string]string {
-	result := make(map[string]string)
-	for key, vals := range headers {
-		if len(vals) > 0 {
-			result[key] = vals[0]
-		}
-	}
-	return result
-}
-
 func convert_to_value(native interface{}) Value {
 	switch v := native.(type) {
 	case string:
 		return NewString(v)
 	case float64:
 		return NewNumber(v)
+	case int:
+		return NewNumber(float64(v))
 	case bool:
 		return NewBoolean(v)
 	case nil:
@@ -842,6 +852,15 @@ func convert_to_value(native interface{}) Value {
 			})
 		}
 		return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+	case map[string]string:
+		entries := make([]MapEntry, 0)
+		for k, val := range v {
+			entries = append(entries, MapEntry{
+				key:   NewString(k),
+				value: NewString(val),
+			})
+		}
+		return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{StringType})
 	case []interface{}:
 		elements := make([]Value, len(v))
 		for i, val := range v {
@@ -879,6 +898,26 @@ func convert_to_native(value Value) interface{} {
 	default:
 		panic(fmt.Sprintf("unsupported type: %T", v))
 	}
+}
+
+func parse_query(values map[string][]string) map[string]string {
+	result := make(map[string]string)
+	for key, vals := range values {
+		if len(vals) > 0 {
+			result[key] = vals[0]
+		}
+	}
+	return result
+}
+
+func parse_headers(headers http.Header) map[string]string {
+	result := make(map[string]string)
+	for key, vals := range headers {
+		if len(vals) > 0 {
+			result[key] = vals[0]
+		}
+	}
+	return result
 }
 
 func load_native_modules() {

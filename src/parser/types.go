@@ -119,6 +119,13 @@ func parse_map_type(parser *parser) ast.Type {
 	parser.expect(lexer.MAP)
 	parser.advance(1)
 
+	if parser.current_token().Kind != lexer.OPEN_BRACKET {
+		return ast.MapType{
+			Key:   ast.AnyType{},
+			Value: ast.AnyType{},
+		}
+	}
+
 	parser.expect(lexer.OPEN_BRACKET)
 	parser.advance(1)
 

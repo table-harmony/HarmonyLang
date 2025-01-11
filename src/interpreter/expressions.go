@@ -579,6 +579,13 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 
 		panic(fmt.Sprintf("Unknown map method: %s", property.Value))
 
+	case Server:
+		if method, exists := owner.methods[property.Value]; exists {
+			return method
+		}
+
+		panic(fmt.Sprintf("Unknown server method: %s", property.Value))
+
 	case *Error:
 		if method, exists := owner.methods[property.Value]; exists {
 			return method
@@ -726,8 +733,8 @@ func evaluate_struct_instantiation_expression(expression ast.Expression, scope *
 	}
 
 	for name, attr := range constructorStruct._type.storage {
-		if ref, ok := attr.Reference.(*VariableReference); ok && !attr.isStatic && storage[name] == nil {
-			storage[name] = NewVariableReference(name, ref.isConstant, attr.Load(), attr.Type())
+		if _, ok := attr.Reference.(*VariableReference); ok && !attr.isStatic && storage[name] == nil {
+			storage[name].Store(attr.Load())
 		}
 	}
 

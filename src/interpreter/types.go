@@ -44,7 +44,7 @@ func ExpectType[T Type](value Type) (T, error) {
 // EvaluateType evaluates an AST type into a runtime type
 func EvaluateType(astType ast.Type, scope *Scope) Type {
 	if astType == nil {
-		return PrimitiveType{NilType}
+		return PrimitiveType{AnyType}
 	}
 
 	switch t := astType.(type) {
@@ -75,6 +75,8 @@ func EvaluateType(astType ast.Type, scope *Scope) Type {
 		return NewArrayType(size, EvaluateType(t.Underlying, scope))
 	case ast.SliceType:
 		return NewSliceType(EvaluateType(t.Underlying, scope))
+	case ast.MapType:
+		return NewMapType(EvaluateType(t.Key, scope), EvaluateType(t.Value, scope))
 	case ast.PointerType:
 		value := EvaluateType(t.Target, scope)
 		return NewPointerType(value)

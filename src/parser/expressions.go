@@ -368,21 +368,30 @@ func parse_map_instantiation_expression(parser *parser) ast.Expression {
 	parser.expect(lexer.MAP)
 	parser.advance(1)
 
-	parser.expect(lexer.OPEN_BRACKET)
-	parser.advance(1)
+	var keyType ast.Type
+	var valueType ast.Type
+	if parser.current_token().Kind == lexer.OPEN_CURLY {
+		parser.advance(1)
 
-	keyType := parse_type(parser, default_bp)
+		keyType = ast.AnyType{}
+		valueType = ast.AnyType{}
+	} else {
+		parser.expect(lexer.OPEN_BRACKET)
+		parser.advance(1)
 
-	parser.expect(lexer.ARROW)
-	parser.advance(1)
+		keyType = parse_type(parser, default_bp)
 
-	valueType := parse_type(parser, default_bp)
+		parser.expect(lexer.ARROW)
+		parser.advance(1)
 
-	parser.expect(lexer.CLOSE_BRACKET)
-	parser.advance(1)
+		valueType = parse_type(parser, default_bp)
 
-	parser.expect(lexer.OPEN_CURLY)
-	parser.advance(1)
+		parser.expect(lexer.CLOSE_BRACKET)
+		parser.advance(1)
+
+		parser.expect(lexer.OPEN_CURLY)
+		parser.advance(1)
+	}
 
 	entries := make([]ast.MapEntry, 0)
 	for !parser.is_empty() && parser.current_token().Kind != lexer.CLOSE_CURLY {
