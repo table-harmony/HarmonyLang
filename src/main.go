@@ -12,7 +12,6 @@ import (
 
 func main() {
 	start := time.Now()
-	run("examples/testing2.harmony")
 	if len(os.Args) == 1 {
 		run_repl()
 	} else {
