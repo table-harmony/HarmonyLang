@@ -177,8 +177,6 @@ fn get_book(id: number) -> Book {
       throw error("request has failed")
     }
 
-    printf(response["body"])
-    printf(json.parse(response["body"]))
     json.parse(response["body"])
   } catch err {
     printf(err)
@@ -248,4 +246,8 @@ const book = new Book{
   },
 }
 
-printf(delete_book(131))
+const book1 = get_book(4)
+printf(book1.to_map())
+printf(book1["metadata"].to_map())
+//printf(get_books())
+//printf(delete_book(131))
