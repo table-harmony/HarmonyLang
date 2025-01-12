@@ -100,7 +100,7 @@ func (m *Map) Get(key Value) Value {
 			return entry.value
 		}
 	}
-	panic(fmt.Sprintf("key %s not found in map", key.String()))
+	return NewNil()
 }
 func (m *Map) Set(key Value, newValue Value) {
 	if !m._type.keyType.Equals(key.Type()) {

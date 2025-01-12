@@ -19,35 +19,35 @@ struct User {
   }
 }
 
-//const currentUser = User.create(map{
-//  "id" -> "asda",
-//  "email" -> "asdasd",
-//  "userName" -> "asdasd",
-//})
-//const userMap = map{
-//      "id" -> currentUser.id,
-//      "email" -> currentUser.email,
-//      "username" -> currentUser.username,
-//    }
-//printf(userMap)
-//const response = http.post("http://localhost:7137/api/auth/login", map{
-//  "headers" -> map{
-//    "Content-Type" -> "application/json",
-//  },
-//  "body" -> json.stringify(map{
-//    "email" -> "lironkaner2007@gmail.com",
-//    "password" -> "Liron1!",
-//  }),
-//})
-//printf(response["statusCode"])
-//
-//const isSuccess = response["statusCode"] < 300
-//if !isSuccess {
-//  throw error("request has failed")
-//}
-//
-//const user = response["body"]
-//printf(user)
+const currentUser = User.create(map{
+  "id" -> "asda",
+  "email" -> "asdasd",
+  "userName" -> "asdasd",
+})
+const userMap = map{
+      "id" -> currentUser.id,
+      "email" -> currentUser.email,
+      "username" -> currentUser.username,
+    }
+printf(userMap)
+const response = http.post("http://localhost:7137/api/auth/login", map{
+  "headers" -> map{
+    "Content-Type" -> "application/json",
+  },
+  "body" -> json.stringify(map{
+    "email" -> "lironkaner2007@gmail.com",
+    "password" -> "Liron1!",
+  }),
+})
+printf(response["statusCode"])
+
+const isSuccess = response["statusCode"] < 300
+if !isSuccess {
+  throw error("request has failed")
+}
+
+const user = response["body"]
+printf(user)
 
 
 const response = http.get("http://localhost:7137/api/books", map{
