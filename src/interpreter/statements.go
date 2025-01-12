@@ -137,7 +137,7 @@ func evaluate_traditional_for_statement(statement ast.Statement, scope *Scope) {
 				}
 			}()
 
-			iterationScope := NewScope(scope)
+			iterationScope := NewScope(loopScope)
 			for _, statement := range expectedStatement.Body {
 				evaluate_statement(statement, iterationScope)
 			}

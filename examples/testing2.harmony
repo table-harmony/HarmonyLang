@@ -246,8 +246,8 @@ const book = new Book{
   },
 }
 
-const book1 = get_book(4)
-printf(book1.to_map())
-printf(book1["metadata"].to_map())
+//const book1 = get_book(4)
+//printf(book1.to_map())
+//printf(book1["metadata"].to_map())
 //printf(get_books())
 //printf(delete_book(131))
