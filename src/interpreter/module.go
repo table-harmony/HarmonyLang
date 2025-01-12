@@ -627,7 +627,6 @@ func init_xml_module() Module {
 }
 
 func convert_to_value(native interface{}) Value {
-	fmt.Print(native)
 	switch v := native.(type) {
 	case string:
 		return NewString(v)

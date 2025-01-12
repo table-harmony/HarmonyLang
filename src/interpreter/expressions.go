@@ -772,9 +772,29 @@ func evaluate_struct_instantiation_expression(expression ast.Expression, scope *
 	}
 
 	storage := make(map[string]Reference)
+
+	for identifier, property := range constructorStruct._type.storage {
+		if !property.isStatic {
+			if ref, ok := property.Reference.(*VariableReference); ok {
+				var defaultValue Value
+				if ref.value != nil {
+					defaultValue = ref.value.Clone()
+				} else {
+					defaultValue = ref.explicitType.DefaultValue()
+				}
+
+				storage[identifier] = NewVariableReference(
+					identifier,
+					ref.isConstant,
+					defaultValue,
+					ref.explicitType,
+				)
+			}
+		}
+	}
+
 	for _, propertyExpression := range expectedExpression.Properties {
 		var propertyName string
-		var propertyValue Value
 
 		if propertyExpression.Identifier != nil {
 			identifier, err := ast.ExpectExpression[ast.SymbolExpression](propertyExpression.Identifier)
@@ -800,23 +820,20 @@ func evaluate_struct_instantiation_expression(expression ast.Expression, scope *
 			panic(fmt.Sprintf("Cannot assign to static property '%s'", propertyName))
 		}
 
-		if propertyExpression.Value != nil {
-			propertyValue = evaluate_expression(propertyExpression.Value, scope)
-		} else {
-			propertyValue = structAttr.Reference.Load()
-		}
+		propertyValue := evaluate_expression(propertyExpression.Value, scope)
 
-		storage[propertyName] = NewVariableReference(
-			propertyName,
-			structAttr.Reference.(*VariableReference).isConstant,
-			propertyValue,
-			structAttr.Reference.Type(),
-		)
-	}
+		if ref, ok := structAttr.Reference.(*VariableReference); ok {
+			if !ref.explicitType.Equals(propertyValue.Type()) {
+				panic(fmt.Sprintf("Type mismatch: cannot assign value of type %v to property '%s' of type %v",
+					propertyValue.Type(), propertyName, ref.explicitType))
+			}
 
-	for name, attr := range constructorStruct._type.storage {
-		if _, ok := attr.Reference.(*VariableReference); ok && !attr.isStatic && storage[name] == nil {
-			storage[name].Store(attr.Load())
+			storage[propertyName] = NewVariableReference(
+				propertyName,
+				ref.isConstant,
+				propertyValue,
+				ref.explicitType,
+			)
 		}
 	}
 

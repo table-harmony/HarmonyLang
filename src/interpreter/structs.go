@@ -61,7 +61,7 @@ func (s StructType) Equals(other Type) bool {
 	}
 	for key, attr := range s.storage {
 		otherAttr, exists := otherStruct.storage[key]
-		if !exists || !attr.Reference.Type().Equals(otherAttr.Reference.Type()) || attr.isStatic != otherAttr.isStatic {
+		if !exists || !attr.Reference.Load().Type().Equals(otherAttr.Reference.Load().Type()) || attr.isStatic != otherAttr.isStatic {
 			return false
 		}
 	}

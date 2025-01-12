@@ -1,0 +1,251 @@
+import http from "http"
+import json from "json"
+
+struct User {
+  id: string
+  username: string
+  email: string
+
+  static fn create(data) {
+    if data == nil {
+      return nil
+    }
+  
+    return new User{
+      id: data["id"],
+      username: data["userName"] != nil ? data["userName"] : data["username"],
+      email: data["email"],
+    }
+  }
+
+  fn to_map() {
+    return map{
+      "id" -> self.id,
+      "email" -> self.email,
+      "username" -> self.username,
+    }
+  }
+}
+
+struct Chapter {
+  index: number
+  title: string
+  content: string
+
+  static fn create(data) {
+    return new Chapter{
+      index: data["index"],
+      title: data["title"],
+      content: data["content"],
+    }
+  }
+
+  fn to_map() {
+    return map{
+      "index" -> self.index,
+      "title" -> self.title,
+      "content" -> self.content,
+    }
+  }
+}
+
+struct Audio {
+  url: string
+
+  static fn create(data) {
+    return new Audio{
+      url: data["audio_url"],
+    }
+  }
+
+  fn to_map() {
+    return map{
+      "url" -> self.url,
+    }
+  }
+}
+
+struct BookMetadata {
+  title: string
+  description: string
+  imageUrl: string
+  chapters: []Chapter
+
+  static fn create(data) {
+    if data == nil {
+      return nil
+    }
+    
+    const chapters = []Chapter{}
+    for _, chapter in data["chapters"] {
+      chapters.append(Chapter.create(chapter))
+    }
+
+    return new BookMetadata{
+      title: data["title"],
+      description: data["description"],
+      imageUrl: data["image_url"],
+      chapters: chapters,
+    } 
+  }
+
+  fn to_map() {
+    return map{
+      "title" -> self.title,
+      "description" -> self.description,
+      "image_url" -> self.imageUrl,
+      "chapters" -> self.chapters.each(fn (_, chapter) {
+        return chapter.to_map()
+      }),
+    }
+  }
+}
+
+struct Book {
+  id: number
+  server: number
+  author: User
+  metadata: BookMetadata
+  audios: []Audio
+
+  static fn create(data) {
+    const audios = []Audio{}
+    for _, audio in data["audio_books"] {
+      audios.append(Audio.create(audio))
+    }
+
+    return new Book{
+      id: data["id"],
+      author: User.create(data["author"]),
+      server: data["server"],
+      metadata: BookMetadata.create(data["metadata"]),
+      audios: audios,
+    }
+  }
+
+  fn to_map() {
+    return map{
+      "id" -> self.id,
+      "server" -> self.server,
+      "author" -> self.author.to_map(),
+      "metadata" -> self.metadata.to_map(),
+      "audios" -> self.audios.each(fn (_, audio) {
+        return audio.to_map()
+      }),
+    }
+  }
+}
+
+fn get_books() -> []Book {
+  const fetchedBooks = try {
+    const response = http.get("http://localhost:7137/api/books", map{
+      "headers" -> map{
+        "Content-Type" -> "application/json",
+      },
+    })
+
+    const isSuccess = response["statusCode"] < 300
+    if !isSuccess {
+      throw error("request has failed")
+    }
+
+    json.parse(response["body"])
+  } catch err {
+    printf("An error occured while fetching the books: " + err.message())
+    []Book{}
+  }
+  
+  const books = []Book{}
+  for _, book in fetchedBooks {
+    books.append(Book.create(book))
+  }
+
+  return books
+}
+
+fn get_book(id: number) -> Book {
+  const fetchedBook = try {
+    const fullUrl = "http://localhost:7137/api/books/" + id
+    const response = http.get(fullUrl, map{
+      "headers" -> map{
+        "Content-Type" -> "application/json",
+      },
+    })
+
+    const isSuccess = response["statusCode"] < 300
+    if !isSuccess {
+      throw error("request has failed")
+    }
+
+    printf(response["body"])
+    printf(json.parse(response["body"]))
+    json.parse(response["body"])
+  } catch err {
+    printf(err)
+    nil
+  }
+
+  const book = Book.create(fetchedBook)
+  return book
+}
+
+fn delete_book(id: number) -> bool {
+  const isDeleted = try {
+    const fullUrl = "http://localhost:7137/api/books/" + id
+    const response = http.delete(fullUrl, map{
+      "headers" -> map{
+        "Content-Type" -> "application/json",
+      },
+    })
+
+    const isSuccess = response["statusCode"] < 300
+    if !isSuccess {
+      throw error("request has failed")
+    }
+
+    true
+  } catch err {
+    printf(err)
+    false
+  }
+
+  return isDeleted
+}
+
+fn create_book(book: Book) {
+  try {      
+    const response = http.post("http://localhost:7137/api/books", map{
+      "headers" -> map{
+        "Content-Type" -> "application/json",
+      },
+      "body" -> json.stringify(map{
+        "author_id" -> book.author.id,
+        "server" -> book.server,
+        "metadata" -> book.metadata.to_map(),
+      }),
+    })
+
+    const isSuccess = response["statusCode"] < 300
+    if !isSuccess {
+      throw error("request has failed")
+    }
+    
+  } catch err {
+    printf(err)
+  }
+}
+
+const book = new Book{
+  server: 5,
+  author: new User{
+    id: "0d122c0c-9ff7-4f3d-96bd-08b20d8b67d3",
+  },
+  metadata: new BookMetadata{
+    title: "this is title",
+    description: "this is decription",
+    chapters: []Chapter{},
+    imageUrl: "asdasds",
+  },
+}
+
+printf(delete_book(131))
