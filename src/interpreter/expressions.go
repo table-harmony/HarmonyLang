@@ -582,15 +582,35 @@ func evaluate_computed_member_expression(expression ast.Expression, scope *Scope
 		if !exists {
 			if ref, ok := attr.Reference.(*FunctionReference); ok {
 				if fn, ok := ref.value.(*FunctionValue); ok {
-					fn.closure.Declare(NewVariableReference("self", true, owner, owner.constructor.Type()))
-					return ref.Load()
+					// Create a new function value with the closure containing self
+					newFn := *fn
+					newClosure := NewScope(fn.closure)
+					newClosure.Declare(NewVariableReference("self", true, owner, owner.constructor.Type()))
+					newFn.closure = newClosure
+					return NewFunctionReference(ref.identifier, &newFn)
 				}
 			}
-
 			panic(fmt.Sprintf("Member '%s' not initialized", propertyName.Value()))
 		}
 
+		// If the referenced value is a struct and has methods, we need to handle method calls on it
+		if loaded := ref.Load(); loaded != nil {
+			if structInst, ok := loaded.(StructInstantiation); ok {
+				if methodRef, ok := structInst.storage[propertyName.Value()]; ok {
+					if fn, ok := methodRef.Load().(*FunctionValue); ok {
+						// Create a new function value with the closure containing self
+						newFn := *fn
+						newClosure := NewScope(fn.closure)
+						newClosure.Declare(NewVariableReference("self", true, structInst, structInst.constructor.Type()))
+						newFn.closure = newClosure
+						return NewFunctionReference(propertyName.Value(), &newFn)
+					}
+				}
+			}
+		}
+
 		return ref
+
 	default:
 		panic(fmt.Sprintf("Computed member expression not supported for type: %T", ownerValue))
 	}
@@ -708,15 +728,32 @@ func evaluate_member_expression(expression ast.Expression, scope *Scope) Value {
 		if !exists {
 			if ref, ok := attr.Reference.(*FunctionReference); ok {
 				if fn, ok := ref.value.(*FunctionValue); ok {
-					fn.closure.Declare(NewVariableReference("self", true, owner, owner.constructor.Type()))
-					return ref.Load()
+					newFn := *fn
+					newClosure := NewScope(fn.closure)
+					newClosure.Declare(NewVariableReference("self", true, owner, owner.constructor.Type()))
+					newFn.closure = newClosure
+					return NewFunctionReference(ref.identifier, &newFn)
 				}
 			}
-
 			panic(fmt.Sprintf("Member '%s' not initialized", property.Value))
 		}
 
+		if loaded := ref.Load(); loaded != nil {
+			if structInst, ok := loaded.(StructInstantiation); ok {
+				if methodRef, ok := structInst.storage[property.Value]; ok {
+					if fn, ok := methodRef.Load().(*FunctionValue); ok {
+						newFn := *fn
+						newClosure := NewScope(fn.closure)
+						newClosure.Declare(NewVariableReference("self", true, structInst, structInst.constructor.Type()))
+						newFn.closure = newClosure
+						return NewFunctionReference(property.Value, &newFn)
+					}
+				}
+			}
+		}
+
 		return ref
+
 	}
 
 	panic(fmt.Sprintf("Member expression not supported for type: %T", ownerValue))
