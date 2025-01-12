@@ -540,22 +540,15 @@ func init_json_module() Module {
 	module.exports["parse"] = NewNativeFunction(
 		func(args ...Value) Value {
 			jsonStr := args[0].(String).Value()
-			var result map[string]interface{}
+			var result interface{}
 			if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 				panic(fmt.Sprintf("JSON parse error: %v", err))
 			}
 
-			entries := make([]MapEntry, 0)
-			for k, v := range result {
-				entries = append(entries, MapEntry{
-					key:   NewString(k),
-					value: convert_to_value(v),
-				})
-			}
-			return NewMap(entries, PrimitiveType{StringType}, PrimitiveType{AnyType})
+			return convert_to_value(result)
 		},
 		[]Type{PrimitiveType{StringType}},
-		NewMapType(PrimitiveType{AnyType}, PrimitiveType{AnyType}),
+		PrimitiveType{AnyType},
 	)
 
 	module.exports["stringify"] = NewNativeFunction(
@@ -634,6 +627,7 @@ func init_xml_module() Module {
 }
 
 func convert_to_value(native interface{}) Value {
+	fmt.Print(native)
 	switch v := native.(type) {
 	case string:
 		return NewString(v)
@@ -696,6 +690,12 @@ func convert_to_native(value Value) interface{} {
 	case Slice:
 		result := make([]interface{}, len(*v.elements))
 		for i, elem := range *v.elements {
+			result[i] = convert_to_native(elem)
+		}
+		return result
+	case Array:
+		result := make([]interface{}, len(v.elements))
+		for i, elem := range v.elements {
 			result[i] = convert_to_native(elem)
 		}
 		return result
