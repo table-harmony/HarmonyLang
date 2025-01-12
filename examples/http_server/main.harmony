@@ -34,4 +34,10 @@ server.get("/static", fn(req, res) {
   res.html(fileContent)
 })
 
+server.get("/book/:bookId/libraries/:libraryId", fn(req, res) {
+  const bookId = req.params["bookId"]
+  const libraryId = req.params["libraryId"]
+  res.write("" + bookId + " " + libraryId)
+})
+
 net.serve(server, 3000)

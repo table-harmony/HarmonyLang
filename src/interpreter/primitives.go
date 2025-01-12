@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -169,6 +170,24 @@ func NewString(value string) Value {
 		},
 		[]Type{PrimitiveType{StringType}},
 		NewSliceType(PrimitiveType{StringType}),
+	)
+
+	methods["url_decode"] = NewNativeFunction(
+		func(args ...Value) Value {
+			decoded, _ := url.QueryUnescape(s.value)
+			return NewString(decoded)
+		},
+		[]Type{},
+		PrimitiveType{StringType},
+	)
+
+	methods["url_encode"] = NewNativeFunction(
+		func(args ...Value) Value {
+			decoded := url.QueryEscape(s.value)
+			return NewString(decoded)
+		},
+		[]Type{},
+		PrimitiveType{StringType},
 	)
 
 	return s

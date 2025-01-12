@@ -38,3 +38,6 @@ println(parts)
 for index, char in str {
   println("index: " + index + " char: " + char)
 }
+
+printf("lironkaner2007%40gmail.com".url_decode())
+printf("lironkaner2007@gmail.com".url_encode())

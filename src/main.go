@@ -12,7 +12,7 @@ import (
 
 func main() {
 	start := time.Now()
-
+	run("examples/http_server/main.harmony")
 	if len(os.Args) == 1 {
 		run_repl()
 	} else {

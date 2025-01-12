@@ -10,6 +10,62 @@ import (
 	"github.com/table-harmony/HarmonyLang/src/helpers"
 )
 
+// RoutePattern represents a parsed route pattern
+type RoutePattern struct {
+	segments []segment
+	raw      string
+}
+
+type segment struct {
+	value   string
+	isParam bool
+}
+
+// Parse a route pattern into segments
+func parse_route_pattern(pattern string) *RoutePattern {
+	parts := strings.Split(strings.Trim(pattern, "/"), "/")
+	segments := make([]segment, len(parts))
+
+	for i, part := range parts {
+		if strings.HasPrefix(part, ":") {
+			segments[i] = segment{
+				value:   strings.TrimPrefix(part, ":"),
+				isParam: true,
+			}
+		} else {
+			segments[i] = segment{
+				value:   part,
+				isParam: false,
+			}
+		}
+	}
+
+	return &RoutePattern{
+		segments: segments,
+		raw:      pattern,
+	}
+}
+
+// Check if a path matches a pattern and extract parameters
+func (p RoutePattern) match(path string) (bool, map[string]string) {
+	params := make(map[string]string)
+	pathParts := strings.Split(strings.Trim(path, "/"), "/")
+
+	if len(pathParts) != len(p.segments) {
+		return false, nil
+	}
+
+	for i, seg := range p.segments {
+		if seg.isParam {
+			params[seg.value] = pathParts[i]
+		} else if seg.value != pathParts[i] {
+			return false, nil
+		}
+	}
+
+	return true, params
+}
+
 // RequestType represents the type of an HTTP request
 type RequestType struct{}
 
@@ -36,6 +92,7 @@ type Request struct {
 	Path    string
 	Query   map[string]string
 	Headers map[string]string
+	Params  map[string]string
 	Body    string
 }
 
@@ -43,6 +100,7 @@ func NewRequest() *Request {
 	return &Request{
 		Headers: make(map[string]string),
 		Query:   make(map[string]string),
+		Params:  make(map[string]string),
 	}
 }
 
@@ -183,13 +241,13 @@ func (s ServerType) DefaultValue() Value { return NewNil() }
 
 // Server represents an HTTP server with improved routing
 type Server struct {
-	routes  map[string]map[string]Function
+	routes  map[*RoutePattern]map[string]Function
 	methods map[string]Function
 }
 
 func NewServer() *Server {
 	server := &Server{
-		routes:  make(map[string]map[string]Function),
+		routes:  make(map[*RoutePattern]map[string]Function),
 		methods: make(map[string]Function),
 	}
 	server.init_methods()
@@ -204,37 +262,24 @@ func (s Server) String() string {
 }
 
 func (s *Server) init_methods() {
-	// GET method
-	s.methods["get"] = NewNativeFunction(
-		func(args ...Value) Value {
-			path := args[0].(String).Value()
-			handler := args[1].(Function)
+	methods := []string{"get", "post", "put", "patch", "delete"}
+	for _, method := range methods {
+		s.methods[method] = NewNativeFunction(
+			func(args ...Value) Value {
+				pathPattern := args[0].(String).Value()
+				handler := args[1].(Function)
 
-			if s.routes[path] == nil {
-				s.routes[path] = make(map[string]Function)
-			}
-			s.routes[path]["GET"] = handler
-			return NewNil()
-		},
-		[]Type{PrimitiveType{StringType}, PrimitiveType{AnyType}},
-		PrimitiveType{NilType},
-	)
-
-	// POST method
-	s.methods["post"] = NewNativeFunction(
-		func(args ...Value) Value {
-			path := args[0].(String).Value()
-			handler := args[1].(Function)
-
-			if s.routes[path] == nil {
-				s.routes[path] = make(map[string]Function)
-			}
-			s.routes[path]["POST"] = handler
-			return NewNil()
-		},
-		[]Type{PrimitiveType{StringType}, PrimitiveType{AnyType}},
-		PrimitiveType{NilType},
-	)
+				pattern := parse_route_pattern(pathPattern)
+				if s.routes[pattern] == nil {
+					s.routes[pattern] = make(map[string]Function)
+				}
+				s.routes[pattern][strings.ToUpper(method)] = handler
+				return NewNil()
+			},
+			[]Type{PrimitiveType{StringType}, PrimitiveType{AnyType}},
+			PrimitiveType{NilType},
+		)
+	}
 }
 
 func init_net_module() Module {
@@ -257,23 +302,25 @@ func init_net_module() Module {
 
 			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 				req := parse_request(r)
-
 				res := NewResponse()
 				res.Writer = w
 
-				if routeHandlers := server.routes[req.Path]; routeHandlers != nil {
-					if handler := routeHandlers[req.Method]; handler != nil {
-						_, err := handler.Call(req, res)
-						if err != nil {
-							panic(err)
-						}
+				for pattern, routeHandlers := range server.routes {
+					if matches, params := pattern.match(req.Path); matches {
+						if handler := routeHandlers[req.Method]; handler != nil {
+							req.Params = params
+							_, err := handler.Call(req, res)
+							if err != nil {
+								panic(err)
+							}
 
-						for key, value := range res.Headers {
-							w.Header().Set(key, value)
+							for key, value := range res.Headers {
+								w.Header().Set(key, value)
+							}
+							w.WriteHeader(res.StatusCode)
+							w.Write([]byte(res.Body.String()))
+							return
 						}
-						w.WriteHeader(res.StatusCode)
-						w.Write([]byte(res.Body.String()))
-						return
 					}
 				}
 
