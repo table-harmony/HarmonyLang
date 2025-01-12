@@ -166,14 +166,24 @@ func (res *Response) init_methods() {
 		func(args ...Value) Value {
 			data := args[0]
 			res.Headers["Content-Type"] = "application/json"
-			jsonBytes, err := json.Marshal(convert_to_native(data))
+			var jsonBytes []byte
+			var err error
+
+			nativeData := convert_to_native(data)
+			switch nativeData.(type) {
+			case map[string]interface{}, []interface{}:
+				jsonBytes, err = json.Marshal(nativeData)
+			default:
+				err = fmt.Errorf("unsupported data type for json serialization")
+			}
+
 			if err != nil {
 				panic(err)
 			}
 			res.Body.Write(jsonBytes)
 			return res
 		},
-		[]Type{NewMapType(PrimitiveType{AnyType}, PrimitiveType{AnyType})},
+		[]Type{PrimitiveType{AnyType}},
 		ResponseType{},
 	)
 

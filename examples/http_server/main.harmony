@@ -16,7 +16,8 @@ server.get("/api/data", fn(req, res) {
     "message" -> "Hello from API",
     "query" -> req.query,
   }
-
+  res.json([]number{1, 2, 3})
+  res.json(data)
   res.xml(data)
 })
 
