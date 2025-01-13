@@ -1,5 +1,7 @@
 # Harmony Lang
 
+<img src="logo.png" alt="Harmony Lang Logo" width="200" height="200" />
+
 Harmony Lang is a new programming language designed to make coding more intuitive and enjoyable. It combines the best features of modern languages with a focus on simplicity and readability.
 
 ## Features
@@ -28,7 +30,7 @@ cd HarmonyLang
 3. Run the installation script:
 
 ```sh
-./install.sh
+./harmony-installer.bat
 ```
 
 ## Usage
@@ -37,6 +39,12 @@ To run a Harmony Lang program, use the following command:
 
 ```sh
 harmony run yourfile.harmony
+```
+
+Or use the REPL
+
+```sh
+harmony repl
 ```
 
 ## Contributing
@@ -49,4 +57,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For any questions or suggestions, please open an issue on GitHub or contact us at support@harmonylang.org.
+For any questions or suggestions, please open an issue on GitHub
